@@ -6166,9 +6166,12 @@ async function openGroupEmailModal(groupId) {
   document.getElementById('groupEmailError').style.display = 'none';
   setGroupEmailFrom(group ? group.leader : 'Heritage Hill Church', group ? group.leaderEmail : '');
 
-  // Pre-populate recipients from sign-ups for this group
-  const signups = await SupaDB.adminGetSignupsByGroup(groupId);
-  const emails = [...new Set(signups.map(s => s.email).filter(Boolean))];
+  // Pre-populate recipients from this group's current membership roster —
+  // must match "Current Members" (adminGetGroupMembers), not the separate
+  // signups/inquiries table, which can list people who never became members
+  // (or omit members added directly without a signup record).
+  const members = await SupaDB.adminGetGroupMembers(groupId);
+  const emails = [...new Set(members.map(m => m.email).filter(Boolean))];
   document.getElementById('groupEmailTo').value = emails.join('\n');
   updateGroupEmailCount();
 
