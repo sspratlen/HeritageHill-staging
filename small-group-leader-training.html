@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Small Group Leader Training | Heritage Hill Church</title>
+<link rel="icon" href="assets/logos/logo-icon-color-white.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#1C1C1E; --ink-muted:#6B6B6B; --ink-faint:#9A9A9A;
+    --accent:#BC7A1E; --accent-deep:#9A6118; --accent-wash:#FBF0E0;
+    --line:#E4E4E4; --dark:#0D0F14; --bg:#FFFFFF; --bg-soft:#F7F7F5;
+    --shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; background:var(--dark); overflow:hidden; }
+  body{
+    font-family:'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    color:var(--ink);
+  }
+
+  .deck{ position:relative; width:100vw; height:100vh; }
+
+  .slide{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    padding:7vh 9vw;
+    background:var(--bg);
+    opacity:0;
+  }
+  .slide.active{
+    display:flex;
+    animation: rise .45s ease both;
+  }
+  @media (prefers-reduced-motion: reduce){ .slide.active{ animation:none; opacity:1; } }
+  @keyframes rise{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+
+  .slide.dark{ background:var(--dark); color:#fff; }
+  .slide.center{ justify-content:center; align-items:flex-start; }
+
+  .kicker{
+    font-family:'Oswald',sans-serif; font-weight:500; font-size:clamp(.85rem,1.4vw,1.05rem);
+    letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+    margin-bottom:2vh;
+  }
+  .slide.dark .kicker{ color:var(--accent); }
+
+  h1{
+    font-size:clamp(2.4rem,6vw,4.6rem); font-weight:700; letter-spacing:-.015em; line-height:1.05;
+    margin:0 0 2vh; text-wrap:balance; max-width:16ch;
+  }
+  h2{
+    font-size:clamp(1.9rem,4.4vw,3rem); font-weight:700; letter-spacing:-.01em; line-height:1.1;
+    margin:0 0 3vh; text-wrap:balance;
+  }
+  .lede{ font-size:clamp(1.05rem,1.7vw,1.4rem); color:var(--ink-muted); max-width:62ch; line-height:1.55; }
+  .slide.dark .lede{ color:rgba(255,255,255,.72); }
+
+  .num-badge{
+    width:clamp(46px,5vw,64px); height:clamp(46px,5vw,64px); border-radius:50%;
+    background:var(--accent-wash); color:var(--accent-deep);
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:clamp(1.2rem,2vw,1.6rem);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+
+  .path-row{
+    display:flex; align-items:center; gap:1.4vw; flex-wrap:wrap; margin-top:4vh;
+    font-family:'DM Sans',sans-serif; font-weight:700; font-size:clamp(1rem,1.6vw,1.3rem);
+  }
+  .path-chip{
+    background:var(--bg-soft); border:1.5px solid var(--line); border-radius:10px;
+    padding:.7em 1.1em;
+  }
+  .path-chip.brand{ background:var(--dark); color:#fff; border-color:var(--dark); }
+  .path-arrow{ color:var(--ink-faint); font-size:1.3em; }
+
+  .step-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:2.4vw 2.8vw;
+    margin-top:2vh; width:100%;
+  }
+  .step-card{ display:flex; gap:1.1vw; align-items:flex-start; }
+  .step-card h3{
+    font-size:clamp(1.15rem,1.7vw,1.5rem); font-weight:700; margin:0 0 .4em; letter-spacing:-.005em;
+  }
+  .step-card p{ margin:0; color:var(--ink-muted); font-size:clamp(.92rem,1.25vw,1.12rem); line-height:1.5; max-width:34ch; }
+
+  .ui-chip{
+    display:inline-flex; align-items:center; gap:.3em;
+    background:var(--accent-wash); color:var(--accent-deep);
+    font-weight:700; font-size:.94em; padding:.12em .55em; border-radius:6px;
+  }
+
+  .field-list{ margin-top:2.4vh; display:flex; flex-direction:column; gap:1.1vh; max-width:640px; }
+  .field-row{
+    display:flex; justify-content:space-between; gap:2vw; padding:1.2vh 0; border-bottom:1px solid var(--line);
+    font-size:clamp(1rem,1.4vw,1.2rem);
+  }
+  .field-row .k{ font-weight:700; }
+  .field-row .v{ color:var(--ink-muted); text-align:right; }
+
+  .faq-grid{ display:grid; grid-template-columns:1fr 1fr; gap:3vw 3.4vw; margin-top:1vh; width:100%; }
+  .faq-q{ font-weight:700; font-size:clamp(1.02rem,1.4vw,1.25rem); margin-bottom:.4em; }
+  .faq-a{ color:var(--ink-muted); font-size:clamp(.92rem,1.2vw,1.08rem); line-height:1.5; margin:0; }
+
+  .closing-contact{ margin-top:4vh; font-size:clamp(1rem,1.5vw,1.3rem); color:rgba(255,255,255,.65); }
+
+  /* ---------- Chrome: nav + counter + progress ---------- */
+  .chrome{
+    position:fixed; left:0; right:0; bottom:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 5vw 3vh;
+    pointer-events:none;
+  }
+  .chrome > *{ pointer-events:auto; }
+  .brandmark{
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:.82rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .navwrap{ display:flex; align-items:center; gap:14px; }
+  .navbtn{
+    width:44px; height:44px; border-radius:50%; border:1.5px solid var(--line);
+    background:var(--bg); color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s, transform .1s;
+  }
+  .navbtn:hover{ background:var(--accent-wash); border-color:var(--accent); }
+  .navbtn:active{ transform:scale(.94); }
+  .navbtn:disabled{ opacity:.3; cursor:default; }
+  .navbtn:disabled:hover{ background:var(--bg); border-color:var(--line); }
+  .counter{ font-variant-numeric:tabular-nums; font-weight:700; font-size:.9rem; color:var(--ink-muted); min-width:52px; text-align:center; }
+
+  .progress{ position:fixed; top:0; left:0; height:4px; background:var(--accent); z-index:60; transition:width .35s ease; }
+
+  /* Body-level dark-chrome toggle set by JS when current slide is dark */
+  body.on-dark .navbtn{ background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.25); color:#fff; }
+  body.on-dark .navbtn:hover{ background:rgba(255,255,255,.16); }
+  body.on-dark .counter{ color:rgba(255,255,255,.55); }
+  body.on-dark .brandmark{ color:rgba(255,255,255,.4); }
+
+  @media (max-width:760px){
+    .step-grid, .faq-grid{ grid-template-columns:1fr; }
+    .slide{ padding:9vh 7vw; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="deck" id="deck">
+
+  <section class="slide dark active" id="s1">
+    <div style="flex:1;"></div>
+    <span class="kicker">Heritage Hill Church</span>
+    <h1>Small Group Leader Training</h1>
+    <p class="lede">Two things worth five minutes to learn: emailing your group, and logging weekly attendance.</p>
+    <div style="flex:1.4;"></div>
+  </section>
+
+  <section class="slide center" id="s2">
+    <span class="kicker">Before We Start</span>
+    <h2>Everything lives in one place.</h2>
+    <p class="lede">No separate app, nothing to install. Start the same way every time:</p>
+    <div class="path-row">
+      <span class="path-chip brand">Log in</span>
+      <span class="path-arrow">→</span>
+      <span class="path-chip">Sidebar: Small Groups</span>
+      <span class="path-arrow">→</span>
+      <span class="path-chip">Find your group's row</span>
+    </div>
+  </section>
+
+  <section class="slide dark center" id="s3">
+    <span class="kicker">Part One</span>
+    <h1>Emailing Your Group</h1>
+    <p class="lede">Announcements, this week's plan, a change of location — sent to everyone in your group, without collecting a single email address yourself.</p>
+  </section>
+
+  <section class="slide center" id="s4">
+    <span class="kicker">Emailing Your Group</span>
+    <h2>Four steps, start to finish.</h2>
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="num-badge">1</div>
+        <div><h3>Open the composer</h3><p>On your group's row, click <span class="ui-chip">✉ Email Group</span>.</p></div>
+      </div>
+      <div class="step-card">
+        <div class="num-badge">2</div>
+        <div><h3>Check who it's going to</h3><p><strong>To</strong> is pre-filled from your current members — add or remove anyone.</p></div>
+      </div>
+      <div class="step-card">
+        <div class="num-badge">3</div>
+        <div><h3>Write it like an email</h3><p>Subject, then your message — bold, bullets, and links all work.</p></div>
+      </div>
+      <div class="step-card">
+        <div class="num-badge">4</div>
+        <div><h3>Send it</h3><p>Click <span class="ui-chip">Send Email</span>. Each person gets their own copy.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide dark center" id="s5">
+    <span class="kicker">Part Two</span>
+    <h1>Tracking Attendance</h1>
+    <p class="lede">A running headcount for every week your group meets — no names, just numbers, and it takes about ten seconds.</p>
+  </section>
+
+  <section class="slide center" id="s6">
+    <span class="kicker">Tracking Attendance</span>
+    <h2>Three fields, one click.</h2>
+    <p class="lede">On your group's row, click <span class="ui-chip">Attendance</span>, then fill in:</p>
+    <div class="field-list">
+      <div class="field-row"><span class="k">Date</span><span class="v">The date your group met</span></div>
+      <div class="field-row"><span class="k">Headcount</span><span class="v">How many people were there</span></div>
+      <div class="field-row"><span class="k">Notes</span><span class="v">Optional — e.g. "Holiday week"</span></div>
+    </div>
+    <p class="lede" style="margin-top:2.6vh;">Click <span class="ui-chip">Add</span> — it's saved, and stays editable if you need to fix it later.</p>
+  </section>
+
+  <section class="slide center" id="s7">
+    <span class="kicker">A Few Things People Ask</span>
+    <h2>Quick answers.</h2>
+    <div class="faq-grid">
+      <div><div class="faq-q">I don't see my group.</div><p class="faq-a">You only see groups you're listed as the leader for — ask staff to confirm your name is on the record.</p></div>
+      <div><div class="faq-q">Just one person, not the whole group?</div><p class="faq-a">Delete every line in To except that one person before sending.</p></div>
+      <div><div class="faq-q">We didn't meet one week.</div><p class="faq-a">Log a headcount of 0 with a note — that keeps the history accurate instead of leaving a gap.</p></div>
+      <div><div class="faq-q">Does this use my personal email?</div><p class="faq-a">No — it sends from the church's system, with no limit on how often you use it.</p></div>
+    </div>
+  </section>
+
+  <section class="slide dark" id="s8">
+    <div style="flex:1;"></div>
+    <span class="kicker">You're Ready</span>
+    <h1>Go lead your group.</h1>
+    <p class="lede">Small Groups tab → your group's row → Email Group or Attendance.</p>
+    <p class="closing-contact">Questions? Ask your Small Groups staff contact.</p>
+    <div style="flex:1.2;"></div>
+  </section>
+
+</div>
+
+<div class="chrome">
+  <span class="brandmark">Heritage Hill Church</span>
+  <div class="navwrap">
+    <button class="navbtn" id="prevBtn" aria-label="Previous slide">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="counter" id="counter">1 / 8</span>
+    <button class="navbtn" id="nextBtn" aria-label="Next slide">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let i = 0;
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+
+  function render(){
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    counter.textContent = (i + 1) + ' / ' + total;
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === total - 1;
+    progress.style.width = ((i + 1) / total * 100) + '%';
+    document.body.classList.toggle('on-dark', slides[i].classList.contains('dark'));
+  }
+
+  function go(delta){
+    const next = i + delta;
+    if (next < 0 || next >= total) return;
+    i = next;
+    render();
+  }
+
+  prevBtn.addEventListener('click', (e) => { e.stopPropagation(); go(-1); });
+  nextBtn.addEventListener('click', (e) => { e.stopPropagation(); go(1); });
+
+  document.getElementById('deck').addEventListener('click', () => go(1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+  });
+
+  render();
+</script>
+</body>
+</html>

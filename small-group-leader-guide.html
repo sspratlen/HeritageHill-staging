@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Small Group Leader Guide | Heritage Hill Church</title>
+<link rel="icon" href="assets/logos/logo-icon-color-white.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#FFFFFF;
+    --bg-soft:#F7F7F5;
+    --surface:#FFFFFF;
+    --ink:#1C1C1E;
+    --ink-muted:#6B6B6B;
+    --ink-faint:#9A9A9A;
+    --accent:#BC7A1E;
+    --accent-deep:#9A6118;
+    --accent-wash:#FBF0E0;
+    --line:#E4E4E4;
+    --dark:#0D0F14;
+    --success:#1E7A45;
+    --success-wash:#E4F3EA;
+    --shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size:16px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    font-weight:700;
+    letter-spacing:-.01em;
+    line-height:1.15;
+    color:var(--ink);
+    text-wrap:balance;
+    margin:0;
+  }
+  a{ color:inherit; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(6px);
+  }
+  .topbar-inner{
+    max-width:760px; margin:0 auto;
+    padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .topbar-brand{
+    font-weight:700; font-size:1.05rem; letter-spacing:-.01em;
+    display:flex; align-items:baseline; gap:8px;
+    text-decoration:none;
+  }
+  .topbar-brand small{
+    font-family:'DM Sans', sans-serif; font-weight:500; font-size:.72rem;
+    text-transform:uppercase; letter-spacing:.09em; color:var(--ink-faint);
+  }
+  .topbar-nav{ display:flex; gap:6px; }
+  .topbar-nav a{
+    font-size:.82rem; font-weight:600; color:var(--ink-muted);
+    text-decoration:none; padding:6px 12px; border-radius:20px;
+    transition:background .15s, color .15s;
+  }
+  .topbar-nav a:hover, .topbar-nav a:focus-visible{ background:var(--accent-wash); color:var(--accent-deep); }
+
+  /* ---------- Page shell ---------- */
+  main{ max-width:760px; margin:0 auto; padding:0 24px 96px; }
+
+  .hero{ padding:56px 0 40px; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'Oswald',sans-serif; font-size:.8rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--accent-deep); background:var(--accent-wash);
+    padding:6px 14px; border-radius:50px; margin-bottom:18px;
+  }
+  .hero h1{ font-size:2.5rem; line-height:1.12; margin-bottom:16px; letter-spacing:-.01em; }
+  .hero p{ font-size:1.12rem; color:var(--ink-muted); max-width:56ch; margin:0; }
+
+  .path-card{
+    margin-top:32px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:22px 24px;
+    box-shadow:var(--shadow);
+  }
+  .path-card p{ margin:0 0 14px; font-size:.95rem; color:var(--ink-muted); }
+  .path-steps{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    font-family:'DM Sans',sans-serif; font-weight:600; font-size:.9rem;
+  }
+  .chip{
+    background:var(--bg); border:1px solid var(--line);
+    padding:7px 13px; border-radius:9px; white-space:nowrap;
+  }
+  .chip.brand{ background:var(--dark); color:#fff; border-color:var(--dark); }
+  .path-steps .arrow{ color:var(--ink-faint); font-size:1rem; }
+
+  /* ---------- Section headers ---------- */
+  section.workflow{ padding:64px 0 8px; scroll-margin-top:78px; }
+  .section-head{ margin-bottom:36px; }
+  .section-kicker{
+    display:flex; align-items:center; gap:10px; margin-bottom:10px;
+  }
+  .section-kicker .num{
+    font-family:'Oswald',sans-serif; font-size:1.05rem; font-weight:600;
+    color:var(--accent-deep); background:var(--accent-wash);
+    width:30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .section-kicker span.label{
+    font-family:'Oswald',sans-serif; font-size:.8rem; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint);
+  }
+  .section-head h2{ font-size:1.85rem; margin-bottom:10px; }
+  .section-head .sub{ color:var(--ink-muted); font-size:1.02rem; max-width:58ch; }
+
+  /* ---------- Steps ---------- */
+  .steps{ display:flex; flex-direction:column; gap:0; border-left:2px solid var(--line); margin-left:17px; }
+  .step{
+    position:relative;
+    padding:0 0 40px 34px;
+  }
+  .step:last-child{ padding-bottom:4px; }
+  .step-num{
+    position:absolute; left:-19px; top:-2px;
+    width:36px; height:36px; border-radius:50%;
+    background:var(--surface); border:2px solid var(--accent);
+    color:var(--accent-deep); font-family:'Oswald',sans-serif; font-weight:600; font-size:1.05rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .step h3{ font-size:1.15rem; margin-bottom:8px; }
+  .step p{ margin:0 0 12px; color:var(--ink-muted); font-size:.98rem; }
+  .step p:last-child{ margin-bottom:0; }
+  .step strong{ color:var(--ink); font-weight:700; }
+
+  .ui-chip{
+    display:inline-flex; align-items:center; gap:4px;
+    background:var(--accent-wash); color:var(--accent-deep);
+    font-family:'DM Sans',sans-serif; font-weight:700; font-size:.86rem;
+    padding:2px 9px; border-radius:6px; border:1px solid rgba(143,90,18,.18);
+  }
+
+  .field-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px; margin-top:8px; box-shadow:var(--shadow);
+  }
+  .field-row{ display:flex; justify-content:space-between; gap:16px; padding:9px 0; border-bottom:1px solid var(--line); font-size:.9rem; }
+  .field-row:last-child{ border-bottom:none; }
+  .field-row .k{ font-weight:700; color:var(--ink); flex-shrink:0; }
+  .field-row .v{ color:var(--ink-muted); text-align:right; }
+
+  .callout{
+    background:var(--success-wash); border:1px solid rgba(75,122,74,.25);
+    border-radius:10px; padding:12px 16px; margin-top:14px;
+    font-size:.88rem; color:var(--ink); display:flex; gap:10px; align-items:flex-start;
+  }
+  .callout .dot{ color:var(--success); font-size:1.1rem; line-height:1.3; flex-shrink:0; }
+
+  /* ---------- Mock preview ---------- */
+  .mock{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    box-shadow:var(--shadow); margin-top:20px; overflow:hidden;
+  }
+  .mock-bar{ background:var(--dark); color:#fff; padding:10px 16px; font-size:.78rem; font-weight:600; display:flex; align-items:center; justify-content:space-between; }
+  .mock-bar .traffic{ display:flex; gap:5px; }
+  .mock-bar .traffic span{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.25); }
+  .mock-body{ padding:20px; }
+  .mock-field-label{ font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); margin-bottom:5px; }
+  .mock-field{ background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:.88rem; color:var(--ink-muted); margin-bottom:14px; }
+  .mock-btn{ display:inline-block; background:var(--accent); color:#fff; font-weight:700; font-size:.85rem; padding:9px 18px; border-radius:8px; }
+
+  /* ---------- Divider ---------- */
+  .divider{ height:1px; background:var(--line); margin:56px 0 0; }
+
+  /* ---------- FAQ ---------- */
+  .faq{ padding:56px 0 0; }
+  .faq h2{ font-size:1.6rem; margin-bottom:28px; }
+  .faq-item{ padding:18px 0; border-bottom:1px solid var(--line); }
+  .faq-item:first-of-type{ border-top:1px solid var(--line); }
+  .faq-item h4{ font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700; margin:0 0 6px; }
+  .faq-item p{ margin:0; color:var(--ink-muted); font-size:.94rem; max-width:60ch; }
+
+  footer{
+    margin-top:64px; padding:28px 0 8px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+    color:var(--ink-faint); font-size:.82rem;
+  }
+  footer a{ color:var(--accent-deep); font-weight:600; text-decoration:none; }
+  footer a:hover{ text-decoration:underline; }
+
+  @media (max-width:600px){
+    .hero h1{ font-size:2rem; }
+    .path-steps{ font-size:.82rem; }
+    .field-row{ flex-direction:column; gap:2px; }
+    .field-row .v{ text-align:left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="topbar-brand" href="index.html">Small Group Leader Guide <small>Heritage Hill Church</small></a>
+    <nav class="topbar-nav">
+      <a href="#email">Emailing Your Group</a>
+      <a href="#attendance">Tracking Attendance</a>
+    </nav>
+  </div>
+</div>
+
+<main>
+
+  <section class="hero">
+    <span class="eyebrow">For Small Group Leaders</span>
+    <h1>Two things worth five minutes to learn.</h1>
+    <p>Everything below lives in one place — the <strong>Small Groups</strong> tab of your admin dashboard, right on your own group's row. No separate app, nothing to install.</p>
+
+    <div class="path-card">
+      <p>Start every time the same way:</p>
+      <div class="path-steps">
+        <span class="chip brand">Log in</span>
+        <span class="arrow">→</span>
+        <span class="chip">Sidebar: Small Groups</span>
+        <span class="arrow">→</span>
+        <span class="chip">Find your group's row</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="workflow" id="email">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="num">1</span>
+        <span class="label">Workflow One</span>
+      </div>
+      <h2>Emailing Your Group</h2>
+      <p class="sub">Send a message to everyone in your group — announcements, this week's plan, a change of location — without collecting anyone's email address yourself.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Open the composer</h3>
+        <p>On your group's row, click <span class="ui-chip">✉ Email Group</span>. A window opens with everything pre-filled for you.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Check who it's going to</h3>
+        <p>The <strong>To</strong> field is already filled in from your group's current members — one email per line. Add or remove someone if the list needs adjusting.</p>
+        <div class="field-card">
+          <div class="field-row"><span class="k">From</span><span class="v">You, as your group's leader</span></div>
+          <div class="field-row"><span class="k">To</span><span class="v">Pre-filled from current members · editable</span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Write it like a normal email</h3>
+        <p>Add a <strong>Subject</strong>, then write your message in the box below it. Bold, bullet points, and links all work — it's a real editor, not a plain text box.</p>
+        <div class="mock">
+          <div class="mock-bar"><span>Email Group</span><div class="traffic"><span></span><span></span><span></span></div></div>
+          <div class="mock-body">
+            <div class="mock-field-label">Subject</div>
+            <div class="mock-field">This week: we're meeting at the Andersons'</div>
+            <div class="mock-field-label">Message</div>
+            <div class="mock-field" style="min-height:52px;">Hey everyone! Quick change for Thursday — we're at 412 Maple St this week instead...</div>
+            <span class="mock-btn">Send Email</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Send it</h3>
+        <p>Click <span class="ui-chip">Send Email</span>. Each person gets their own copy, addressed to them — nobody sees the full recipient list.</p>
+        <div class="callout"><span class="dot">✓</span> That's the whole workflow. No separate email account, no group text chain to manage.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="workflow" id="attendance">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="num">2</span>
+        <span class="label">Workflow Two</span>
+      </div>
+      <h2>Tracking Attendance</h2>
+      <p class="sub">A running log of how many people showed up each week — nobody's names, just a headcount. Takes about ten seconds after your group wraps up.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Open your attendance log</h3>
+        <p>On your group's row, click <span class="ui-chip">Attendance</span>. A window opens titled with your group's name, showing every week you've logged so far.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Log this week</h3>
+        <p>Fill in three things, then click <span class="ui-chip">Add</span>:</p>
+        <div class="field-card">
+          <div class="field-row"><span class="k">Date</span><span class="v">The date your group met</span></div>
+          <div class="field-row"><span class="k">Headcount</span><span class="v">How many people were there</span></div>
+          <div class="field-row"><span class="k">Notes</span><span class="v">Optional — e.g. "Holiday week"</span></div>
+        </div>
+        <div class="mock">
+          <div class="mock-bar"><span>Life Group — Attendance</span><div class="traffic"><span></span><span></span><span></span></div></div>
+          <div class="mock-body">
+            <div class="mock-field-label">Date</div>
+            <div class="mock-field">Thu, Oct 9, 2026</div>
+            <div class="mock-field-label">Headcount</div>
+            <div class="mock-field">11</div>
+            <span class="mock-btn">Add</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>It's saved — and stays editable</h3>
+        <p>Your entry drops straight into the list below the form, newest on top. Made a typo on the headcount? Click any row to fix it later — nothing is locked in once you hit Add.</p>
+        <div class="callout"><span class="dot">✓</span> That's it — one entry per week your group meets, and your church leadership can see the trend over the whole semester.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="faq">
+    <h2>A few things people ask</h2>
+    <div class="faq-item">
+      <h4>I don't see my group in the list.</h4>
+      <p>You'll only see the group(s) you're listed as the leader for. If nothing shows up, have a staff member confirm you're set as the leader on your group's record.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Can I email just one person instead of the whole group?</h4>
+      <p>Yes — before sending, delete every line in the To field except the one person you want to reach.</p>
+    </div>
+    <div class="faq-item">
+      <h4>What if we didn't meet one week?</h4>
+      <p>Log a headcount of 0 with a note like "Skipped — holiday." That keeps your attendance history accurate instead of leaving a gap.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Does emailing the group cost anything or use my personal email?</h4>
+      <p>No — it sends from the church's system, not your personal inbox, and there's no limit on how often you use it.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Heritage Hill Church · Small Group Leader Resources</span>
+    <a href="index.html">← Back to heritagehill.church</a>
+  </footer>
+
+</main>
+</body>
+</html>
