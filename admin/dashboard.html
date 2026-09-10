@@ -1230,9 +1230,10 @@
       </div>
       <div class="chart-card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;">
         <h3 style="font-size:1.05rem;margin-bottom:14px;">Journey Funnel</h3>
-        <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
           <div class="stat-card"><div class="num" id="analyticsMilestoneGtRegistered">–</div><div class="lbl">Registered for Growth Track</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneGtAttended">–</div><div class="lbl">Attended Growth Track</div></div>
+          <div class="stat-card"><div class="num" id="analyticsMilestoneBecameMember">–</div><div class="lbl">Became a Member</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneDisc">–</div><div class="lbl">Completed DISC</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneGifts">–</div><div class="lbl">Completed Spiritual Gifts</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneGroupMember">–</div><div class="lbl">Joined a Small Group</div></div>
@@ -5518,6 +5519,7 @@ async function renderAnalyticsTab() {
   ]);
   document.getElementById('analyticsMilestoneGtRegistered').textContent = milestoneCounts.growth_track_registered || 0;
   document.getElementById('analyticsMilestoneGtAttended').textContent = milestoneCounts.growth_track_attended || 0;
+  document.getElementById('analyticsMilestoneBecameMember').textContent = milestoneCounts.became_member || 0;
   document.getElementById('analyticsMilestoneDisc').textContent = milestoneCounts.assessment_disc_completed || 0;
   document.getElementById('analyticsMilestoneGifts').textContent = milestoneCounts.assessment_gifts_completed || 0;
   document.getElementById('analyticsMilestoneGroupMember').textContent = milestoneCounts.small_group_member || 0;

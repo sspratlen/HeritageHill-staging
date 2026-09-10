@@ -582,9 +582,15 @@ window.SupaDB = {
     if (!db()) return { error: 'Not configured' };
     try {
       const { data, error } = await db().from('growth_track_registrations')
-        .update({ attended: !!attended }).eq('id', id).select('person_id').single();
+        .update({ attended: !!attended }).eq('id', id).select('person_id, part, user_id').single();
       if (error) throw error;
       if (attended && data && data.person_id) this.recordMilestone(data.person_id, 'growth_track_attended');
+      // About Us is the membership step -- attending it approves membership
+      // (only if they already have a profile; matches "membership requires
+      // a profile" -- a guest with no account yet just attended a session).
+      if (attended && data && data.part === 'about_us' && data.user_id) {
+        await this.adminSetMemberStatus(data.user_id, 'approved');
+      }
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminSetGtAttended:', e.message); return { error: e.message }; }
   },
@@ -1370,9 +1376,23 @@ window.SupaDB = {
   },
   async adminSetMemberStatus(userId, status) {
     if (!db()) return { error: 'Not configured' };
-    const { error } = await db().from('member_profiles')
-      .update({ status }).eq('user_id', userId);
+    const updates = { status };
+    if (status === 'approved') {
+      // Membership = About Us attended (or a manual approve) + a profile.
+      // member_since is set once and never overwritten by a later re-approve.
+      const { data: existing } = await db().from('member_profiles')
+        .select('member_since').eq('user_id', userId).maybeSingle();
+      if (!existing || !existing.member_since) updates.member_since = new Date().toISOString().slice(0, 10);
+      const { data: { user } } = await db().auth.getUser();
+      if (user) {
+        const { data: approver } = await db().from('people').select('id').eq('user_id', user.id).maybeSingle();
+        if (approver) updates.approved_by_person_id = approver.id;
+      }
+    }
+    const { data, error } = await db().from('member_profiles')
+      .update(updates).eq('user_id', userId).select('person_id').single();
     if (error) return { error: error.message };
+    if (status === 'approved' && data && data.person_id) this.recordMilestone(data.person_id, 'became_member');
     return { success: true };
   },
   async adminDeleteMember(userId) {
