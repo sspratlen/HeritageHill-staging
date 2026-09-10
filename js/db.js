@@ -369,6 +369,18 @@ window.SupaDB = {
     } catch(e) { console.warn('[SupaDB] recordMilestone failed (non-critical):', e.message); }
   },
 
+  /* ── ADMIN: Journey funnel — count of people at each milestone ── */
+  async adminGetMilestoneCounts() {
+    if (!db()) return {};
+    try {
+      const { data, error } = await db().from('person_milestones').select('milestone');
+      if (error) throw error;
+      const counts = {};
+      (data || []).forEach(r => { counts[r.milestone] = (counts[r.milestone] || 0) + 1; });
+      return counts;
+    } catch(e) { console.error('[SupaDB] adminGetMilestoneCounts:', e.message); return {}; }
+  },
+
   /* ── PUBLIC: Sermons ────────────────────────────────────── */
   async getPublishedSermons() {
     if (!db()) return [];
