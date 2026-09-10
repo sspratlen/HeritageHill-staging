@@ -2853,9 +2853,8 @@ async function approveApplication(id){
     SupaDB.saveGroup(draftGroup),
     SupaDB.updateApplication(id,{status:'approved'})
   ]);
-  SupaDB.upsertPerson({name:a.name,email:a.email,phone:a.phone}).then(personId => {
-    if (personId) SupaDB.recordMilestone(personId, 'small_group_leader');
-  });
+  const personId = await SupaDB.upsertPerson({name:a.name,email:a.email,phone:a.phone});
+  if (personId) SupaDB.recordMilestone(personId, 'small_group_leader');
   if(a.email){
     const parts=a.name.trim().split(/\s+/);
     const firstName=parts[0]||'', lastName=parts.slice(1).join(' ');
