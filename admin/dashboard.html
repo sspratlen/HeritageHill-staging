@@ -5512,9 +5512,16 @@ function analyticsBarList(counts, maxScale) {
 }
 
 async function renderAnalyticsTab() {
-  const [profiles, attempts, content] = await Promise.all([
+  const [profiles, attempts, content, milestoneCounts] = await Promise.all([
     SupaDB.adminGetAllMemberProfiles(), SupaDB.getVisibleAttempts(), SupaDB.getAssessmentContent(),
+    SupaDB.adminGetMilestoneCounts(),
   ]);
+  document.getElementById('analyticsMilestoneGtRegistered').textContent = milestoneCounts.growth_track_registered || 0;
+  document.getElementById('analyticsMilestoneGtAttended').textContent = milestoneCounts.growth_track_attended || 0;
+  document.getElementById('analyticsMilestoneDisc').textContent = milestoneCounts.assessment_disc_completed || 0;
+  document.getElementById('analyticsMilestoneGifts').textContent = milestoneCounts.assessment_gifts_completed || 0;
+  document.getElementById('analyticsMilestoneGroupMember').textContent = milestoneCounts.small_group_member || 0;
+  document.getElementById('analyticsMilestoneGroupLeader').textContent = milestoneCounts.small_group_leader || 0;
   const stats = computeAssessmentAnalytics(profiles, attempts, content);
   window._analyticsStats = stats;
 
