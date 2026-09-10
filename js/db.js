@@ -567,9 +567,10 @@ window.SupaDB = {
   async adminSetGtAttended(id, attended) {
     if (!db()) return { error: 'Not configured' };
     try {
-      const { error } = await db().from('growth_track_registrations')
-        .update({ attended: !!attended }).eq('id', id);
+      const { data, error } = await db().from('growth_track_registrations')
+        .update({ attended: !!attended }).eq('id', id).select('person_id').single();
       if (error) throw error;
+      if (attended && data && data.person_id) this.recordMilestone(data.person_id, 'growth_track_attended');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminSetGtAttended:', e.message); return { error: e.message }; }
   },
@@ -1397,6 +1398,8 @@ window.SupaDB = {
       answers, scores, result,
     });
     if (error) return { error: error.message };
+    const { data: person } = await db().from('people').select('id').eq('user_id', user.id).maybeSingle();
+    if (person) this.recordMilestone(person.id, assessmentType === 'disc' ? 'assessment_disc_completed' : 'assessment_gifts_completed');
     return { success: true };
   },
   async getMyAttempts() {
