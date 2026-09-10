@@ -328,6 +328,7 @@ window.SupaDB = {
         user_id: reg.userId || null, person_id: personId,
       });
       if (error) throw error;
+      if (personId) this.recordMilestone(personId, 'growth_track_registered');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] submitGrowthTrackRegistration:', e.message); return { error: e.message }; }
   },
@@ -354,6 +355,18 @@ window.SupaDB = {
       if (error) throw error;
       return data;
     } catch(e) { console.warn('[SupaDB] upsertPerson failed (non-critical):', e.message); return null; }
+  },
+
+  /* ── People backbone: fire-and-forget journey milestone record.
+     Never awaited by callers for its result — nothing depends on it
+     succeeding immediately. Safe to call repeatedly for the same
+     (person, milestone) pair; the DB side no-ops on conflict. */
+  async recordMilestone(personId, milestone) {
+    if (!db() || !personId || !milestone) return;
+    try {
+      const { error } = await db().rpc('record_milestone', { p_person_id: personId, p_milestone: milestone });
+      if (error) throw error;
+    } catch(e) { console.warn('[SupaDB] recordMilestone failed (non-critical):', e.message); }
   },
 
   /* ── PUBLIC: Sermons ────────────────────────────────────── */
@@ -542,21 +555,24 @@ window.SupaDB = {
     if (!db()) return { error: 'Not configured' };
     try {
       const match = await this.adminFindMemberByEmail(reg.email);
+      const personId = await this.upsertPerson({ name: reg.name, email: reg.email, phone: reg.phone });
       const { error } = await db().from('growth_track_registrations').insert({
         part: reg.part, session_date: reg.sessionDate || null, session_time: reg.sessionTime || '',
         name: reg.name, email: reg.email, phone: reg.phone || '', notes: reg.notes || '',
-        added_by_admin: true, user_id: match ? match.userId : null,
+        added_by_admin: true, user_id: match ? match.userId : null, person_id: personId,
       });
       if (error) throw error;
+      if (personId) this.recordMilestone(personId, 'growth_track_registered');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminAddGrowthTrackRegistration:', e.message); return { error: e.message }; }
   },
   async adminSetGtAttended(id, attended) {
     if (!db()) return { error: 'Not configured' };
     try {
-      const { error } = await db().from('growth_track_registrations')
-        .update({ attended: !!attended }).eq('id', id);
+      const { data, error } = await db().from('growth_track_registrations')
+        .update({ attended: !!attended }).eq('id', id).select('person_id').single();
       if (error) throw error;
+      if (attended && data && data.person_id) this.recordMilestone(data.person_id, 'growth_track_attended');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminSetGtAttended:', e.message); return { error: e.message }; }
   },
@@ -664,6 +680,7 @@ window.SupaDB = {
         notes: m.notes || '', user_id: match ? match.userId : null, person_id: personId,
       });
       if (error) throw error;
+      if (personId) this.recordMilestone(personId, 'small_group_member');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminAddGroupMember:', e.message); return { error: e.message }; }
   },
@@ -1383,6 +1400,8 @@ window.SupaDB = {
       answers, scores, result,
     });
     if (error) return { error: error.message };
+    const { data: person } = await db().from('people').select('id').eq('user_id', user.id).maybeSingle();
+    if (person) this.recordMilestone(person.id, assessmentType === 'disc' ? 'assessment_disc_completed' : 'assessment_gifts_completed');
     return { success: true };
   },
   async getMyAttempts() {
