@@ -328,6 +328,7 @@ window.SupaDB = {
         user_id: reg.userId || null, person_id: personId,
       });
       if (error) throw error;
+      if (personId) this.recordMilestone(personId, 'growth_track_registered');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] submitGrowthTrackRegistration:', e.message); return { error: e.message }; }
   },
@@ -676,6 +677,7 @@ window.SupaDB = {
         notes: m.notes || '', user_id: match ? match.userId : null, person_id: personId,
       });
       if (error) throw error;
+      if (personId) this.recordMilestone(personId, 'small_group_member');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminAddGroupMember:', e.message); return { error: e.message }; }
   },
