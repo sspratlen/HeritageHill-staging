@@ -555,12 +555,14 @@ window.SupaDB = {
     if (!db()) return { error: 'Not configured' };
     try {
       const match = await this.adminFindMemberByEmail(reg.email);
+      const personId = await this.upsertPerson({ name: reg.name, email: reg.email, phone: reg.phone });
       const { error } = await db().from('growth_track_registrations').insert({
         part: reg.part, session_date: reg.sessionDate || null, session_time: reg.sessionTime || '',
         name: reg.name, email: reg.email, phone: reg.phone || '', notes: reg.notes || '',
-        added_by_admin: true, user_id: match ? match.userId : null,
+        added_by_admin: true, user_id: match ? match.userId : null, person_id: personId,
       });
       if (error) throw error;
+      if (personId) this.recordMilestone(personId, 'growth_track_registered');
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminAddGrowthTrackRegistration:', e.message); return { error: e.message }; }
   },
