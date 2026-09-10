@@ -321,10 +321,11 @@ window.SupaDB = {
   async submitGrowthTrackRegistration(reg) {
     if (!db()) return { error: 'Not configured' };
     try {
+      const personId = await this.upsertPerson({ name: reg.name, email: reg.email, phone: reg.phone });
       const { error } = await db().from('growth_track_registrations').insert({
         part: reg.part, session_date: reg.sessionDate || null, session_time: reg.sessionTime || '',
         name: reg.name, email: reg.email, phone: reg.phone || '', notes: reg.notes || '',
-        user_id: reg.userId || null,
+        user_id: reg.userId || null, person_id: personId,
       });
       if (error) throw error;
       return { ok: true };
@@ -338,6 +339,21 @@ window.SupaDB = {
       if (error) throw error;
       return data ? { userId: data.user_id } : null;
     } catch(e) { console.error('[SupaDB] adminFindMemberByEmail:', e.message); return null; }
+  },
+
+  /* ── People backbone: find-or-create a canonical person row ──
+     Best-effort — a failure here must never block the caller's real
+     write (a signup, an RSVP, etc.). Returns the person's uuid, or
+     null if it couldn't be resolved. */
+  async upsertPerson({ name, email, phone }) {
+    if (!db() || !email) return null;
+    try {
+      const { data, error } = await db().rpc('upsert_person', {
+        p_name: name || '', p_email: email, p_phone: phone || '',
+      });
+      if (error) throw error;
+      return data;
+    } catch(e) { console.warn('[SupaDB] upsertPerson failed (non-critical):', e.message); return null; }
   },
 
   /* ── PUBLIC: Sermons ────────────────────────────────────── */
@@ -356,7 +372,8 @@ window.SupaDB = {
     if (!db()) return { error: 'Not configured' };
     try {
       const current = await this.getCurrentSemester();
-      const { error } = await db().from('signups').insert(signupToDb({ ...signup, semesterId: current ? current.id : null }));
+      const personId = await this.upsertPerson({ name: signup.name, email: signup.email, phone: signup.phone });
+      const { error } = await db().from('signups').insert({ ...signupToDb({ ...signup, semesterId: current ? current.id : null }), person_id: personId });
       if (error) throw error;
       // Fire-and-forget confirmation email to the requester (non-blocking)
       fetch(GROUP_SIGNUP_NOTIFY_URL, {
@@ -383,7 +400,8 @@ window.SupaDB = {
         const current = await this.getCurrentSemester();
         semesterId = current ? current.id : null;
       }
-      const { error } = await db().from('applications').insert(applicationToDb({ ...app, semesterId }));
+      const personId = await this.upsertPerson({ name: app.name, email: app.email, phone: app.phone });
+      const { error } = await db().from('applications').insert({ ...applicationToDb({ ...app, semesterId }), person_id: personId });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] submitApplication:', e.message); return { error: e.message }; }
@@ -621,9 +639,10 @@ window.SupaDB = {
       const json = await res.json();
       if (!res.ok || json.error) return { error: json.error || ('HTTP ' + res.status) };
 
+      const personId = await this.upsertPerson({ name: name || lower, email: lower, phone });
       const { error: insertErr } = await db().from('member_profiles').insert({
         user_id: json.userId, name: name || lower, email: lower, phone: phone || '',
-        group_id: groupId || null, status: 'approved',
+        group_id: groupId || null, status: 'approved', person_id: personId,
       });
       if (insertErr) return { error: insertErr.message };
       return { created: true, userId: json.userId };
@@ -639,9 +658,10 @@ window.SupaDB = {
         });
         if (provisioned.userId) match = { userId: provisioned.userId };
       }
+      const personId = await this.upsertPerson({ name: m.name, email: m.email, phone: m.phone });
       const { error } = await db().from('group_memberships').insert({
         group_id: m.groupId, name: m.name, email: m.email, phone: m.phone || '',
-        notes: m.notes || '', user_id: match ? match.userId : null,
+        notes: m.notes || '', user_id: match ? match.userId : null, person_id: personId,
       });
       if (error) throw error;
       return { ok: true };
@@ -774,7 +794,8 @@ window.SupaDB = {
   async addSubscriber(sub) {
     if (!db()) return { error: 'Not configured' };
     try {
-      const { error } = await db().from('subscribers').insert(subscriberToDb(sub));
+      const personId = await this.upsertPerson({ name: [sub.firstName, sub.lastName].filter(Boolean).join(' '), email: sub.email });
+      const { error } = await db().from('subscribers').insert({ ...subscriberToDb(sub), person_id: personId });
       if (error) {
         if (error.code === '23505') return { duplicate: true };
         throw error;
@@ -821,8 +842,9 @@ window.SupaDB = {
   async upsertSubscriber(sub) {
     if (!db()) return { error: 'Not configured' };
     try {
+      const personId = await this.upsertPerson({ name: [sub.firstName, sub.lastName].filter(Boolean).join(' '), email: sub.email });
       const { error } = await db().from('subscribers')
-        .upsert(subscriberToDb(sub), { onConflict: 'email' });
+        .upsert({ ...subscriberToDb(sub), person_id: personId }, { onConflict: 'email' });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] upsertSubscriber:', e.message); return { error: e.message }; }
@@ -994,7 +1016,8 @@ window.SupaDB = {
   async submitEventRsvp(rsvp) {
     if (!db()) return { error: 'No DB' };
     try {
-      const { error } = await db().from('event_rsvps').insert(rsvpToDb(rsvp));
+      const personId = await this.upsertPerson({ name: rsvp.fullName, email: rsvp.email, phone: rsvp.phone });
+      const { error } = await db().from('event_rsvps').insert({ ...rsvpToDb(rsvp), person_id: personId });
       if (error) throw error;
       return { success: true };
     } catch(e) { console.error('[SupaDB] submitEventRsvp:', e.message); return { error: e.message }; }
@@ -1229,8 +1252,9 @@ window.SupaDB = {
   async adminUpsertUserRole({ email, displayName, role, forcePasswordChange }) {
     if (!db()) return { error: 'No DB' };
     try {
+      const personId = await this.upsertPerson({ name: displayName, email });
       const { error } = await db().from('user_roles')
-        .upsert({ email: email.toLowerCase(), display_name: displayName || '', role, force_password_change: !!forcePasswordChange }, { onConflict: 'email' });
+        .upsert({ email: email.toLowerCase(), display_name: displayName || '', role, force_password_change: !!forcePasswordChange, person_id: personId }, { onConflict: 'email' });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminUpsertUserRole:', e.message); return { error: e.message }; }
@@ -1274,13 +1298,16 @@ window.SupaDB = {
     const { data: { user } } = await db().auth.getUser();
     if (!user) return { error: 'Not signed in' };
     const m = user.user_metadata || {};
+    const name = m.name || user.email.split('@')[0];
+    const email = user.email.toLowerCase();
+    const personId = await this.upsertPerson({ name, email, phone: m.phone });
     const { error } = await db().from('member_profiles').insert({
       user_id: user.id,
-      name: m.name || user.email.split('@')[0],
-      email: user.email.toLowerCase(),
+      name, email,
       phone: m.phone || '',
       group_id: m.group_id || null,
       years_attending: m.years_attending || '',
+      person_id: personId,
     });
     if (error) return { error: error.message };
     return { success: true };

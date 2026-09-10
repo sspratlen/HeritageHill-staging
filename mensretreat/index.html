@@ -1004,6 +1004,17 @@
       dietary:      document.getElementById('reg-dietary').value.trim() || null,
     };
 
+    var personId = null;
+    try {
+      var personRes = await fetch(SUPA_URL + '/rest/v1/rpc/upsert_person', {
+        method: 'POST',
+        headers: { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_name: payload.full_name, p_email: payload.email, p_phone: payload.phone || '' }),
+      });
+      if (personRes.ok) personId = await personRes.json();
+    } catch (e) { /* best-effort — continue without person_id */ }
+    payload.person_id = personId;
+
     try {
       var res = await fetch(SUPA_URL + '/rest/v1/retreat_registrations', {
         method:  'POST',
