@@ -639,9 +639,10 @@ window.SupaDB = {
       const json = await res.json();
       if (!res.ok || json.error) return { error: json.error || ('HTTP ' + res.status) };
 
+      const personId = await this.upsertPerson({ name: name || lower, email: lower, phone });
       const { error: insertErr } = await db().from('member_profiles').insert({
         user_id: json.userId, name: name || lower, email: lower, phone: phone || '',
-        group_id: groupId || null, status: 'approved',
+        group_id: groupId || null, status: 'approved', person_id: personId,
       });
       if (insertErr) return { error: insertErr.message };
       return { created: true, userId: json.userId };
@@ -657,9 +658,10 @@ window.SupaDB = {
         });
         if (provisioned.userId) match = { userId: provisioned.userId };
       }
+      const personId = await this.upsertPerson({ name: m.name, email: m.email, phone: m.phone });
       const { error } = await db().from('group_memberships').insert({
         group_id: m.groupId, name: m.name, email: m.email, phone: m.phone || '',
-        notes: m.notes || '', user_id: match ? match.userId : null,
+        notes: m.notes || '', user_id: match ? match.userId : null, person_id: personId,
       });
       if (error) throw error;
       return { ok: true };
@@ -1250,8 +1252,9 @@ window.SupaDB = {
   async adminUpsertUserRole({ email, displayName, role, forcePasswordChange }) {
     if (!db()) return { error: 'No DB' };
     try {
+      const personId = await this.upsertPerson({ name: displayName, email });
       const { error } = await db().from('user_roles')
-        .upsert({ email: email.toLowerCase(), display_name: displayName || '', role, force_password_change: !!forcePasswordChange }, { onConflict: 'email' });
+        .upsert({ email: email.toLowerCase(), display_name: displayName || '', role, force_password_change: !!forcePasswordChange, person_id: personId }, { onConflict: 'email' });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminUpsertUserRole:', e.message); return { error: e.message }; }
@@ -1295,13 +1298,16 @@ window.SupaDB = {
     const { data: { user } } = await db().auth.getUser();
     if (!user) return { error: 'Not signed in' };
     const m = user.user_metadata || {};
+    const name = m.name || user.email.split('@')[0];
+    const email = user.email.toLowerCase();
+    const personId = await this.upsertPerson({ name, email, phone: m.phone });
     const { error } = await db().from('member_profiles').insert({
       user_id: user.id,
-      name: m.name || user.email.split('@')[0],
-      email: user.email.toLowerCase(),
+      name, email,
       phone: m.phone || '',
       group_id: m.group_id || null,
       years_attending: m.years_attending || '',
+      person_id: personId,
     });
     if (error) return { error: error.message };
     return { success: true };
