@@ -356,6 +356,18 @@ window.SupaDB = {
     } catch(e) { console.warn('[SupaDB] upsertPerson failed (non-critical):', e.message); return null; }
   },
 
+  /* ── People backbone: fire-and-forget journey milestone record.
+     Never awaited by callers for its result — nothing depends on it
+     succeeding immediately. Safe to call repeatedly for the same
+     (person, milestone) pair; the DB side no-ops on conflict. */
+  async recordMilestone(personId, milestone) {
+    if (!db() || !personId || !milestone) return;
+    try {
+      const { error } = await db().rpc('record_milestone', { p_person_id: personId, p_milestone: milestone });
+      if (error) throw error;
+    } catch(e) { console.warn('[SupaDB] recordMilestone failed (non-critical):', e.message); }
+  },
+
   /* ── PUBLIC: Sermons ────────────────────────────────────── */
   async getPublishedSermons() {
     if (!db()) return [];
