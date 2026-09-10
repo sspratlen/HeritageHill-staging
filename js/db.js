@@ -321,10 +321,11 @@ window.SupaDB = {
   async submitGrowthTrackRegistration(reg) {
     if (!db()) return { error: 'Not configured' };
     try {
+      const personId = await this.upsertPerson({ name: reg.name, email: reg.email, phone: reg.phone });
       const { error } = await db().from('growth_track_registrations').insert({
         part: reg.part, session_date: reg.sessionDate || null, session_time: reg.sessionTime || '',
         name: reg.name, email: reg.email, phone: reg.phone || '', notes: reg.notes || '',
-        user_id: reg.userId || null,
+        user_id: reg.userId || null, person_id: personId,
       });
       if (error) throw error;
       return { ok: true };
@@ -371,7 +372,8 @@ window.SupaDB = {
     if (!db()) return { error: 'Not configured' };
     try {
       const current = await this.getCurrentSemester();
-      const { error } = await db().from('signups').insert(signupToDb({ ...signup, semesterId: current ? current.id : null }));
+      const personId = await this.upsertPerson({ name: signup.name, email: signup.email, phone: signup.phone });
+      const { error } = await db().from('signups').insert({ ...signupToDb({ ...signup, semesterId: current ? current.id : null }), person_id: personId });
       if (error) throw error;
       // Fire-and-forget confirmation email to the requester (non-blocking)
       fetch(GROUP_SIGNUP_NOTIFY_URL, {
@@ -398,7 +400,8 @@ window.SupaDB = {
         const current = await this.getCurrentSemester();
         semesterId = current ? current.id : null;
       }
-      const { error } = await db().from('applications').insert(applicationToDb({ ...app, semesterId }));
+      const personId = await this.upsertPerson({ name: app.name, email: app.email, phone: app.phone });
+      const { error } = await db().from('applications').insert({ ...applicationToDb({ ...app, semesterId }), person_id: personId });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] submitApplication:', e.message); return { error: e.message }; }
