@@ -340,6 +340,21 @@ window.SupaDB = {
     } catch(e) { console.error('[SupaDB] adminFindMemberByEmail:', e.message); return null; }
   },
 
+  /* ── People backbone: find-or-create a canonical person row ──
+     Best-effort — a failure here must never block the caller's real
+     write (a signup, an RSVP, etc.). Returns the person's uuid, or
+     null if it couldn't be resolved. */
+  async upsertPerson({ name, email, phone }) {
+    if (!db() || !email) return null;
+    try {
+      const { data, error } = await db().rpc('upsert_person', {
+        p_name: name || '', p_email: email, p_phone: phone || '',
+      });
+      if (error) throw error;
+      return data;
+    } catch(e) { console.warn('[SupaDB] upsertPerson failed (non-critical):', e.message); return null; }
+  },
+
   /* ── PUBLIC: Sermons ────────────────────────────────────── */
   async getPublishedSermons() {
     if (!db()) return [];
