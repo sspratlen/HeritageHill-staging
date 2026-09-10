@@ -792,7 +792,8 @@ window.SupaDB = {
   async addSubscriber(sub) {
     if (!db()) return { error: 'Not configured' };
     try {
-      const { error } = await db().from('subscribers').insert(subscriberToDb(sub));
+      const personId = await this.upsertPerson({ name: [sub.firstName, sub.lastName].filter(Boolean).join(' '), email: sub.email });
+      const { error } = await db().from('subscribers').insert({ ...subscriberToDb(sub), person_id: personId });
       if (error) {
         if (error.code === '23505') return { duplicate: true };
         throw error;
@@ -839,8 +840,9 @@ window.SupaDB = {
   async upsertSubscriber(sub) {
     if (!db()) return { error: 'Not configured' };
     try {
+      const personId = await this.upsertPerson({ name: [sub.firstName, sub.lastName].filter(Boolean).join(' '), email: sub.email });
       const { error } = await db().from('subscribers')
-        .upsert(subscriberToDb(sub), { onConflict: 'email' });
+        .upsert({ ...subscriberToDb(sub), person_id: personId }, { onConflict: 'email' });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] upsertSubscriber:', e.message); return { error: e.message }; }
@@ -1012,7 +1014,8 @@ window.SupaDB = {
   async submitEventRsvp(rsvp) {
     if (!db()) return { error: 'No DB' };
     try {
-      const { error } = await db().from('event_rsvps').insert(rsvpToDb(rsvp));
+      const personId = await this.upsertPerson({ name: rsvp.fullName, email: rsvp.email, phone: rsvp.phone });
+      const { error } = await db().from('event_rsvps').insert({ ...rsvpToDb(rsvp), person_id: personId });
       if (error) throw error;
       return { success: true };
     } catch(e) { console.error('[SupaDB] submitEventRsvp:', e.message); return { error: e.message }; }
