@@ -176,7 +176,19 @@ function openCalendarMenu(e, type, id) {
   const target = document.getElementById(`calMenu-${type}-${id}`);
   const wasOpen = target && target.classList.contains('open');
   closeAllCalendarMenus();
-  if (target && !wasOpen) target.classList.add('open');
+  if (!target || wasOpen) return;
+  // Fixed-position, computed from the trigger button's own rect -- several
+  // cards this menu lives in use `overflow:hidden` (for rounded image
+  // corners), which would otherwise clip an absolutely-positioned dropdown.
+  const btnRect = e.currentTarget.getBoundingClientRect();
+  target.style.left = '0px';
+  target.style.top = '0px';
+  target.classList.add('open');
+  const menuRect = target.getBoundingClientRect();
+  let left = btnRect.right - menuRect.width;
+  if (left < 8) left = 8;
+  target.style.left = `${left}px`;
+  target.style.top = `${btnRect.bottom + 6}px`;
 }
 function closeAllCalendarMenus() {
   document.querySelectorAll('.cal-menu.open').forEach(el => el.classList.remove('open'));
