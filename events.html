@@ -33,6 +33,13 @@
     .ev-rsvp-success .checkmark { font-size:2.5rem;display:block;margin-bottom:8px; }
     .ev-modal-close { position:absolute;top:14px;right:16px;background:rgba(0,0,0,.45);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10; }
     .ev-modal-img-wrap { position:relative; }
+
+    /* ── Add to Calendar menu ────────────────────────────── */
+    .cal-menu { display:none;position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);min-width:180px;z-index:50;overflow:hidden; }
+    .cal-menu.open { display:block; }
+    .cal-menu button { display:block;width:100%;text-align:left;padding:.55rem .8rem;font-size:.82rem;background:none;border:none;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif; }
+    .cal-menu button:hover { background:var(--bg-soft); }
+    .cal-menu button + button { border-top:1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -248,12 +255,19 @@ async function submitSubscribe() {
 <script src="js/supabase-client.js"></script>
 <script src="js/db.js"></script>
 <script src="js/main.js"></script>
+<script src="js/calendar.js"></script>
 <script>
   document.getElementById('footerYear').textContent = new Date().getFullYear();
       renderNavAvatar();
 
   // Cache all published events so filters don't re-query on every keystroke
   let _allEvents = [];
+
+  // Looked up by js/calendar.js's shared Add to Calendar menu.
+  function calGetEventData(type, id) {
+    const ev = _allEvents.find(e => e.id === id);
+    return ev ? buildEventCalendarData(ev) : null;
+  }
 
   // "June 8, 2026" + "June 11, 2026" → "June 8–11, 2026"
   // "June 28, 2026" + "July 2, 2026" → "June 28 – July 2, 2026"
@@ -290,9 +304,10 @@ async function submitSubscribe() {
           <span><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${ev.location.split(',')[0]}</span>
         </div>
         <p>${(ev.description||'').length > 120 ? ev.description.slice(0,120)+'…' : ev.description}</p>
-        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <button class="btn btn-ghost btn-sm" onclick="openEventDetail(${ev.id})">More Info</button>
           ${ev.rsvpEnabled ? `<button class="btn btn-primary btn-sm" onclick="openEventDetail(${ev.id}, true)">RSVP</button>` : ''}
+          ${calendarButtonHtml('event', ev.id)}
         </div>
       </div>
     </article>`;
@@ -391,6 +406,9 @@ async function submitSubscribe() {
       <span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${ev.time}</span>
       <span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${ev.location}</span>`;
 
+    // Add to Calendar
+    document.getElementById('evDetailCalendar').innerHTML = calendarButtonHtml('event', ev.id);
+
     // Description
     document.getElementById('evDetailDesc').textContent = ev.description;
 
@@ -459,6 +477,7 @@ async function submitSubscribe() {
       <div id="evDetailTags" style="margin-bottom:10px;"></div>
       <h2 id="evDetailTitle"></h2>
       <div class="ev-modal-meta" id="evDetailMeta"></div>
+      <div id="evDetailCalendar" style="margin-bottom:18px;"></div>
       <p class="ev-modal-desc" id="evDetailDesc"></p>
 
       <!-- RSVP Section (shown only when rsvpEnabled) -->
