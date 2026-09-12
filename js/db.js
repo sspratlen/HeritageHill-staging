@@ -1234,8 +1234,15 @@ window.SupaDB = {
         if (sum > 0) updates.push({ id: row.id, small_group_count: sum });
       }
       if (!updates.length) return { success: true, updated: 0 };
-      const { error: upErr } = await db().from('attendance').upsert(updates, { onConflict: 'id' });
-      if (upErr) throw upErr;
+      // Plain per-row updates, not .upsert() -- these rows always already
+      // exist (never inserting), and .upsert() builds a real INSERT
+      // statement under the hood, which fails NOT NULL constraints (like
+      // service_date) on columns this partial payload doesn't include.
+      const results = await Promise.all(
+        updates.map(u => db().from('attendance').update({ small_group_count: u.small_group_count }).eq('id', u.id))
+      );
+      const failed = results.find(r => r.error);
+      if (failed) throw failed.error;
       return { success: true, updated: updates.length };
     } catch(e) { console.error('[SupaDB] adminRecomputeSmallGroupCounts:', e.message); return { error: e.message }; }
   },
