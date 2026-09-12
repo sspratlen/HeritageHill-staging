@@ -1209,6 +1209,36 @@ window.SupaDB = {
   },
 
 /* ── Small Group Attendance ─────────────────────────────── */
+  // Recomputes every attendance row's small_group_count from group_attendance
+  // (same 7-day-window-ending-on-Sunday logic the Attendance Analytics chart
+  // uses) and persists it. Called after every group attendance write so the
+  // stored value never drifts from what the chart would compute live.
+  // Only sets a row when the window has data (sum > 0) -- never clobbers an
+  // existing value with null just because this week has no group meetings.
+  async adminRecomputeSmallGroupCounts() {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const [{ data: attendanceRows, error: aErr }, { data: groupRows, error: gErr }] = await Promise.all([
+        db().from('attendance').select('id, service_date'),
+        db().from('group_attendance').select('meeting_date, headcount'),
+      ]);
+      if (aErr) throw aErr;
+      if (gErr) throw gErr;
+      const updates = [];
+      for (const row of attendanceRows || []) {
+        const end = new Date(row.service_date + 'T00:00:00');
+        const start = new Date(end.getTime() - 6 * 86400000);
+        const sum = (groupRows || [])
+          .filter(g => { const d = new Date(g.meeting_date + 'T00:00:00'); return d >= start && d <= end; })
+          .reduce((s, g) => s + (g.headcount || 0), 0);
+        if (sum > 0) updates.push({ id: row.id, small_group_count: sum });
+      }
+      if (!updates.length) return { success: true, updated: 0 };
+      const { error: upErr } = await db().from('attendance').upsert(updates, { onConflict: 'id' });
+      if (upErr) throw upErr;
+      return { success: true, updated: updates.length };
+    } catch(e) { console.error('[SupaDB] adminRecomputeSmallGroupCounts:', e.message); return { error: e.message }; }
+  },
   async adminGetAllGroupAttendance() {
     if (!db()) return [];
     const { data, error } = await db()
@@ -1236,6 +1266,7 @@ window.SupaDB = {
       notes:        notes || null,
     });
     if (error) return { error: error.message };
+    await this.adminRecomputeSmallGroupCounts();
     return { success: true };
   },
   async adminUpdateGroupAttendance(id, { meetingDate, headcount, notes }) {
@@ -1246,12 +1277,14 @@ window.SupaDB = {
       notes:        notes || null,
     }).eq('id', id);
     if (error) return { error: error.message };
+    await this.adminRecomputeSmallGroupCounts();
     return { success: true };
   },
   async adminDeleteGroupAttendance(id) {
     if (!db()) return { error: 'Not configured' };
     const { error } = await db().from('group_attendance').delete().eq('id', id);
     if (error) return { error: error.message };
+    await this.adminRecomputeSmallGroupCounts();
     return { success: true };
   },
 
