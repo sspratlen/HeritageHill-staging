@@ -1608,6 +1608,10 @@
             <input id="itmNote" type="text" placeholder="Admin note…" />
           </div>
         </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field checkbox"><input type="checkbox" id="itmTrained" onchange="document.getElementById('itmTrainedAtRow').style.display=this.checked?'':'none';" /><label for="itmTrained">Trained for this team</label></div>
+          <div class="field" id="itmTrainedAtRow" style="display:none;"><label>Trained on</label><input id="itmTrainedAt" type="date" /></div>
+        </div>
         <div id="itmError" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:.875rem;color:#b91c1c;margin-bottom:12px;"></div>
         <button id="itmSaveBtn" class="btn btn-primary btn-sm" onclick="saveImpactTeamMember()">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2173,6 +2177,19 @@
     <div class="modal-header"><h3>Confirm Delete</h3><button class="modal-close" onclick="closeDeleteModal()">✕</button></div>
     <div class="modal-body"><p>Are you sure you want to delete <strong id="deleteItemName"></strong>? This cannot be undone.</p></div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button><button class="btn btn-danger" onclick="confirmDelete()">Delete</button></div>
+  </div>
+</div>
+
+<!-- SET BAPTISM DATE MODAL -->
+<div class="modal-overlay" id="baptismModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header"><h3>Set Baptism Date</h3><button class="modal-close" onclick="closeBaptismModal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="baptismPersonId" />
+      <p style="margin-bottom:14px;">Baptism date for <strong id="baptismPersonName"></strong>:</p>
+      <div class="field"><label>Date</label><input type="date" id="baptismDate" /></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeBaptismModal()">Cancel</button><button class="btn btn-primary" onclick="saveBaptismDate()">Save</button></div>
   </div>
 </div>
 
@@ -2834,7 +2851,7 @@ async function renderImpactTeamRoster() {
     <h4 style="font-size:.95rem;font-weight:700;margin-bottom:12px;">Current Members (${members.length})</h4>
     <div class="table-wrap" style="margin:0;">
       <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Note</th><th>Joined</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Trained</th><th>Note</th><th>Joined</th><th></th></tr></thead>
         <tbody>
           ${members.map(m => `
             <tr>
@@ -2842,6 +2859,7 @@ async function renderImpactTeamRoster() {
               <td><a href="mailto:${escapeHtml(m.email)}" style="color:var(--primary);">${escapeHtml(m.email)}</a></td>
               <td>${escapeHtml(m.phone || '—')}</td>
               <td>${m.role==='leader'?'<span class="badge badge-amber">Leader</span>':'<span class="badge badge-blue">Member</span>'}</td>
+              <td style="font-size:.82rem;">${m.trained?`<span class="badge badge-green">✓${m.trainedAt?' '+new Date(m.trainedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</span>`:'<span class="badge badge-gray">Not yet</span>'}</td>
               <td style="font-size:.82rem;color:var(--text-muted);">${escapeHtml(m.notes || '—')}</td>
               <td style="font-size:.82rem;color:var(--text-muted);">${new Date(m.joinedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
               <td style="white-space:nowrap;">
@@ -2862,6 +2880,9 @@ function editImpactTeamMember(membershipId) {
   document.getElementById('itmPhone').value = m.phone || '';
   document.getElementById('itmRole').value = m.role || 'member';
   document.getElementById('itmNote').value = m.notes || '';
+  document.getElementById('itmTrained').checked = !!m.trained;
+  document.getElementById('itmTrainedAt').value = m.trainedAt || '';
+  document.getElementById('itmTrainedAtRow').style.display = m.trained ? '' : 'none';
   document.getElementById('itmError').style.display = 'none';
   document.getElementById('itmFormTitle').textContent = 'Edit Member';
   document.getElementById('itmSaveBtn').innerHTML = 'Save Changes';
@@ -2875,6 +2896,9 @@ function cancelEditImpactTeamMember() {
   document.getElementById('itmPhone').value = '';
   document.getElementById('itmRole').value = 'member';
   document.getElementById('itmNote').value = '';
+  document.getElementById('itmTrained').checked = false;
+  document.getElementById('itmTrainedAt').value = '';
+  document.getElementById('itmTrainedAtRow').style.display = 'none';
   document.getElementById('itmError').style.display = 'none';
   document.getElementById('itmFormTitle').textContent = 'Add a Member';
   document.getElementById('itmSaveBtn').innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Team';
@@ -2886,6 +2910,8 @@ async function saveImpactTeamMember() {
   const phone = document.getElementById('itmPhone').value.trim();
   const role  = document.getElementById('itmRole').value;
   const note  = document.getElementById('itmNote').value.trim();
+  const trained = document.getElementById('itmTrained').checked;
+  const trainedAt = document.getElementById('itmTrainedAt').value || null;
   const errEl = document.getElementById('itmError');
   errEl.style.display = 'none';
 
@@ -2898,7 +2924,7 @@ async function saveImpactTeamMember() {
   if (!team) return;
 
   if (_editingTeamMembershipId) {
-    const result = await SupaDB.adminUpdateImpactTeamMember(_editingTeamMembershipId, { name, email, phone, role, notes: note });
+    const result = await SupaDB.adminUpdateImpactTeamMember(_editingTeamMembershipId, { name, email, phone, role, notes: note, trained, trainedAt });
     if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
     showToast(`✓ ${name} updated`);
     cancelEditImpactTeamMember();
@@ -2908,7 +2934,7 @@ async function saveImpactTeamMember() {
   }
 
   const result = await SupaDB.adminAddImpactTeamMember({
-    teamId: team.id, name, email, phone, role, notes: note,
+    teamId: team.id, name, email, phone, role, notes: note, trained, trainedAt,
   });
 
   if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
@@ -2918,6 +2944,9 @@ async function saveImpactTeamMember() {
   document.getElementById('itmPhone').value = '';
   document.getElementById('itmRole').value = 'member';
   document.getElementById('itmNote').value = '';
+  document.getElementById('itmTrained').checked = false;
+  document.getElementById('itmTrainedAt').value = '';
+  document.getElementById('itmTrainedAtRow').style.display = 'none';
   showToast(`✓ ${name} added to ${team.name}`);
   await renderImpactTeamRoster();
   await renderImpactTeamsTable();
@@ -2932,9 +2961,10 @@ async function removeImpactTeamMember(membershipId) {
 function exportImpactTeamRosterCsv() {
   if (!_rosterTeamMembers.length) { showToast('No members to export.', true); return; }
   const team = _cachedImpactTeams.find(t => t.id === _rosterTeamId);
-  const headers = ['Name', 'Email', 'Phone', 'Role', 'Note', 'Joined'];
+  const headers = ['Name', 'Email', 'Phone', 'Role', 'Trained', 'Note', 'Joined'];
   const rows = _rosterTeamMembers.map(m => [
-    m.name, m.email, m.phone || '', m.role || 'member', m.notes || '',
+    m.name, m.email, m.phone || '', m.role || 'member',
+    m.trained ? (m.trainedAt || 'Yes') : 'No', m.notes || '',
     m.joinedAt ? new Date(m.joinedAt + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
   ]);
   const csv = [headers, ...rows].map(r =>
@@ -5768,7 +5798,7 @@ function escapeHtml(s) {
   }[c]));
 }
 
-let _pplProfiles = [], _pplLatest = {}, _pplGifts = []; // _pplLatest[userId] = {disc, gifts}
+let _pplProfiles = [], _pplLatest = {}, _pplGifts = [], _pplBaptized = {}; // _pplLatest[userId] = {disc, gifts}; _pplBaptized[personId] = achievedAt
 
 function latestByUser(attempts) {
   const map = {};
@@ -6002,12 +6032,15 @@ async function bulkRegisterLeadersAttendees() {
 }
 
 async function renderPeoplePanel() {
-  const [profiles, attempts, groups, content] = await Promise.all([
+  const [profiles, attempts, groups, content, baptisms] = await Promise.all([
     SupaDB.adminGetAllMemberProfiles(), SupaDB.getVisibleAttempts(),
     SupaDB.adminGetAllGroups(), SupaDB.getAssessmentContent(),
+    SupaDB.adminGetMilestonesByType('baptized'),
   ]);
   _pplProfiles = profiles; _pplLatest = latestByUser(attempts);
   window._pplGroups = groups;
+  _pplBaptized = {};
+  baptisms.forEach(m => { _pplBaptized[m.personId] = m.achievedAt; });
 
   const pending = profiles.filter(p => p.status === 'pending');
   const badge = document.getElementById('peopleBadge');
@@ -6063,19 +6096,41 @@ function memberTable(rows) {
   if (!rows.length) return '<p style="color:var(--text-muted); padding:20px;">No members match.</p>';
   const isAdmin = window._userRole === 'admin';
   return `<table><thead><tr>
-    <th>Name</th><th>Group</th><th>Personality</th><th>Top Gifts</th><th>Last Test</th><th></th>
+    <th>Name</th><th>Group</th><th>Baptized</th><th>Personality</th><th>Top Gifts</th><th>Last Test</th><th></th>
   </tr></thead><tbody>${rows.map(p => {
     const d = (_pplLatest[p.userId] || {}).disc, g = (_pplLatest[p.userId] || {}).gifts;
     const last = [d, g].filter(Boolean).map(a => a.completedAt).sort().pop();
+    const baptizedAt = p.personId ? _pplBaptized[p.personId] : null;
     return `<tr>
       <td><strong>${escapeHtml(p.name)}</strong><br><span style="font-size:.8rem; color:var(--text-muted);">${escapeHtml(p.email)}</span></td>
       <td>${escapeHtml(groupName(p.groupId))}</td>
+      <td>${baptizedAt
+        ? `<span class="badge badge-green">✓ ${new Date(baptizedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>`
+        : (isAdmin && p.personId ? `<button class="btn btn-ghost btn-sm" onclick="openBaptismModal('${p.personId}','${escapeHtml(p.name).replace(/'/g,"\\'")}')">Set Date</button>` : '<span class="badge badge-gray">Not yet</span>')}</td>
       <td>${d ? escapeHtml(d.result) : '—'}</td>
       <td>${g ? giftNames(g).slice(0,3).map(escapeHtml).join(', ') : '—'}</td>
       <td>${last ? new Date(last).toLocaleDateString() : '—'}</td>
       <td>${isAdmin ? `<a class="btn btn-secondary btn-sm" href="member-dashboard.html?id=${encodeURIComponent(p.userId)}">View</a>` : ''}</td>
     </tr>`;
   }).join('')}</tbody></table>`;
+}
+
+function openBaptismModal(personId, name) {
+  document.getElementById('baptismPersonId').value = personId;
+  document.getElementById('baptismPersonName').textContent = name;
+  document.getElementById('baptismDate').value = '';
+  document.getElementById('baptismModal').classList.add('open');
+}
+function closeBaptismModal() { document.getElementById('baptismModal').classList.remove('open'); }
+async function saveBaptismDate() {
+  const personId = document.getElementById('baptismPersonId').value;
+  const date = document.getElementById('baptismDate').value;
+  if (!date) { showToast('Pick a date first.', true); return; }
+  const result = await SupaDB.adminSetBaptized(personId, date);
+  if (result?.error) { showToast(result.error, true); return; }
+  closeBaptismModal();
+  showToast('Baptism date saved');
+  renderPeoplePanel();
 }
 
 async function approveMember(userId) {

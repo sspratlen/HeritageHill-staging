@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/portal.css" />
+  <link rel="stylesheet" href="../css/journey-pipeline.css" />
 </head>
 <body>
 
@@ -84,15 +85,9 @@
   </div>
 
   <div class="portal-card">
-    <h2>Growth Track</h2>
-    <p class="sub">Your progress through Plant, Discover, and Grow.</p>
-    <div id="gtProgressBox"></div>
-  </div>
-
-  <div class="portal-card">
-    <h2>Small Group History</h2>
-    <p class="sub">Groups you've been part of at Heritage Hill.</p>
-    <div id="groupHistoryBox"></div>
+    <h2>My Journey</h2>
+    <p class="sub">Found by God, filled by the Spirit, freed to live like Jesus, forged for mission.</p>
+    <div id="journeyBox"></div>
   </div>
 
   <div class="portal-card">
@@ -147,16 +142,27 @@ let _profile = null, _content = null;
   sel.value = _profile.groupId || '';
 
   // Results
-  const [attempts, content, gtRegs, memberships, semesters] = await Promise.all([
+  const [attempts, content, gtRegs, memberships, semesters, teamMemberships, teams, milestones] = await Promise.all([
     SupaDB.getMyAttempts(), SupaDB.getAssessmentContent(),
     SupaDB.getGrowthTrackRegistrationsForUser(user.id), SupaDB.getGroupMembershipsForUser(user.id),
     SupaDB.getSemesters(),
+    SupaDB.getImpactTeamMembershipsForUser(user.id), SupaDB.getPublishedImpactTeams(),
+    SupaDB.getMyMilestones(_profile.personId),
   ]);
   _content = Assessments.splitContent(content);
-  renderResult('disc',  attempts.filter(a => a.assessmentType === 'disc'));
-  renderResult('gifts', attempts.filter(a => a.assessmentType === 'gifts'));
-  MemberDashboard.renderGrowthTrackProgress(document.getElementById('gtProgressBox'), gtRegs);
-  MemberDashboard.renderGroupHistory(document.getElementById('groupHistoryBox'), memberships, groups, _profile.email, semesters);
+  const discAttempts = attempts.filter(a => a.assessmentType === 'disc');
+  const giftsAttempts = attempts.filter(a => a.assessmentType === 'gifts');
+  renderResult('disc',  discAttempts);
+  renderResult('gifts', giftsAttempts);
+
+  const baptism = milestones.find(m => m.milestone === 'baptized');
+  MemberDashboard.renderJourneyPipeline(document.getElementById('journeyBox'), {
+    memberSince: _profile.memberSince, baptizedAt: baptism ? baptism.achievedAt : null,
+    groupMemberships: memberships, groups, email: _profile.email,
+    gtRegistrations: gtRegs,
+    discAttempt: discAttempts[0], giftsAttempt: giftsAttempts[0],
+    teamMemberships, teams,
+  });
 })();
 
 function escapeHtml(s) {

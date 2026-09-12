@@ -143,6 +143,7 @@ function impactTeamMembershipFromDb(r) {
     id: r.id, teamId: r.team_id, userId: r.user_id, name: r.name,
     email: r.email, phone: r.phone || '', role: r.role || 'member',
     joinedAt: r.joined_at, leftAt: r.left_at, notes: r.notes || '',
+    trained: !!r.trained, trainedAt: r.trained_at || null,
   };
 }
 
@@ -245,8 +246,12 @@ function memberProfileFromDb(r) {
     userId: r.user_id, name: r.name, email: r.email, phone: r.phone || '',
     groupId: r.group_id, yearsAttending: r.years_attending || '',
     status: r.status, shareWithLeader: !!r.share_with_leader, createdAt: r.created_at,
-    avatarUrl: r.avatar_url || null,
+    avatarUrl: r.avatar_url || null, personId: r.person_id || null,
+    memberSince: r.member_since || null,
   };
+}
+function personMilestoneFromDb(r) {
+  return { id: r.id, personId: r.person_id, milestone: r.milestone, achievedAt: r.achieved_at };
 }
 function attemptFromDb(r) {
   return {
@@ -388,6 +393,18 @@ window.SupaDB = {
       const { error } = await db().rpc('record_milestone', { p_person_id: personId, p_milestone: milestone });
       if (error) throw error;
     } catch(e) { console.warn('[SupaDB] recordMilestone failed (non-critical):', e.message); }
+  },
+
+  /* ── People backbone: link a person's row to the currently signed-in
+     auth account (only succeeds server-side if the emails match and the
+     row isn't linked yet) -- lets a member's own RLS-scoped reads (their
+     milestones, their people row) actually find their data. ── */
+  async linkMyPersonId(personId) {
+    if (!db() || !personId) return;
+    try {
+      const { error } = await db().rpc('link_person_user_id', { p_person_id: personId });
+      if (error) throw error;
+    } catch(e) { console.warn('[SupaDB] linkMyPersonId failed (non-critical):', e.message); }
   },
 
   /* ── ADMIN: Journey funnel — count of people at each milestone ── */
@@ -563,6 +580,7 @@ window.SupaDB = {
         team_id: m.teamId, name: m.name, email: m.email, phone: m.phone || '',
         role: m.role === 'leader' ? 'leader' : 'member', notes: m.notes || '',
         user_id: match ? match.userId : null, person_id: personId,
+        trained: !!m.trained, trained_at: m.trained ? (m.trainedAt || null) : null,
       });
       if (error) throw error;
       if (personId) this.recordMilestone(personId, m.role === 'leader' ? 'impact_team_leader' : 'impact_team_member');
@@ -573,14 +591,17 @@ window.SupaDB = {
       console.error('[SupaDB] adminAddImpactTeamMember:', e.message); return { error: e.message };
     }
   },
-  async adminUpdateImpactTeamMember(id, { name, email, phone, role, notes }) {
+  async adminUpdateImpactTeamMember(id, { name, email, phone, role, notes, trained, trainedAt }) {
     if (!db()) return { error: 'Not configured' };
     try {
       const roleVal = role === 'leader' ? 'leader' : 'member';
       const { data: existing } = await db().from('impact_team_memberships')
         .select('person_id, role').eq('id', id).maybeSingle();
       const { error } = await db().from('impact_team_memberships')
-        .update({ name, email, phone: phone || '', role: roleVal, notes: notes || '' }).eq('id', id);
+        .update({
+          name, email, phone: phone || '', role: roleVal, notes: notes || '',
+          trained: !!trained, trained_at: trained ? (trainedAt || null) : null,
+        }).eq('id', id);
       if (error) throw error;
       if (existing && existing.person_id && roleVal !== existing.role) {
         this.recordMilestone(existing.person_id, roleVal === 'leader' ? 'impact_team_leader' : 'impact_team_member');
@@ -606,6 +627,48 @@ window.SupaDB = {
       if (error) throw error;
       return (data || []).map(impactTeamMembershipFromDb);
     } catch(e) { console.error('[SupaDB] getImpactTeamMembershipsForUser:', e.message); return []; }
+  },
+  async getPublishedImpactTeams() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_teams').select('*')
+        .eq('published', true).order('name');
+      if (error) throw error;
+      return (data || []).map(impactTeamFromDb);
+    } catch(e) { console.error('[SupaDB] getPublishedImpactTeams:', e.message); return []; }
+  },
+
+  /* ── People backbone: a person's own milestone history (RLS-scoped
+     to their own person_id; admins can pass any personId). ── */
+  async getMyMilestones(personId) {
+    if (!db() || !personId) return [];
+    try {
+      const { data, error } = await db().from('person_milestones')
+        .select('*').eq('person_id', personId).order('achieved_at');
+      if (error) throw error;
+      return (data || []).map(personMilestoneFromDb);
+    } catch(e) { console.error('[SupaDB] getMyMilestones:', e.message); return []; }
+  },
+  async adminGetMilestonesByType(milestone) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('person_milestones').select('*').eq('milestone', milestone);
+      if (error) throw error;
+      return (data || []).map(personMilestoneFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetMilestonesByType:', e.message); return []; }
+  },
+  // Baptism has no dedicated column -- it's a person_milestones row like any
+  // other, just settable to a specific historical date (unlike
+  // recordMilestone, which is fire-and-forget "now"). Admin-only (RLS).
+  async adminSetBaptized(personId, baptizedAt) {
+    if (!db() || !personId || !baptizedAt) return { error: 'Person and date are required' };
+    try {
+      const { error } = await db().from('person_milestones')
+        .upsert({ person_id: personId, milestone: 'baptized', achieved_at: baptizedAt },
+          { onConflict: 'person_id,milestone' });
+      if (error) throw error;
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminSetBaptized:', e.message); return { error: e.message }; }
   },
 
   /* ── ADMIN: Growth Track ─────────────────────────────────── */
@@ -1496,6 +1559,7 @@ window.SupaDB = {
     const name = m.name || user.email.split('@')[0];
     const email = user.email.toLowerCase();
     const personId = await this.upsertPerson({ name, email, phone: m.phone });
+    if (personId) this.linkMyPersonId(personId);
     const { error } = await db().from('member_profiles').insert({
       user_id: user.id,
       name, email,

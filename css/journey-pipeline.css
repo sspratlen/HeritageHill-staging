@@ -1,0 +1,90 @@
+/* Heritage Hill — "My Journey" pipeline (Found / Filled / Freed / Forged).
+   Shared by admin/my-profile.html and admin/member-dashboard.html; relies
+   only on --primary/--border/--text-muted/--radius/--shadow/--success,
+   which both host pages already define on :root. */
+
+.journey-pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .journey-pipeline { grid-template-columns: 1fr; }
+}
+
+.jp-stage { display: flex; flex-direction: column; gap: 10px; }
+.jp-stage-head { display: flex; align-items: baseline; gap: 8px; }
+.jp-stage-name { font-weight: 700; font-size: 1rem; }
+.jp-stage-verse { font-size: .78rem; color: var(--text-muted); font-style: italic; }
+
+.jp-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.jp-label {
+  font-size: .68rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.jp-field {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  font-size: .87rem;
+}
+.jp-field:first-of-type { border-top: none; }
+.jp-field .jp-val { font-size: .78rem; color: var(--text-muted); white-space: nowrap; }
+.jp-field .jp-yes { color: var(--success); font-weight: 700; }
+.jp-field .jp-no { color: var(--text-muted); opacity: .6; }
+
+.jp-roster { display: flex; flex-direction: column; }
+.jp-roster-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+.jp-roster-row:first-child { border-top: none; }
+.jp-roster-name { font-size: .87rem; }
+.jp-roster-sub { font-size: .74rem; color: var(--text-muted); }
+
+.jp-role-tag {
+  font-size: .66rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.jp-role-tag.jp-leads { background: rgba(188,122,30,.12); color: var(--primary); }
+.jp-role-tag.jp-member { background: rgba(21,92,162,.1); color: #155CA2; }
+
+.jp-empty { font-size: .82rem; color: var(--text-muted); }
+
+.jp-pill {
+  display: inline-block;
+  font-size: .7rem;
+  letter-spacing: .02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(22,163,74,.1);
+  color: var(--success);
+  font-weight: 700;
+  width: fit-content;
+}

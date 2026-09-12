@@ -172,4 +172,115 @@ const MemberDashboard = {
       <div style="margin:14px 0;">${rows}</div>
       <p style="color:var(--text-muted);font-size:.82rem;">Taken ${new Date(attempt.completedAt).toLocaleDateString()}${attemptCount > 1 ? ` · ${attemptCount} attempts` : ''}</p>`;
   },
+
+  // Renders the 4-stage Found/Filled/Freed/Forged journey pipeline into
+  // containerEl, using css/journey-pipeline.css (must be linked by the
+  // host page). Every field is real data -- no placeholder content.
+  //
+  // opts:
+  //   memberSince, baptizedAt: date strings or null/undefined
+  //   groupMemberships, groups, email: same shape as renderGroupHistory,
+  //     used to build the Filled roster (member + led rows)
+  //   gtRegistrations: result of getGrowthTrackRegistrationsForUser
+  //   discAttempt, giftsAttempt: latest attempt or falsy
+  //   teamMemberships, teams: same shape as groupMemberships/groups, for
+  //     the Forged roster (member + led rows), each row also showing
+  //     whether that person is trained for that team
+  renderJourneyPipeline(containerEl, opts) {
+    const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const yesNo = (isYes, dateStr) => isYes
+      ? `<span class="jp-yes">✓${dateStr ? ' · ' + this.escapeHtml(fmt(dateStr)) : ''}</span>`
+      : `<span class="jp-no">✗</span>`;
+
+    // ── Filled: small group roster (leader + member rows), same merge
+    // logic as renderGroupHistory.
+    const groups = opts.groups || [];
+    const memberships = opts.groupMemberships || [];
+    const email = opts.email || '';
+    const led = (email
+      ? groups.filter(g => g.leaderEmail && g.leaderEmail.toLowerCase() === email.toLowerCase())
+      : []
+    ).filter(g => !memberships.some(m => String(m.groupId) === String(g.id)))
+     .map(g => ({ name: g.name, role: 'leader' }));
+    const groupRows = memberships
+      .filter(m => !m.leftAt)
+      .map(m => ({ name: (groups.find(g => String(g.id) === String(m.groupId)) || {}).name || 'Unknown Group', role: 'member' }))
+      .concat(led);
+
+    // ── Forged: impact team roster (leader + member rows), same shape.
+    const teams = opts.teams || [];
+    const teamMemberships = (opts.teamMemberships || []).filter(m => !m.leftAt);
+    const teamRows = teamMemberships.map(m => ({
+      name: (teams.find(t => String(t.id) === String(m.teamId)) || {}).name || 'Unknown Team',
+      role: m.role === 'leader' ? 'leader' : 'member',
+      trained: m.trained, trainedAt: m.trainedAt,
+    }));
+
+    // ── Freed: Growth Track history, in fixed part order.
+    const byPart = {};
+    (opts.gtRegistrations || []).forEach(r => {
+      const existing = byPart[r.part];
+      if (!existing || (r.attended && !existing.attended)) byPart[r.part] = r;
+    });
+    const gtRows = this.GT_ORDER.map(part => {
+      const r = byPart[part];
+      const label = this.GT_LABELS[part];
+      if (!r) return `<div class="jp-roster-row"><span class="jp-roster-name">${label}</span><span class="jp-no">Not registered</span></div>`;
+      if (r.attended) return `<div class="jp-roster-row"><span class="jp-roster-name">${label}</span>${yesNo(true, r.sessionDate)}</div>`;
+      return `<div class="jp-roster-row"><span class="jp-roster-name">${label}</span><span class="jp-val">Registered${r.sessionDate ? ' · ' + this.escapeHtml(fmt(r.sessionDate)) : ''}</span></div>`;
+    }).join('');
+    const plantAttended = byPart.about_us && byPart.about_us.attended;
+
+    const rosterOrEmpty = (rows, emptyText, renderRow) =>
+      rows.length ? `<div class="jp-roster">${rows.map(renderRow).join('')}</div>` : `<p class="jp-empty">${emptyText}</p>`;
+
+    containerEl.innerHTML = `
+      <div class="journey-pipeline">
+        <div class="jp-stage">
+          <div class="jp-stage-head"><span class="jp-stage-name">Found</span><span class="jp-stage-verse">by God</span></div>
+          <div class="jp-card">
+            <div class="jp-label">Attendance</div>
+            <div class="jp-field"><span>Baptism</span>${yesNo(!!opts.baptizedAt, opts.baptizedAt)}</div>
+            <div class="jp-field"><span>Member</span>${yesNo(!!opts.memberSince, opts.memberSince)}</div>
+          </div>
+        </div>
+
+        <div class="jp-stage">
+          <div class="jp-stage-head"><span class="jp-stage-name">Filled</span><span class="jp-stage-verse">by the Spirit</span></div>
+          <div class="jp-card">
+            <div class="jp-label">Small groups</div>
+            ${rosterOrEmpty(groupRows, 'Not in a small group yet.', g => `
+              <div class="jp-roster-row">
+                <span class="jp-roster-name">${this.escapeHtml(g.name)}</span>
+                <span class="jp-role-tag ${g.role === 'leader' ? 'jp-leads' : 'jp-member'}">${g.role === 'leader' ? 'Leads' : 'Member'}</span>
+              </div>`)}
+          </div>
+        </div>
+
+        <div class="jp-stage">
+          <div class="jp-stage-head"><span class="jp-stage-name">Freed</span><span class="jp-stage-verse">to live like Jesus</span></div>
+          <div class="jp-card">
+            <div class="jp-label">Growth Track history</div>
+            <div class="jp-roster">${gtRows}</div>
+            ${plantAttended ? '<span class="jp-pill">Plant attended → membership</span>' : ''}
+            <div class="jp-label" style="margin-top:2px;">Assessments</div>
+            <div class="jp-field"><span>Spiritual gifts</span>${yesNo(!!opts.giftsAttempt, opts.giftsAttempt && opts.giftsAttempt.completedAt)}</div>
+            <div class="jp-field"><span>DISC profile</span>${yesNo(!!opts.discAttempt, opts.discAttempt && opts.discAttempt.completedAt)}</div>
+          </div>
+        </div>
+
+        <div class="jp-stage">
+          <div class="jp-stage-head"><span class="jp-stage-name">Forged</span><span class="jp-stage-verse">for mission</span></div>
+          <div class="jp-card">
+            <div class="jp-label">Impact teams</div>
+            ${rosterOrEmpty(teamRows, 'Not on an impact team yet.', t => `
+              <div class="jp-roster-row">
+                <span class="jp-roster-name">${this.escapeHtml(t.name)}</span>
+                <span class="jp-role-tag ${t.role === 'leader' ? 'jp-leads' : 'jp-member'}">${t.role === 'leader' ? 'Leads' : 'Member'}</span>
+              </div>
+              <div class="jp-roster-sub" style="padding:0 0 6px;">${t.trained ? `✓ Trained${t.trainedAt ? ' · ' + this.escapeHtml(fmt(t.trainedAt)) : ''}` : 'Not yet trained'}</div>`)}
+          </div>
+        </div>
+      </div>`;
+  },
 };
