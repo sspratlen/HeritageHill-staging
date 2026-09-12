@@ -5840,7 +5840,7 @@ function escapeHtml(s) {
   }[c]));
 }
 
-let _pplProfiles = [], _pplLatest = {}, _pplGifts = [], _pplBaptized = {}; // _pplLatest[userId] = {disc, gifts}; _pplBaptized[personId] = achievedAt
+let _pplProfiles = [], _pplLatest = {}, _pplGifts = []; // _pplLatest[userId] = {disc, gifts}
 
 function latestByUser(attempts) {
   const map = {};
@@ -6074,15 +6074,12 @@ async function bulkRegisterLeadersAttendees() {
 }
 
 async function renderPeoplePanel() {
-  const [profiles, attempts, groups, content, baptisms] = await Promise.all([
+  const [profiles, attempts, groups, content] = await Promise.all([
     SupaDB.adminGetAllMemberProfiles(), SupaDB.getVisibleAttempts(),
     SupaDB.adminGetAllGroups(), SupaDB.getAssessmentContent(),
-    SupaDB.adminGetMilestonesByType('baptized'),
   ]);
   _pplProfiles = profiles; _pplLatest = latestByUser(attempts);
   window._pplGroups = groups;
-  _pplBaptized = {};
-  baptisms.forEach(m => { _pplBaptized[m.personId] = m.achievedAt; });
 
   const pending = profiles.filter(p => p.status === 'pending');
   const badge = document.getElementById('peopleBadge');
@@ -6138,17 +6135,13 @@ function memberTable(rows) {
   if (!rows.length) return '<p style="color:var(--text-muted); padding:20px;">No members match.</p>';
   const isAdmin = window._userRole === 'admin';
   return `<table><thead><tr>
-    <th>Name</th><th>Group</th><th>Baptized</th><th>Personality</th><th>Top Gifts</th><th>Last Test</th><th></th>
+    <th>Name</th><th>Group</th><th>Personality</th><th>Top Gifts</th><th>Last Test</th><th></th>
   </tr></thead><tbody>${rows.map(p => {
     const d = (_pplLatest[p.userId] || {}).disc, g = (_pplLatest[p.userId] || {}).gifts;
     const last = [d, g].filter(Boolean).map(a => a.completedAt).sort().pop();
-    const baptizedAt = p.personId ? _pplBaptized[p.personId] : null;
     return `<tr>
       <td><strong>${escapeHtml(p.name)}</strong><br><span style="font-size:.8rem; color:var(--text-muted);">${escapeHtml(p.email)}</span></td>
       <td>${escapeHtml(groupName(p.groupId))}</td>
-      <td>${baptizedAt
-        ? `<span class="badge badge-green">✓ ${new Date(baptizedAt.slice(0,10)+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>`
-        : (isAdmin && p.personId ? `<button class="btn btn-ghost btn-sm" onclick="openBaptismModal({name:'${escapeHtml(p.name).replace(/'/g,"\\'")}',email:'${escapeHtml(p.email).replace(/'/g,"\\'")}',phone:'${escapeHtml(p.phone||'').replace(/'/g,"\\'")}'})">Set Date</button>` : '<span class="badge badge-gray">Not yet</span>')}</td>
       <td>${d ? escapeHtml(d.result) : '—'}</td>
       <td>${g ? giftNames(g).slice(0,3).map(escapeHtml).join(', ') : '—'}</td>
       <td>${last ? new Date(last).toLocaleDateString() : '—'}</td>
