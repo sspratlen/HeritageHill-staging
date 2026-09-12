@@ -187,7 +187,11 @@ const MemberDashboard = {
   //     the Forged roster (member + led rows), each row also showing
   //     whether that person is trained for that team
   renderJourneyPipeline(containerEl, opts) {
-    const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    // Some dates here are plain `date` columns ("2026-09-12") and some are
+    // `timestamptz` columns already rendered as full ISO strings by
+    // supabase-js -- appending 'T00:00:00' to the latter breaks Date
+    // parsing, so only add it when the string doesn't already carry a time.
+    const fmt = d => d ? new Date(d.includes('T') ? d : d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     const yesNo = (isYes, dateStr) => isYes
       ? `<span class="jp-yes">✓${dateStr ? ' · ' + this.escapeHtml(fmt(dateStr)) : ''}</span>`
       : `<span class="jp-no">✗</span>`;

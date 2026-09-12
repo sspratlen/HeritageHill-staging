@@ -6147,7 +6147,7 @@ function memberTable(rows) {
       <td><strong>${escapeHtml(p.name)}</strong><br><span style="font-size:.8rem; color:var(--text-muted);">${escapeHtml(p.email)}</span></td>
       <td>${escapeHtml(groupName(p.groupId))}</td>
       <td>${baptizedAt
-        ? `<span class="badge badge-green">✓ ${new Date(baptizedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>`
+        ? `<span class="badge badge-green">✓ ${new Date(baptizedAt.includes('T') ? baptizedAt : baptizedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>`
         : (isAdmin && p.personId ? `<button class="btn btn-ghost btn-sm" onclick="openBaptismModal({name:'${escapeHtml(p.name).replace(/'/g,"\\'")}',email:'${escapeHtml(p.email).replace(/'/g,"\\'")}',phone:'${escapeHtml(p.phone||'').replace(/'/g,"\\'")}'})">Set Date</button>` : '<span class="badge badge-gray">Not yet</span>')}</td>
       <td>${d ? escapeHtml(d.result) : '—'}</td>
       <td>${g ? giftNames(g).slice(0,3).map(escapeHtml).join(', ') : '—'}</td>
@@ -6168,7 +6168,7 @@ function openBaptismModal(opts) {
   document.getElementById('baptismName').value = opts.name || '';
   document.getElementById('baptismEmail').value = opts.email || '';
   document.getElementById('baptismPhone').value = opts.phone || '';
-  document.getElementById('baptismDate').value = opts.date || '';
+  document.getElementById('baptismDate').value = opts.date ? opts.date.slice(0, 10) : '';
   document.getElementById('baptismNotes').value = opts.notes || '';
   document.getElementById('baptismError').style.display = 'none';
   document.getElementById('baptismModal').classList.add('open');
@@ -6202,7 +6202,9 @@ async function renderBaptismTab() {
     SupaDB.adminGetAllBaptisms(), SupaDB.adminGetAllMemberProfiles(),
   ]);
   _baptisms = baptisms;
-  const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  // achieved_at is a timestamptz, already a full ISO string -- don't append
+  // another 'T00:00:00' onto it (that produced "Invalid Date").
+  const fmt = d => new Date(d.includes('T') ? d : d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const tbody = document.getElementById('baptismTable'), empty = document.getElementById('baptismEmpty');
   if (!baptisms.length) { tbody.innerHTML = ''; empty.style.display = ''; }
