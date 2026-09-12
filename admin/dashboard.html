@@ -206,6 +206,10 @@
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Members <span id="peopleBadge" style="display:none; background:#BC7A1E; color:#fff; border-radius:10px; font-size:.7rem; padding:1px 7px; margin-left:auto;">0</span>
     </a>
+    <a onclick="switchTab('baptism')" id="sideBaptism" data-tab="baptism">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 0 12 0"/><path d="M8 12V6a4 4 0 0 1 8 0v6"/><line x1="3" y1="20" x2="21" y2="20"/><circle cx="12" cy="4" r="1.5"/></svg>
+      Baptism
+    </a>
 
     <div class="nav-section" id="navSectionFilled">Filled <span class="nav-section-verse">by the Spirit</span></div>
     <a onclick="switchTab('groups')" id="sideGroups" data-tab="groups">
@@ -1219,6 +1223,29 @@
       <div id="peopleTableWrap"></div>
     </div>
 
+    <!-- BAPTISM -->
+    <div class="tab-panel" id="panelBaptism">
+      <div class="action-bar">
+        <h2>Baptism</h2>
+        <button class="btn btn-primary" onclick="openBaptismModal()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Record Baptism
+        </button>
+      </div>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <table><thead><tr><th>Name</th><th>Email</th><th>Date</th><th>Notes</th><th>Actions</th></tr></thead>
+        <tbody id="baptismTable"></tbody></table>
+        <div class="empty" id="baptismEmpty" style="display:none;">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 0 12 0"/><path d="M8 12V6a4 4 0 0 1 8 0v6"/><line x1="3" y1="20" x2="21" y2="20"/><circle cx="12" cy="4" r="1.5"/></svg>
+          <h3>No baptisms recorded yet</h3><p>Record your first baptism using the button above.</p>
+        </div>
+      </div>
+      <div class="table-wrap" style="padding:20px;">
+        <h3 style="font-size:.95rem;margin-bottom:4px;">Not Yet Baptized</h3>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:4px;">Approved members with no baptism on record.</p>
+        <div id="baptismNotYetBox"></div>
+      </div>
+    </div>
+
     <!-- MY GROUP (small group leader) -->
     <div class="tab-panel" id="panelMygroup">
       <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:14px;">
@@ -2187,16 +2214,23 @@
   </div>
 </div>
 
-<!-- SET BAPTISM DATE MODAL -->
+<!-- BAPTISM RECORD MODAL (used by both the Baptism tab and the People panel's quick action) -->
 <div class="modal-overlay" id="baptismModal">
-  <div class="modal" style="max-width:400px;">
-    <div class="modal-header"><h3>Set Baptism Date</h3><button class="modal-close" onclick="closeBaptismModal()">✕</button></div>
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header"><h3 id="baptismModalTitle">Record Baptism</h3><button class="modal-close" onclick="closeBaptismModal()">✕</button></div>
     <div class="modal-body">
-      <input type="hidden" id="baptismPersonId" />
-      <p style="margin-bottom:14px;">Baptism date for <strong id="baptismPersonName"></strong>:</p>
-      <div class="field"><label>Date</label><input type="date" id="baptismDate" /></div>
+      <div class="form-row">
+        <div class="field"><label>Name *</label><input type="text" id="baptismName" placeholder="Full name" /></div>
+        <div class="field"><label>Email *</label><input type="email" id="baptismEmail" placeholder="email@example.com" /></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Phone <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span></label><input type="tel" id="baptismPhone" placeholder="(402) 555-0100" /></div>
+        <div class="field"><label>Date *</label><input type="date" id="baptismDate" /></div>
+      </div>
+      <div class="form-row full"><div class="field"><label>Notes <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional — e.g. location, baptized by)</span></label><input type="text" id="baptismNotes" placeholder="e.g. Main Campus, baptized by Pastor Lee" /></div></div>
+      <p id="baptismError" style="color:var(--danger);font-size:.82rem;margin-top:4px;display:none;"></p>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeBaptismModal()">Cancel</button><button class="btn btn-primary" onclick="saveBaptismDate()">Save</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeBaptismModal()">Cancel</button><button class="btn btn-primary" onclick="saveBaptismRecord()">Save</button></div>
   </div>
 </div>
 
@@ -2210,7 +2244,7 @@
 <script>
 // Role-based access map
 const ROLE_TABS = {
-  admin:               ['people','groups','attendance','growthtrack','analytics','impactteams','events','signups','applications','subscribers','rsvps','prayer','retreat','sermons','email','settings','users'],
+  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','signups','applications','subscribers','rsvps','prayer','retreat','sermons','email','settings','users'],
   event_manager:       ['events','rsvps','sermons','email'],
   small_group_leader:  ['groups','signups','mygroup'],
 };
@@ -2289,7 +2323,7 @@ function applyRoleVisibility() {
   }
 })();
 
-const ALL_TABS = ['people','groups','attendance','mygroup','growthtrack','analytics','impactteams','events','signups','applications','subscribers','rsvps','prayer','retreat','sermons','email','settings','users'];
+const ALL_TABS = ['people','baptism','groups','attendance','mygroup','growthtrack','analytics','impactteams','events','signups','applications','subscribers','rsvps','prayer','retreat','sermons','email','settings','users'];
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
   document.getElementById('sidebarBackdrop').classList.toggle('open');
@@ -2312,7 +2346,7 @@ function switchTab(tab) {
   const c = tab[0].toUpperCase()+tab.slice(1);
   const p = document.getElementById('panel'+c), s = document.getElementById('side'+c);
   if(p) p.classList.add('active'); if(s) s.classList.add('active');
-  const titles = {events:'Events',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',rsvps:'Event RSVPs',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Members & Assessments',analytics:'Analytics',mygroup:'My Group',growthtrack:'Growth Track',impactteams:'Impact Teams'};
+  const titles = {events:'Events',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',rsvps:'Event RSVPs',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Members & Assessments',baptism:'Baptism',analytics:'Analytics',mygroup:'My Group',growthtrack:'Growth Track',impactteams:'Impact Teams'};
   document.getElementById('topbarTitle').textContent = titles[tab]||tab;
   if(tab==='events') renderEventsTable();
   else if(tab==='groups') renderGroupsTable();
@@ -2328,6 +2362,7 @@ function switchTab(tab) {
   else if(tab==='settings') { loadBannerSettings(); loadSaveDatesSettings(); loadSemesters(); }
   else if(tab==='users') renderUsersTable();
   else if(tab==='people')  renderPeoplePanel();
+  else if(tab==='baptism') renderBaptismTab();
   else if(tab==='analytics') renderAnalyticsTab();
   else if(tab==='mygroup') renderMyGroupPanel();
   else if(tab==='growthtrack') renderGrowthTrackTab();
@@ -6113,7 +6148,7 @@ function memberTable(rows) {
       <td>${escapeHtml(groupName(p.groupId))}</td>
       <td>${baptizedAt
         ? `<span class="badge badge-green">✓ ${new Date(baptizedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>`
-        : (isAdmin && p.personId ? `<button class="btn btn-ghost btn-sm" onclick="openBaptismModal('${p.personId}','${escapeHtml(p.name).replace(/'/g,"\\'")}')">Set Date</button>` : '<span class="badge badge-gray">Not yet</span>')}</td>
+        : (isAdmin && p.personId ? `<button class="btn btn-ghost btn-sm" onclick="openBaptismModal({name:'${escapeHtml(p.name).replace(/'/g,"\\'")}',email:'${escapeHtml(p.email).replace(/'/g,"\\'")}',phone:'${escapeHtml(p.phone||'').replace(/'/g,"\\'")}'})">Set Date</button>` : '<span class="badge badge-gray">Not yet</span>')}</td>
       <td>${d ? escapeHtml(d.result) : '—'}</td>
       <td>${g ? giftNames(g).slice(0,3).map(escapeHtml).join(', ') : '—'}</td>
       <td>${last ? new Date(last).toLocaleDateString() : '—'}</td>
@@ -6122,22 +6157,98 @@ function memberTable(rows) {
   }).join('')}</tbody></table>`;
 }
 
-function openBaptismModal(personId, name) {
-  document.getElementById('baptismPersonId').value = personId;
-  document.getElementById('baptismPersonName').textContent = name;
-  document.getElementById('baptismDate').value = '';
+// opts: { name, email, phone, date, notes } -- all optional prefill values.
+// Save always goes through SupaDB.adminAddBaptism, which finds-or-creates the
+// person by email and upserts their baptism row -- so this same modal serves
+// "add a new record", "record baptism for this not-yet-baptized member", and
+// "edit an existing record" without needing separate code paths.
+function openBaptismModal(opts) {
+  opts = opts || {};
+  document.getElementById('baptismModalTitle').textContent = opts.email ? 'Edit Baptism Record' : 'Record Baptism';
+  document.getElementById('baptismName').value = opts.name || '';
+  document.getElementById('baptismEmail').value = opts.email || '';
+  document.getElementById('baptismPhone').value = opts.phone || '';
+  document.getElementById('baptismDate').value = opts.date || '';
+  document.getElementById('baptismNotes').value = opts.notes || '';
+  document.getElementById('baptismError').style.display = 'none';
   document.getElementById('baptismModal').classList.add('open');
 }
 function closeBaptismModal() { document.getElementById('baptismModal').classList.remove('open'); }
-async function saveBaptismDate() {
-  const personId = document.getElementById('baptismPersonId').value;
+async function saveBaptismRecord() {
+  const name = document.getElementById('baptismName').value.trim();
+  const email = document.getElementById('baptismEmail').value.trim();
+  const phone = document.getElementById('baptismPhone').value.trim();
   const date = document.getElementById('baptismDate').value;
-  if (!date) { showToast('Pick a date first.', true); return; }
-  const result = await SupaDB.adminSetBaptized(personId, date);
-  if (result?.error) { showToast(result.error, true); return; }
+  const notes = document.getElementById('baptismNotes').value.trim();
+  const errEl = document.getElementById('baptismError');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = ''; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'A valid email is required.'; errEl.style.display = ''; return;
+  }
+  if (!date) { errEl.textContent = 'Date is required.'; errEl.style.display = ''; return; }
+  const result = await SupaDB.adminAddBaptism({ name, email, phone, date, notes });
+  if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
   closeBaptismModal();
-  showToast('Baptism date saved');
-  renderPeoplePanel();
+  showToast('Baptism record saved');
+  if (window._userRole === 'admin' && document.getElementById('panelPeople').classList.contains('active')) renderPeoplePanel();
+  if (document.getElementById('panelBaptism').classList.contains('active')) renderBaptismTab();
+}
+
+/* ── BAPTISM ── */
+let _baptisms = [], _notYetBaptized = [];
+async function renderBaptismTab() {
+  const [baptisms, profiles] = await Promise.all([
+    SupaDB.adminGetAllBaptisms(), SupaDB.adminGetAllMemberProfiles(),
+  ]);
+  _baptisms = baptisms;
+  const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const tbody = document.getElementById('baptismTable'), empty = document.getElementById('baptismEmpty');
+  if (!baptisms.length) { tbody.innerHTML = ''; empty.style.display = ''; }
+  else {
+    empty.style.display = 'none';
+    tbody.innerHTML = baptisms.map(b => `
+      <tr>
+        <td><strong>${escapeHtml(b.name || b.email)}</strong></td>
+        <td><a href="mailto:${escapeHtml(b.email)}" style="color:var(--primary);">${escapeHtml(b.email)}</a></td>
+        <td>${fmt(b.achievedAt)}</td>
+        <td style="color:var(--text-muted);">${escapeHtml(b.notes || '—')}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editBaptismRecord('${b.personId}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="removeBaptismRecord('${b.personId}','${escapeHtml(b.name || b.email).replace(/'/g,"\\'")}')">Remove</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  // Not-yet-baptized: approved members with no baptism row, for a one-click start.
+  const baptizedIds = new Set(baptisms.map(b => b.personId));
+  _notYetBaptized = profiles.filter(p => p.status === 'approved' && p.personId && !baptizedIds.has(p.personId));
+  const notYetBox = document.getElementById('baptismNotYetBox');
+  notYetBox.innerHTML = _notYetBaptized.length
+    ? _notYetBaptized.map(p => `
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--border);">
+        <span style="flex:1;">${escapeHtml(p.name)} <span style="color:var(--text-muted);font-size:.82rem;">${escapeHtml(p.email)}</span></span>
+        <button class="btn btn-secondary btn-sm" onclick="recordBaptismFor('${p.personId}')">Record Baptism</button>
+      </div>`).join('')
+    : '<p style="color:var(--text-muted);font-size:.88rem;padding-top:8px;">Every approved member has a baptism on record.</p>';
+}
+function editBaptismRecord(personId) {
+  const b = _baptisms.find(x => x.personId === personId);
+  if (!b) return;
+  openBaptismModal({ name: b.name, email: b.email, phone: b.phone, date: b.achievedAt, notes: b.notes });
+}
+function recordBaptismFor(personId) {
+  const p = _notYetBaptized.find(x => x.personId === personId);
+  if (!p) return;
+  openBaptismModal({ name: p.name, email: p.email, phone: p.phone });
+}
+async function removeBaptismRecord(personId, name) {
+  if (!confirm(`Remove ${name}'s baptism record?`)) return;
+  const result = await SupaDB.adminRemoveBaptism(personId);
+  if (result?.error) { showToast(result.error, true); return; }
+  showToast('Baptism record removed');
+  renderBaptismTab();
 }
 
 async function approveMember(userId) {

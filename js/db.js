@@ -251,7 +251,14 @@ function memberProfileFromDb(r) {
   };
 }
 function personMilestoneFromDb(r) {
-  return { id: r.id, personId: r.person_id, milestone: r.milestone, achievedAt: r.achieved_at };
+  return { id: r.id, personId: r.person_id, milestone: r.milestone, achievedAt: r.achieved_at, notes: r.notes || '' };
+}
+function baptismFromDb(r) {
+  const p = r.people || {};
+  return {
+    personId: r.person_id, achievedAt: r.achieved_at, notes: r.notes || '',
+    name: p.name || '', email: p.email || '', phone: p.phone || '',
+  };
 }
 function attemptFromDb(r) {
   return {
@@ -657,18 +664,48 @@ window.SupaDB = {
       return (data || []).map(personMilestoneFromDb);
     } catch(e) { console.error('[SupaDB] adminGetMilestonesByType:', e.message); return []; }
   },
-  // Baptism has no dedicated column -- it's a person_milestones row like any
+  // Baptism has no dedicated table -- it's a person_milestones row like any
   // other, just settable to a specific historical date (unlike
   // recordMilestone, which is fire-and-forget "now"). Admin-only (RLS).
-  async adminSetBaptized(personId, baptizedAt) {
+  async adminSetBaptized(personId, baptizedAt, notes) {
     if (!db() || !personId || !baptizedAt) return { error: 'Person and date are required' };
     try {
+      const row = { person_id: personId, milestone: 'baptized', achieved_at: baptizedAt };
+      if (notes !== undefined) row.notes = notes || '';
       const { error } = await db().from('person_milestones')
-        .upsert({ person_id: personId, milestone: 'baptized', achieved_at: baptizedAt },
-          { onConflict: 'person_id,milestone' });
+        .upsert(row, { onConflict: 'person_id,milestone' });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminSetBaptized:', e.message); return { error: e.message }; }
+  },
+  async adminGetAllBaptisms() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('person_milestones')
+        .select('*, people(name, email, phone)')
+        .eq('milestone', 'baptized').order('achieved_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(baptismFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetAllBaptisms:', e.message); return []; }
+  },
+  // Finds-or-creates the person by email (same convention as adminAddGroupMember)
+  // then records/updates their baptism in one call, for the Baptism tab's add form.
+  async adminAddBaptism({ name, email, phone, date, notes }) {
+    if (!db() || !email || !date) return { error: 'Name, email, and date are required' };
+    try {
+      const personId = await this.upsertPerson({ name, email, phone });
+      if (!personId) return { error: 'Could not save this person' };
+      return await this.adminSetBaptized(personId, date, notes || '');
+    } catch(e) { console.error('[SupaDB] adminAddBaptism:', e.message); return { error: e.message }; }
+  },
+  async adminRemoveBaptism(personId) {
+    if (!db() || !personId) return { error: 'Not configured' };
+    try {
+      const { error } = await db().from('person_milestones')
+        .delete().eq('person_id', personId).eq('milestone', 'baptized');
+      if (error) throw error;
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminRemoveBaptism:', e.message); return { error: e.message }; }
   },
 
   /* ── ADMIN: Growth Track ─────────────────────────────────── */
