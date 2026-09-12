@@ -125,6 +125,27 @@ function groupMembershipFromDb(r) {
   };
 }
 
+function impactTeamFromDb(r) {
+  return {
+    id: r.id, name: r.name, department: r.department || '',
+    description: r.description || '', image: r.image || '',
+    open: r.open !== false, published: r.published !== false,
+  };
+}
+function impactTeamToDb(t) {
+  return {
+    name: t.name, department: t.department || '', description: t.description || '',
+    image: t.image || '', open: t.open !== false, published: t.published !== false,
+  };
+}
+function impactTeamMembershipFromDb(r) {
+  return {
+    id: r.id, teamId: r.team_id, userId: r.user_id, name: r.name,
+    email: r.email, phone: r.phone || '', role: r.role || 'member',
+    joinedAt: r.joined_at, leftAt: r.left_at, notes: r.notes || '',
+  };
+}
+
 function signupFromDb(r) {
   return {
     id: r.id, groupId: r.group_id, groupName: r.group_name,
@@ -486,6 +507,105 @@ window.SupaDB = {
       const { error } = await db().from('groups').delete().eq('id', id);
       if (error) throw error;
     } catch(e) { console.error('[SupaDB] deleteGroup:', e.message); }
+  },
+
+  /* ── ADMIN: Impact Teams ─────────────────────────────────── */
+  async adminGetAllImpactTeams() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_teams').select('*').order('name');
+      if (error) throw error;
+      return (data || []).map(impactTeamFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetAllImpactTeams:', e.message); return []; }
+  },
+  async saveImpactTeam(t) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const row = impactTeamToDb(t);
+      const { data, error } = t.id
+        ? await db().from('impact_teams').update(row).eq('id', t.id).select().single()
+        : await db().from('impact_teams').insert(row).select().single();
+      if (error) throw error;
+      return { ok: true, data: impactTeamFromDb(data) };
+    } catch(e) { console.error('[SupaDB] saveImpactTeam:', e.message); return { error: e.message }; }
+  },
+  async deleteImpactTeam(id) {
+    if (!db()) return;
+    try {
+      const { error } = await db().from('impact_teams').delete().eq('id', id);
+      if (error) throw error;
+    } catch(e) { console.error('[SupaDB] deleteImpactTeam:', e.message); }
+  },
+  async adminGetImpactTeamMembers(teamId) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_team_memberships')
+        .select('*').eq('team_id', teamId).is('left_at', null)
+        .order('role', { ascending: true }).order('joined_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(impactTeamMembershipFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetImpactTeamMembers:', e.message); return []; }
+  },
+  async adminGetAllCurrentImpactTeamMembers() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_team_memberships').select('*').is('left_at', null);
+      if (error) throw error;
+      return (data || []).map(impactTeamMembershipFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetAllCurrentImpactTeamMembers:', e.message); return []; }
+  },
+  async adminAddImpactTeamMember(m) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const match = await this.adminFindMemberByEmail(m.email);
+      const personId = await this.upsertPerson({ name: m.name, email: m.email, phone: m.phone });
+      const { error } = await db().from('impact_team_memberships').insert({
+        team_id: m.teamId, name: m.name, email: m.email, phone: m.phone || '',
+        role: m.role === 'leader' ? 'leader' : 'member', notes: m.notes || '',
+        user_id: match ? match.userId : null, person_id: personId,
+      });
+      if (error) throw error;
+      if (personId) this.recordMilestone(personId, m.role === 'leader' ? 'impact_team_leader' : 'impact_team_member');
+      return { ok: true };
+    } catch(e) {
+      // 23505 = the active-membership-per-team unique index already covers this person.
+      if (e.code === '23505') return { error: 'This person already has an active role on this team.' };
+      console.error('[SupaDB] adminAddImpactTeamMember:', e.message); return { error: e.message };
+    }
+  },
+  async adminUpdateImpactTeamMember(id, { name, email, phone, role, notes }) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const roleVal = role === 'leader' ? 'leader' : 'member';
+      const { data: existing } = await db().from('impact_team_memberships')
+        .select('person_id, role').eq('id', id).maybeSingle();
+      const { error } = await db().from('impact_team_memberships')
+        .update({ name, email, phone: phone || '', role: roleVal, notes: notes || '' }).eq('id', id);
+      if (error) throw error;
+      if (existing && existing.person_id && roleVal !== existing.role) {
+        this.recordMilestone(existing.person_id, roleVal === 'leader' ? 'impact_team_leader' : 'impact_team_member');
+      }
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminUpdateImpactTeamMember:', e.message); return { error: e.message }; }
+  },
+  async adminRemoveImpactTeamMember(id) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const now = new Date();
+      const localToday = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const { error } = await db().from('impact_team_memberships').update({ left_at: localToday }).eq('id', id);
+      if (error) throw error;
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminRemoveImpactTeamMember:', e.message); return { error: e.message }; }
+  },
+  async getImpactTeamMembershipsForUser(userId) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_team_memberships')
+        .select('*').eq('user_id', userId).order('joined_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(impactTeamMembershipFromDb);
+    } catch(e) { console.error('[SupaDB] getImpactTeamMembershipsForUser:', e.message); return []; }
   },
 
   /* ── ADMIN: Growth Track ─────────────────────────────────── */

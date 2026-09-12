@@ -212,6 +212,10 @@
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       Growth Track
     </a>
+    <a onclick="switchTab('impactteams')" id="sideImpactteams" data-tab="impactteams">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Impact Teams
+    </a>
     <div class="nav-section" id="navSectionPeople" style="margin-top:8px;">People</div>
     <a onclick="switchTab('signups')" id="sideSignups" data-tab="signups">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
@@ -1224,6 +1228,29 @@
       <div id="gtCards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;"></div>
     </div>
 
+    <!-- IMPACT TEAMS -->
+    <div class="tab-panel" id="panelImpactteams">
+      <div class="action-bar">
+        <h2>Manage Impact Teams</h2>
+        <select id="teamPublishedFilter" onchange="renderImpactTeamsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
+          <option value="">All Statuses</option>
+          <option value="published">Published Only</option>
+          <option value="draft">Draft Only</option>
+        </select>
+        <button class="btn btn-primary" id="addImpactTeamBtn" onclick="openImpactTeamModal()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Team
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Team Name</th><th>Department</th><th>Members</th><th>Leaders</th><th>Published</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="impactTeamsTable"></tbody></table>
+        <div class="empty" id="impactTeamsEmpty" style="display:none;">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          <h3>No impact teams yet</h3><p>Add your first serving team using the button above.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-panel" id="panelAnalytics">
       <div class="action-bar">
         <h2>Assessment Analytics</h2>
@@ -1517,6 +1544,87 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="exportGroupRosterCsv()">⬇ Export CSV</button>
       <button class="btn btn-ghost" onclick="closeGroupRoster()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPACT TEAM ADD/EDIT MODAL -->
+<div class="modal-overlay" id="impactTeamModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="impactTeamModalTitle">Add Impact Team</h3><button class="modal-close" onclick="closeImpactTeamModal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="itId" />
+      <div class="publish-toggle-row">
+        <div><div class="ptlabel">Published</div><div class="ptsub">Visible to the public on a Serve page (if/when built)</div></div>
+        <label class="toggle-switch"><input type="checkbox" id="itPublished" checked /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Team Name *</label><input type="text" id="itName" placeholder="e.g. Worship Tech" /></div>
+        <div class="field"><label>Department <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span></label><input type="text" id="itDepartment" placeholder="e.g. Production" /></div>
+      </div>
+      <div class="form-row full"><div class="field"><label>Description</label><textarea id="itDescription" placeholder="Describe what this team does…"></textarea></div></div>
+      <div class="form-row full"><div class="field"><label>Image URL <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span></label><input type="url" id="itImage" placeholder="https://…" /></div></div>
+      <div class="form-row full" style="margin-top:4px;"><div class="field checkbox"><input type="checkbox" id="itOpen" checked /><label for="itOpen">Team is open / accepting new members</label></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeImpactTeamModal()">Cancel</button><button class="btn btn-primary" onclick="saveImpactTeamForm()">Save Team</button></div>
+  </div>
+</div>
+
+<!-- IMPACT TEAM ROSTER MODAL -->
+<div class="modal-overlay" id="impactTeamRosterModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="itRosterModalTitle">Team Members</h3>
+      <button class="modal-close" onclick="closeImpactTeamRoster()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Add / Edit Member Form -->
+      <div id="addItMemberForm" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;">
+        <h4 id="itmFormTitle" style="font-size:.95rem;font-weight:700;margin-bottom:16px;">Add a Member</h4>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Name <span style="color:#ef4444;">*</span></label>
+            <input id="itmName" type="text" placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label>Email <span style="color:#ef4444;">*</span></label>
+            <input id="itmEmail" type="email" placeholder="email@example.com" />
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Phone <span style="font-size:.75rem;color:var(--text-muted);font-weight:400;">(optional)</span></label>
+            <input id="itmPhone" type="tel" placeholder="(402) 555-0100" />
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select id="itmRole"><option value="member">Member</option><option value="leader">Leader</option></select>
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Note <span style="font-size:.75rem;color:var(--text-muted);font-weight:400;">(optional)</span></label>
+            <input id="itmNote" type="text" placeholder="Admin note…" />
+          </div>
+        </div>
+        <div id="itmError" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:.875rem;color:#b91c1c;margin-bottom:12px;"></div>
+        <button id="itmSaveBtn" class="btn btn-primary btn-sm" onclick="saveImpactTeamMember()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add to Team
+        </button>
+        <button id="itmCancelEditBtn" class="btn btn-ghost btn-sm" onclick="cancelEditImpactTeamMember()" style="display:none;">Cancel</button>
+      </div>
+
+      <!-- Member List -->
+      <div id="itRosterList">
+        <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:.9rem;">Loading…</div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="exportImpactTeamRosterCsv()">⬇ Export CSV</button>
+      <button class="btn btn-ghost" onclick="closeImpactTeamRoster()">Close</button>
     </div>
   </div>
 </div>
@@ -2078,7 +2186,7 @@
 <script>
 // Role-based access map
 const ROLE_TABS = {
-  admin:               ['events','groups','signups','applications','subscribers','rsvps','prayer','retreat','attendance','sermons','email','settings','users','people','analytics','growthtrack'],
+  admin:               ['events','groups','signups','applications','subscribers','rsvps','prayer','retreat','attendance','sermons','email','settings','users','people','analytics','growthtrack','impactteams'],
   event_manager:       ['events','rsvps','sermons','email'],
   small_group_leader:  ['groups','signups','mygroup'],
 };
@@ -2157,7 +2265,7 @@ function applyRoleVisibility() {
   }
 })();
 
-const ALL_TABS = ['events','groups','signups','applications','subscribers','rsvps','prayer','retreat','attendance','sermons','email','settings','users','people','analytics','mygroup','growthtrack'];
+const ALL_TABS = ['events','groups','signups','applications','subscribers','rsvps','prayer','retreat','attendance','sermons','email','settings','users','people','analytics','mygroup','growthtrack','impactteams'];
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
   document.getElementById('sidebarBackdrop').classList.toggle('open');
@@ -2180,7 +2288,7 @@ function switchTab(tab) {
   const c = tab[0].toUpperCase()+tab.slice(1);
   const p = document.getElementById('panel'+c), s = document.getElementById('side'+c);
   if(p) p.classList.add('active'); if(s) s.classList.add('active');
-  const titles = {events:'Events',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',rsvps:'Event RSVPs',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Members & Assessments',analytics:'Analytics',mygroup:'My Group',growthtrack:'Growth Track'};
+  const titles = {events:'Events',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',rsvps:'Event RSVPs',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Members & Assessments',analytics:'Analytics',mygroup:'My Group',growthtrack:'Growth Track',impactteams:'Impact Teams'};
   document.getElementById('topbarTitle').textContent = titles[tab]||tab;
   if(tab==='events') renderEventsTable();
   else if(tab==='groups') renderGroupsTable();
@@ -2199,6 +2307,7 @@ function switchTab(tab) {
   else if(tab==='analytics') renderAnalyticsTab();
   else if(tab==='mygroup') renderMyGroupPanel();
   else if(tab==='growthtrack') renderGrowthTrackTab();
+  else if(tab==='impactteams') renderImpactTeamsTable();
 }
 
 async function updateStats() {
@@ -2630,6 +2739,213 @@ function exportGroupRosterCsv() {
   a.download = `${slug}-members-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
+
+/* ── IMPACT TEAMS ─────────────────────────────────────────── */
+let _cachedImpactTeams = [];
+async function renderImpactTeamsTable(){
+  _cachedImpactTeams = await SupaDB.adminGetAllImpactTeams();
+  const allMembers = await SupaDB.adminGetAllCurrentImpactTeamMembers();
+  let teams = _cachedImpactTeams;
+  const pubSelEl = document.getElementById('teamPublishedFilter');
+  const pubFilterVal = pubSelEl ? pubSelEl.value : '';
+  if (pubFilterVal === 'published') teams = teams.filter(t => t.published);
+  else if (pubFilterVal === 'draft') teams = teams.filter(t => !t.published);
+  const tbody=document.getElementById('impactTeamsTable'), empty=document.getElementById('impactTeamsEmpty');
+  if(!teams.length){tbody.innerHTML='';empty.style.display='';return;}empty.style.display='none';
+  tbody.innerHTML=teams.map(t=>{
+    const roster = allMembers.filter(m=>m.teamId===t.id);
+    const leaderCount = roster.filter(m=>m.role==='leader').length;
+    const memberCount = roster.length - leaderCount;
+    return `<tr>
+      <td><strong>${escapeHtml(t.name)}</strong></td>
+      <td>${escapeHtml(t.department || '—')}</td>
+      <td>${memberCount}</td>
+      <td>${leaderCount}</td>
+      <td>${t.published?'<span class="badge badge-green">Published</span>':'<span class="badge badge-gray">Draft</span>'}</td>
+      <td>${t.open?'<span class="badge badge-amber">Open</span>':'<span class="badge badge-red">Full</span>'}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openImpactTeamRoster(${t.id})">Members</button>
+        <button class="btn btn-ghost btn-sm" onclick="editImpactTeam(${t.id})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('impactteam',${t.id},'${t.name.replace(/'/g,"\\'")}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function openImpactTeamModal(t){
+  document.getElementById('impactTeamModalTitle').textContent=t?'Edit Team':'Add Team';
+  document.getElementById('itId').value=t?t.id:'';
+  document.getElementById('itPublished').checked=t?t.published!==false:true;
+  document.getElementById('itName').value=t?t.name:'';
+  document.getElementById('itDepartment').value=t?(t.department||''):'';
+  document.getElementById('itDescription').value=t?(t.description||''):'';
+  document.getElementById('itImage').value=t?(t.image||''):'';
+  document.getElementById('itOpen').checked=t?t.open!==false:true;
+  document.getElementById('impactTeamModal').classList.add('open');
+}
+function closeImpactTeamModal(){document.getElementById('impactTeamModal').classList.remove('open');}
+function editImpactTeam(id){const t=_cachedImpactTeams.find(t=>t.id===id);if(t)openImpactTeamModal(t);}
+async function saveImpactTeamForm(){
+  const id=document.getElementById('itId').value;
+  const name=document.getElementById('itName').value.trim();
+  if(!name){showToast('Team name is required.',true);return;}
+  const payload={
+    id: id || undefined,
+    name,
+    department: document.getElementById('itDepartment').value.trim(),
+    description: document.getElementById('itDescription').value.trim(),
+    image: document.getElementById('itImage').value.trim(),
+    open: document.getElementById('itOpen').checked,
+    published: document.getElementById('itPublished').checked,
+  };
+  const result = await SupaDB.saveImpactTeam(payload);
+  if(result?.error){showToast(result.error,true);return;}
+  closeImpactTeamModal();
+  await renderImpactTeamsTable();
+  showToast(`✓ ${name} saved`);
+}
+
+/* ── IMPACT TEAM ROSTER ───────────────────────────────────── */
+let _rosterTeamId = null;
+let _rosterTeamMembers = [];
+let _editingTeamMembershipId = null;
+
+async function openImpactTeamRoster(teamId) {
+  _rosterTeamId = teamId;
+  const team = _cachedImpactTeams.find(t => t.id === teamId);
+  document.getElementById('itRosterModalTitle').textContent = team ? `Members — ${team.name}` : 'Team Members';
+  cancelEditImpactTeamMember();
+  document.getElementById('impactTeamRosterModal').classList.add('open');
+  await renderImpactTeamRoster();
+}
+function closeImpactTeamRoster() {
+  document.getElementById('impactTeamRosterModal').classList.remove('open');
+  _rosterTeamId = null;
+}
+async function renderImpactTeamRoster() {
+  const container = document.getElementById('itRosterList');
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.9rem;">Loading…</div>';
+  const members = await SupaDB.adminGetImpactTeamMembers(_rosterTeamId);
+  _rosterTeamMembers = members;
+  if (!members.length) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:.9rem;">No members yet — add the first one above.</div>';
+    return;
+  }
+  container.innerHTML = `
+    <h4 style="font-size:.95rem;font-weight:700;margin-bottom:12px;">Current Members (${members.length})</h4>
+    <div class="table-wrap" style="margin:0;">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Note</th><th>Joined</th><th></th></tr></thead>
+        <tbody>
+          ${members.map(m => `
+            <tr>
+              <td><strong>${escapeHtml(m.name)}</strong></td>
+              <td><a href="mailto:${escapeHtml(m.email)}" style="color:var(--primary);">${escapeHtml(m.email)}</a></td>
+              <td>${escapeHtml(m.phone || '—')}</td>
+              <td>${m.role==='leader'?'<span class="badge badge-amber">Leader</span>':'<span class="badge badge-blue">Member</span>'}</td>
+              <td style="font-size:.82rem;color:var(--text-muted);">${escapeHtml(m.notes || '—')}</td>
+              <td style="font-size:.82rem;color:var(--text-muted);">${new Date(m.joinedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+              <td style="white-space:nowrap;">
+                <button class="btn btn-ghost btn-sm" onclick="editImpactTeamMember(${m.id})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="removeImpactTeamMember(${m.id})">Remove</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+function editImpactTeamMember(membershipId) {
+  const m = _rosterTeamMembers.find(x => x.id === membershipId);
+  if (!m) return;
+  _editingTeamMembershipId = membershipId;
+  document.getElementById('itmName').value = m.name;
+  document.getElementById('itmEmail').value = m.email;
+  document.getElementById('itmPhone').value = m.phone || '';
+  document.getElementById('itmRole').value = m.role || 'member';
+  document.getElementById('itmNote').value = m.notes || '';
+  document.getElementById('itmError').style.display = 'none';
+  document.getElementById('itmFormTitle').textContent = 'Edit Member';
+  document.getElementById('itmSaveBtn').innerHTML = 'Save Changes';
+  document.getElementById('itmCancelEditBtn').style.display = '';
+  document.getElementById('addItMemberForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function cancelEditImpactTeamMember() {
+  _editingTeamMembershipId = null;
+  document.getElementById('itmName').value = '';
+  document.getElementById('itmEmail').value = '';
+  document.getElementById('itmPhone').value = '';
+  document.getElementById('itmRole').value = 'member';
+  document.getElementById('itmNote').value = '';
+  document.getElementById('itmError').style.display = 'none';
+  document.getElementById('itmFormTitle').textContent = 'Add a Member';
+  document.getElementById('itmSaveBtn').innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Team';
+  document.getElementById('itmCancelEditBtn').style.display = 'none';
+}
+async function saveImpactTeamMember() {
+  const name  = document.getElementById('itmName').value.trim();
+  const email = document.getElementById('itmEmail').value.trim();
+  const phone = document.getElementById('itmPhone').value.trim();
+  const role  = document.getElementById('itmRole').value;
+  const note  = document.getElementById('itmNote').value.trim();
+  const errEl = document.getElementById('itmError');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = ''; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'A valid email is required.'; errEl.style.display = ''; return;
+  }
+
+  const team = _cachedImpactTeams.find(t => t.id === _rosterTeamId);
+  if (!team) return;
+
+  if (_editingTeamMembershipId) {
+    const result = await SupaDB.adminUpdateImpactTeamMember(_editingTeamMembershipId, { name, email, phone, role, notes: note });
+    if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
+    showToast(`✓ ${name} updated`);
+    cancelEditImpactTeamMember();
+    await renderImpactTeamRoster();
+    await renderImpactTeamsTable();
+    return;
+  }
+
+  const result = await SupaDB.adminAddImpactTeamMember({
+    teamId: team.id, name, email, phone, role, notes: note,
+  });
+
+  if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
+
+  document.getElementById('itmName').value = '';
+  document.getElementById('itmEmail').value = '';
+  document.getElementById('itmPhone').value = '';
+  document.getElementById('itmRole').value = 'member';
+  document.getElementById('itmNote').value = '';
+  showToast(`✓ ${name} added to ${team.name}`);
+  await renderImpactTeamRoster();
+  await renderImpactTeamsTable();
+}
+async function removeImpactTeamMember(membershipId) {
+  if (!confirm('Remove this member from the team?')) return;
+  await SupaDB.adminRemoveImpactTeamMember(membershipId);
+  showToast('Member removed.');
+  await renderImpactTeamRoster();
+  await renderImpactTeamsTable();
+}
+function exportImpactTeamRosterCsv() {
+  if (!_rosterTeamMembers.length) { showToast('No members to export.', true); return; }
+  const team = _cachedImpactTeams.find(t => t.id === _rosterTeamId);
+  const headers = ['Name', 'Email', 'Phone', 'Role', 'Note', 'Joined'];
+  const rows = _rosterTeamMembers.map(m => [
+    m.name, m.email, m.phone || '', m.role || 'member', m.notes || '',
+    m.joinedAt ? new Date(m.joinedAt + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+  ]);
+  const csv = [headers, ...rows].map(r =>
+    r.map(v => `"${csvSafe(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+  const slug = (team ? team.name : 'team').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  a.download = `${slug}-members-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
 async function saveGroup(){
   const id=document.getElementById('grId').value;
   const name=document.getElementById('grName').value.trim();
@@ -4318,7 +4634,7 @@ let _deleteType,_deleteId;
 function deleteItem(type,id,name){_deleteType=type;_deleteId=id;document.getElementById('deleteItemName').textContent=name;document.getElementById('deleteModal').classList.add('open');}
 function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('open');}
 async function confirmDelete(){
-  const delFns={event:SupaDB.deleteEvent,group:SupaDB.deleteGroup,signup:SupaDB.deleteSignup,application:SupaDB.deleteApplication,subscriber:SupaDB.deleteSubscriber,sermon:SupaDB.deleteSermon};
+  const delFns={event:SupaDB.deleteEvent,group:SupaDB.deleteGroup,signup:SupaDB.deleteSignup,application:SupaDB.deleteApplication,subscriber:SupaDB.deleteSubscriber,sermon:SupaDB.deleteSermon,impactteam:SupaDB.deleteImpactTeam};
   const fn=delFns[_deleteType];
   if(fn)await fn.call(SupaDB,_deleteId);
   closeDeleteModal();
@@ -4328,6 +4644,7 @@ async function confirmDelete(){
   else if(_deleteType==='application')renderApplicationsTable();
   else if(_deleteType==='subscriber')renderSubscribersTable();
   else if(_deleteType==='sermon')renderSermonsTable();
+  else if(_deleteType==='impactteam')renderImpactTeamsTable();
   updateStats();showToast('Deleted successfully.');
 }
 
