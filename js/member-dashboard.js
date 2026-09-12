@@ -188,10 +188,13 @@ const MemberDashboard = {
   //     whether that person is trained for that team
   renderJourneyPipeline(containerEl, opts) {
     // Some dates here are plain `date` columns ("2026-09-12") and some are
-    // `timestamptz` columns already rendered as full ISO strings by
-    // supabase-js -- appending 'T00:00:00' to the latter breaks Date
-    // parsing, so only add it when the string doesn't already carry a time.
-    const fmt = d => d ? new Date(d.includes('T') ? d : d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    // `timestamptz` columns rendered as full ISO strings ("2026-09-12T00:
+    // 00:00+00:00") -- these only ever carry a calendar date, never a real
+    // time, so take just the first 10 chars and parse as local midnight.
+    // Parsing the timestamptz string as-is would apply its UTC offset, then
+    // display would re-render in the browser's own zone -- shifting the
+    // date back a day for anyone west of UTC.
+    const fmt = d => d ? new Date(d.slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     const yesNo = (isYes, dateStr) => isYes
       ? `<span class="jp-yes">✓${dateStr ? ' · ' + this.escapeHtml(fmt(dateStr)) : ''}</span>`
       : `<span class="jp-no">✗</span>`;
