@@ -9,7 +9,7 @@ const MemberDashboard = {
     }[c]));
   },
 
-  GT_LABELS: { about_us: 'About Us', about_you: 'About You', get_involved: 'Get Involved' },
+  GT_LABELS: { about_us: 'Plant', about_you: 'Discover', get_involved: 'Grow' },
   GT_ORDER: ['about_us', 'about_you', 'get_involved'],
 
   // Renders a 3-row Growth Track checklist into containerEl.

@@ -1449,7 +1449,7 @@
         <div><div class="ptlabel">Published</div><div class="ptsub">Visible to the public on the Growth Track page</div></div>
         <label class="toggle-switch"><input type="checkbox" id="gtpPublished" /><span class="toggle-slider"></span></label>
       </div>
-      <div class="form-row full"><div class="field"><label>Title *</label><input type="text" id="gtpTitle" placeholder="e.g. About Us" /></div></div>
+      <div class="form-row full"><div class="field"><label>Title *</label><input type="text" id="gtpTitle" placeholder="e.g. Plant" /></div></div>
       <div class="form-row full"><div class="field"><label>Description *</label><textarea id="gtpDescription" placeholder="Describe this part of the Growth Track…"></textarea></div></div>
       <div class="form-row">
         <div class="field"><label>Which Sunday</label>
@@ -2019,7 +2019,7 @@
       </div>
       <div class="field" style="margin-bottom:16px;">
         <label>Subject</label>
-        <input type="text" id="gtCancelEmailSubject" placeholder="e.g. About Us — Sep 6 Session Cancelled" />
+        <input type="text" id="gtCancelEmailSubject" placeholder="e.g. Plant — Sep 6 Session Cancelled" />
       </div>
       <div class="field" style="margin-bottom:4px;">
         <label style="margin-bottom:8px;display:block;">Message</label>
@@ -5793,7 +5793,7 @@ async function renderMyGroupPanel() {
 
 /* GROWTH TRACK */
 let _gtPartsAdmin = [], _gtCancellationsAdmin = [];
-const GT_LABELS = { about_us: 'About Us', about_you: 'About You', get_involved: 'Get Involved' };
+const GT_LABELS = { about_us: 'Plant', about_you: 'Discover', get_involved: 'Grow' };
 const SUNDAY_LABELS = { 1: '1st Sunday', 2: '2nd Sunday', 3: '3rd Sunday' };
 
 async function renderGrowthTrackTab() {

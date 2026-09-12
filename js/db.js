@@ -585,7 +585,7 @@ window.SupaDB = {
         .update({ attended: !!attended }).eq('id', id).select('person_id, part, user_id').single();
       if (error) throw error;
       if (attended && data && data.person_id) this.recordMilestone(data.person_id, 'growth_track_attended');
-      // About Us is the membership step -- attending it approves membership
+      // "Plant" (part slug about_us) is the membership step -- attending it approves membership
       // (only if they already have a profile; matches "membership requires
       // a profile" -- a guest with no account yet just attended a session).
       if (attended && data && data.part === 'about_us' && data.user_id) {
@@ -1418,7 +1418,7 @@ window.SupaDB = {
     if (!db()) return { error: 'Not configured' };
     const updates = { status };
     if (status === 'approved') {
-      // Membership = About Us attended (or a manual approve) + a profile.
+      // Membership = "Plant" (part slug about_us) attended (or a manual approve) + a profile.
       // member_since is set once and never overwritten by a later re-approve.
       const { data: existing } = await db().from('member_profiles')
         .select('member_since').eq('user_id', userId).maybeSingle();
