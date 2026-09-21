@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/journey-pipeline.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -27,11 +28,28 @@
     .sidebar-brand span { display: block; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-top: 6px; }
     .sidebar-nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
     .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem; font-weight: 500; transition: background .2s, color .2s; margin-bottom: 2px; cursor: pointer; }
+    .sidebar-nav a.nav-sub { padding-left: 44px; }
     .sidebar-nav a:hover { background: rgba(255,255,255,.08); color: #fff; }
     .sidebar-nav a.active { background: var(--primary); color: #fff; }
     .sidebar-nav a svg { flex-shrink: 0; opacity: .75; }
     .sidebar-nav a.active svg { opacity: 1; }
-    .sidebar-nav .nav-section { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.25); padding: 14px 12px 6px; }
+    .sidebar-nav .nav-section { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.4); padding: 16px 12px 6px; }
+    .sidebar-nav .nav-section:first-child { padding-top: 4px; }
+    .sidebar-nav .nav-section-verse { text-transform: none; font-weight: 400; font-style: italic; letter-spacing: 0; color: rgba(255,255,255,.22); margin-left: 4px; }
+    /* Found/Filled/Freed/Forged stage headers -- numbered like the Journey
+       pipeline's stage circles, in the Heritage amber. */
+    .nav-section.nav-stage { display: flex; align-items: center; gap: 10px; padding: 20px 12px 10px; }
+    .nav-section.nav-stage:first-child { padding-top: 6px; }
+    .nav-stage-circle {
+      width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%;
+      border: 1.5px solid var(--primary); background: rgba(188,122,30,.12); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .68rem; font-weight: 700; letter-spacing: 0; text-transform: none;
+      font-variant-numeric: tabular-nums;
+    }
+    .nav-stage-text { display: flex; flex-direction: column; gap: 1px; }
+    .nav-stage-name { font-size: .82rem; font-weight: 700; letter-spacing: .02em; text-transform: none; color: #fff; }
+    .nav-stage .nav-section-verse { margin-left: 0; font-size: .72rem; }
     .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,.08); }
     .sidebar-footer a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,.5); font-size: .85rem; text-decoration: none; transition: all .2s; }
     .sidebar-footer a:hover { background: rgba(255,255,255,.08); color: #fff; }
@@ -60,7 +78,7 @@
     .btn-ghost:hover { background: var(--bg); color: var(--text); }
     .btn-sm { padding: .35rem .85rem; font-size: .8rem; }
     .btn:disabled { opacity: .55; cursor: not-allowed; }
-    .table-wrap { background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow-x: auto; }
+    .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
     thead tr { background: var(--bg); }
     th { padding: 12px 16px; text-align: left; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); border-bottom: 1px solid var(--border); }
@@ -73,8 +91,27 @@
     .empty h3 { color: var(--text); font-size: 1.05rem; margin-bottom: .4rem; }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1000; align-items: center; justify-content: center; padding: 24px; }
     .modal-overlay.open { display: flex; }
-    .modal { background: #fff; border-radius: var(--radius-lg); width: 100%; max-width: 640px; max-height: 95vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .modal { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); width: 100%; max-width: 640px; max-height: 95vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
     .modal.modal-lg { max-width: min(960px, 94vw); }
+    .raa-person-chip { display:inline-flex; align-items:center; gap:10px; background:var(--bg); border:1px solid var(--border); border-radius:50px; padding:8px 16px; font-size:.88rem; }
+    .raa-person-chip button { background:none; border:none; color:var(--secondary); font-family:inherit; font-size:.82rem; cursor:pointer; padding:0; margin-left:4px; }
+    .raa-search-results { max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; margin-top:8px; }
+    .raa-search-row { padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border); font-size:.88rem; }
+    .raa-search-row:last-child { border-bottom:none; }
+    .raa-search-row:hover { background:var(--bg); }
+    .raa-search-row .email { color:var(--text-muted); font-size:.8rem; }
+    .raa-toggle-row { display:flex; gap:8px; margin-bottom:16px; }
+    .raa-toggle-btn { flex:1; padding:10px; border-radius:8px; border:1.5px solid var(--border); background:#fff; font-family:inherit; font-weight:600; font-size:.88rem; cursor:pointer; color:var(--text-muted); }
+    .raa-toggle-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .raa-q-block { padding:14px 0; border-bottom:1px solid var(--border); }
+    .raa-q-block:last-child { border-bottom:none; }
+    .raa-q-text { font-size:.9rem; font-weight:500; margin-bottom:8px; }
+    .raa-q-scale { display:flex; gap:6px; flex-wrap:wrap; }
+    .raa-q-scale label { border:1.5px solid var(--border); border-radius:8px; padding:6px 12px; font-size:.82rem; cursor:pointer; }
+    .raa-q-scale input { display:none; }
+    .raa-q-scale label:has(input:checked) { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .raa-gift-check { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+    .raa-gift-check:last-child { border-bottom:none; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 22px 28px; border-bottom: 1px solid var(--border); }
     .modal-header h3 { font-size: 1.1rem; }
     .modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--text-muted); transition: background .2s; }
@@ -131,8 +168,8 @@
     .toast { position: fixed; bottom: 24px; right: 24px; background: #111; color: #fff; padding: 12px 20px; border-radius: 50px; font-size: .9rem; box-shadow: 0 4px 20px rgba(0,0,0,.3); z-index: 2000; transform: translateY(80px); opacity: 0; transition: all .3s ease; }
     .toast.show { transform: none; opacity: 1; }
     .stats-row { display: grid; grid-template-columns: repeat(6,1fr); gap: 12px; margin-bottom: 28px; }
-    .stat-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow); }
-    .stat-card .num { font-size: 1.75rem; font-weight: 700; color: var(--text); }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow); }
+    .stat-card .num { font-size: 1.75rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
     .stat-card .lbl { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
     /* Signups grid */
     .signup-msg-preview { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; display: inline-block; cursor: pointer; }
@@ -181,6 +218,54 @@
       .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; }
       .mobile-hamburger { display: flex; }
+
+      /* Many panels here use an inline style="display:grid;
+         grid-template-columns:..." layout instead of a class, so the
+         media-query overrides above (.form-row, .stats-row) don't reach
+         them -- an inline style wins over any class rule, and an inline
+         style="grid-template-columns:..." directly on a .stats-row
+         element even overrides that class's own override. This forces
+         every such inline multi-column grid down to one column on
+         mobile too. Whether a parsed style attribute gets re-serialized
+         with a space after the property colon turned out to be
+         inconsistent across how a page is loaded (confirmed empirically
+         while fixing the same bug on the public site: differs between a
+         normal navigation and an iframe/document.write render of the
+         same markup), so every selector below is listed both ways
+         rather than trusting one; comma-spacing inside repeat(...) is
+         covered both ways for the same reason. Single-column (`1fr`)
+         and auto-fit/auto-fill patterns are left alone since those
+         already reflow naturally. */
+      [style*="grid-template-columns:1fr 1fr"],
+      [style*="grid-template-columns: 1fr 1fr"],
+      [style*="grid-template-columns:repeat(2,1fr)"],
+      [style*="grid-template-columns: repeat(2,1fr)"],
+      [style*="grid-template-columns:repeat(2, 1fr)"],
+      [style*="grid-template-columns: repeat(2, 1fr)"],
+      [style*="grid-template-columns:repeat(3,1fr)"],
+      [style*="grid-template-columns: repeat(3,1fr)"],
+      [style*="grid-template-columns:repeat(3, 1fr)"],
+      [style*="grid-template-columns: repeat(3, 1fr)"],
+      [style*="grid-template-columns:repeat(6, 1fr)"],
+      [style*="grid-template-columns: repeat(6, 1fr)"],
+      [style*="grid-template-columns:repeat(6,1fr)"],
+      [style*="grid-template-columns: repeat(6,1fr)"],
+      [style*="grid-template-columns:160px 1fr 1fr auto"],
+      [style*="grid-template-columns: 160px 1fr 1fr auto"],
+      [style*="grid-template-columns:1fr 100px 1fr auto"],
+      [style*="grid-template-columns: 1fr 100px 1fr auto"],
+      [style*="grid-template-columns:1fr 1fr 1fr"],
+      [style*="grid-template-columns: 1fr 1fr 1fr"],
+      [style*="grid-template-columns:1fr 2fr"],
+      [style*="grid-template-columns: 1fr 2fr"],
+      [style*="grid-template-columns:1fr 80px 90px"],
+      [style*="grid-template-columns: 1fr 80px 90px"],
+      [style*="grid-template-columns:repeat(4,1fr)"],
+      [style*="grid-template-columns: repeat(4,1fr)"],
+      [style*="grid-template-columns:repeat(4, 1fr)"],
+      [style*="grid-template-columns: repeat(4, 1fr)"] {
+        grid-template-columns: 1fr !important;
+      }
     }
     /* Quill editor */
     .ql-toolbar.ql-snow { border-radius: 8px 8px 0 0; border-color: var(--border); font-family: 'DM Sans', sans-serif; }
@@ -199,35 +284,74 @@
     <span>Admin Dashboard</span>
   </div>
   <nav class="sidebar-nav">
-    <div class="nav-section" id="navSectionContent">Content</div>
-    <a onclick="switchTab('events')" id="sideEvents" data-tab="events" class="active">
+    <div class="nav-section nav-stage" id="navSectionFound">
+      <span class="nav-stage-circle">01</span>
+      <span class="nav-stage-text"><span class="nav-stage-name">Found</span><span class="nav-section-verse">by God</span></span>
+    </div>
+    <a onclick="switchTab('people')" id="sidePeople" data-tab="people" class="active nav-sub">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Members <span id="peopleBadge" style="display:none; background:#BC7A1E; color:#fff; border-radius:10px; font-size:.7rem; padding:1px 7px; margin-left:auto;">0</span>
+    </a>
+    <a onclick="switchTab('baptism')" id="sideBaptism" data-tab="baptism" class="nav-sub">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 0 12 0"/><path d="M8 12V6a4 4 0 0 1 8 0v6"/><line x1="3" y1="20" x2="21" y2="20"/><circle cx="12" cy="4" r="1.5"/></svg>
+      Baptism
+    </a>
+    <a onclick="switchTab('events')" id="sideEvents" data-tab="events" class="nav-sub">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Events
     </a>
-    <a onclick="switchTab('groups')" id="sideGroups" data-tab="groups">
+    <a onclick="switchTab('connect')" id="sideConnect" data-tab="connect" class="nav-sub">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Connect
+    </a>
+
+    <div class="nav-section nav-stage" id="navSectionFilled">
+      <span class="nav-stage-circle">02</span>
+      <span class="nav-stage-text"><span class="nav-stage-name">Filled</span><span class="nav-section-verse">by the Spirit</span></span>
+    </div>
+    <a onclick="switchTab('groups')" id="sideGroups" data-tab="groups" class="nav-sub">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Small Groups
     </a>
-    <a onclick="switchTab('growthtrack')" id="sideGrowthtrack" data-tab="growthtrack">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      Growth Track
+    <a onclick="switchTab('attendance')" id="sideAttendance" data-tab="attendance" class="nav-sub">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Attendance
     </a>
-    <div class="nav-section" id="navSectionPeople" style="margin-top:8px;">People</div>
-    <a onclick="switchTab('signups')" id="sideSignups" data-tab="signups">
+    <a onclick="switchTab('signups')" id="sideSignups" data-tab="signups" class="nav-sub">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
       Sign-Up Requests
     </a>
-    <a onclick="switchTab('applications')" id="sideApplications" data-tab="applications">
+    <a onclick="switchTab('applications')" id="sideApplications" data-tab="applications" class="nav-sub">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       Leader Applications
     </a>
+
+    <div class="nav-section nav-stage" id="navSectionFreed">
+      <span class="nav-stage-circle">03</span>
+      <span class="nav-stage-text"><span class="nav-stage-name">Freed</span><span class="nav-section-verse">to live like Jesus</span></span>
+    </div>
+    <a onclick="switchTab('growthtrack')" id="sideGrowthtrack" data-tab="growthtrack" class="nav-sub">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Growth Track
+    </a>
+    <a onclick="switchTab('analytics')" id="sideAnalytics" data-tab="analytics" class="nav-sub">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </a>
+
+    <div class="nav-section nav-stage" id="navSectionForged">
+      <span class="nav-stage-circle">04</span>
+      <span class="nav-stage-text"><span class="nav-stage-name">Forged</span><span class="nav-section-verse">for mission</span></span>
+    </div>
+    <a onclick="switchTab('impactteams')" id="sideImpactteams" data-tab="impactteams" class="nav-sub">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Impact Teams
+    </a>
+
+    <div class="nav-section" id="navSectionOperations">Operations</div>
     <a onclick="switchTab('subscribers')" id="sideSubscribers" data-tab="subscribers">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Subscribers
-    </a>
-    <a onclick="switchTab('rsvps')" id="sideRsvps" data-tab="rsvps">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-      Event RSVPs
     </a>
     <a onclick="switchTab('prayer')" id="sidePrayer" data-tab="prayer">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
@@ -237,23 +361,6 @@
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 17l4-8 4 4 4-6 4 8"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
       Retreat 2026
     </a>
-    <a onclick="switchTab('attendance')" id="sideAttendance" data-tab="attendance">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Attendance
-    </a>
-    <a onclick="switchTab('people')" id="sidePeople" data-tab="people">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Members <span id="peopleBadge" style="display:none; background:#BC7A1E; color:#fff; border-radius:10px; font-size:.7rem; padding:1px 7px; margin-left:auto;">0</span>
-    </a>
-    <a onclick="switchTab('analytics')" id="sideAnalytics" data-tab="analytics">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Analytics
-    </a>
-    <a onclick="switchTab('mygroup')" id="sideMygroup" data-tab="mygroup">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
-      My Group
-    </a>
-    <div class="nav-section" id="navSectionMedia" style="margin-top:8px;">Media</div>
     <a onclick="switchTab('sermons')" id="sideSermons" data-tab="sermons">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
       Sermons
@@ -262,7 +369,6 @@
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Email
     </a>
-    <div class="nav-section" id="navSectionSite" style="margin-top:8px;">Site</div>
     <a onclick="switchTab('settings')" id="sideSettings" data-tab="settings">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       Settings
@@ -276,6 +382,10 @@
     <a href="../index.html" target="_blank">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
       View Website
+    </a>
+    <a href="tap-control.html" target="_blank">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h.01M10 12h4M17 10v4"/></svg>
+      Chair Tag Control
     </a>
     <a href="#" onclick="logout()">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -292,7 +402,7 @@
       <button class="mobile-hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <h1 id="topbarTitle">Events</h1>
+      <h1 id="topbarTitle">Membership</h1>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="admin-badge" id="roleBadge">Admin</span>
@@ -312,7 +422,7 @@
     </div>
 
     <!-- EVENTS -->
-    <div class="tab-panel active" id="panelEvents">
+    <div class="tab-panel" id="panelEvents">
       <div class="action-bar">
         <h2>Manage Events</h2>
         <button class="btn btn-primary" onclick="openEventModal()">
@@ -331,6 +441,7 @@
 
     <!-- GROUPS -->
     <div class="tab-panel" id="panelGroups">
+      <div id="myGroupsBox"></div>
       <div class="action-bar">
         <h2>Manage Small Groups</h2>
         <select id="groupSemesterFilter" onchange="renderGroupsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
@@ -492,44 +603,6 @@
           <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <h3>No subscribers yet</h3>
           <p>Subscribers from the public Events page will appear here.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- EVENT RSVPs -->
-    <div class="tab-panel" id="panelRsvps">
-      <div class="action-bar">
-        <h2>Event RSVPs</h2>
-        <button class="btn btn-ghost" onclick="exportRsvpsCsv()">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export CSV
-        </button>
-      </div>
-      <div class="signup-filter-bar" style="margin-bottom:20px;">
-        <label>Filter by Event:</label>
-        <select id="rsvpFilterEvent" onchange="renderRsvpsPanel()" style="padding:.5rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;min-width:220px;"></select>
-        <label style="margin-left:8px;">Search:</label>
-        <input id="rsvpSearch" type="text" placeholder="Name or email…" oninput="renderRsvpsPanel()"
-          style="padding:.5rem .9rem;border:1.5px solid #e4e4e4;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;min-width:200px;" />
-        <span id="rsvpCount" style="margin-left:auto;font-size:.82rem;color:#6b6b6b;"></span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>#</th>
-            <th>Event</th>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Date Submitted</th>
-            <th>Actions</th>
-          </tr></thead>
-          <tbody id="rsvpsTable"></tbody>
-        </table>
-        <div class="empty" id="rsvpsEmpty" style="display:none;">
-          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-          <h3>No RSVPs yet</h3>
-          <p>RSVPs from events with sign-up enabled will appear here.</p>
         </div>
       </div>
     </div>
@@ -1110,7 +1183,7 @@
       <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px;">
         <h3 style="font-size:.95rem;font-weight:700;margin-bottom:4px;">Add Weekly Entry</h3>
         <p style="font-size:.8rem;color:var(--text-muted);margin:0 0 16px;">Small group totals are auto-calculated from each group's headcount entries.</p>
-        <div style="display:grid;grid-template-columns:160px 1fr 1fr auto;gap:12px;align-items:end;flex-wrap:wrap;">
+        <div style="display:grid;grid-template-columns:160px 1fr 1fr 1fr auto;gap:12px;align-items:end;flex-wrap:wrap;">
           <div class="field">
             <label>Date</label>
             <input type="date" id="attDate" />
@@ -1118,6 +1191,10 @@
           <div class="field">
             <label>Worship Attendance</label>
             <input type="number" id="attWorship" placeholder="e.g. 142" min="0" />
+          </div>
+          <div class="field">
+            <label>Offerings <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
+            <input type="number" id="attOfferings" placeholder="e.g. 4250.00" min="0" step="0.01" />
           </div>
           <div class="field">
             <label>Notes <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
@@ -1136,6 +1213,7 @@
             <th>Worship</th>
             <th>Small Groups</th>
             <th>SG Rate</th>
+            <th>Offerings</th>
             <th>Notes</th>
             <th>Actions</th>
           </tr></thead>
@@ -1153,20 +1231,29 @@
     <div class="tab-panel" id="panelUsers">
       <div class="action-bar">
         <h2>User Permissions</h2>
-        <button class="btn btn-primary" onclick="openUserModal()">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add User
-        </button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" onclick="openCreateUserModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create User
+          </button>
+          <button class="btn btn-primary" onclick="openUserModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add User
+          </button>
+        </div>
       </div>
       <div style="background:rgba(188,122,30,.07);border:1px solid rgba(188,122,30,.25);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:.875rem;color:var(--text-muted);line-height:1.6;">
-        <strong style="color:var(--text);">How it works:</strong> Add a user's email and assign a role. When they log in, they'll only see the sections their role allows. The user account itself must be created in your Supabase dashboard (Authentication → Users → Invite user).
+        <strong style="color:var(--text);">How it works:</strong> Use <strong>Create User</strong> to send a brand-new person a branded email with a secure sign-in link — they set their own password on first click, nothing to email or reset manually. Use <strong>Add User</strong> to assign a dashboard role to an email address that already has (or will separately get) an account; the account itself can also be created via Set Up Account below, or in your Supabase dashboard (Authentication → Users → Invite user).
         <br><br>
         <strong style="color:var(--text);">Admin</strong> — Full access to all sections.<br>
-        <strong style="color:var(--text);">Event Manager</strong> — Events, RSVPs, Sermons, Email.<br>
-        <strong style="color:var(--text);">Small Group Leader</strong> — Small Groups, Sign-Ups, Leader Applications, Subscribers.
+        <strong style="color:var(--text);">Event Manager</strong> — Events (including sign-ups), Sermons, Email.<br>
+        Small group leaders no longer use this dashboard — they manage their group from their own <a href="my-profile.html" style="color:var(--primary);">My Profile</a> page instead.
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <input id="usrSearch" placeholder="Search email, name, or role…" oninput="applyUsersFilter()"
+               style="flex:1;min-width:180px;padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;" />
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Added</th><th>Actions</th></tr></thead>
+          <thead><tr><th onclick="toggleUsersSort()" style="cursor:pointer;user-select:none;">Email<span id="usrSortArrow"></span></th><th>Name</th><th>Role</th><th>Added</th><th>Actions</th></tr></thead>
           <tbody id="usersTable"></tbody>
         </table>
         <div class="empty" id="usersEmpty" style="display:none;">
@@ -1178,9 +1265,9 @@
     </div>
 
     <!-- PEOPLE (admin) -->
-    <div class="tab-panel" id="panelPeople">
+    <div class="tab-panel active" id="panelPeople">
       <div class="action-bar">
-        <h2>Members &amp; Assessments</h2>
+        <h2>Membership</h2>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-secondary" id="bulkRegisterBtn" onclick="bulkRegisterLeadersAttendees()">Register Leaders &amp; Attendees</button>
           <a href="gifts-dashboard.html" class="btn btn-secondary">
@@ -1193,46 +1280,98 @@
         <div id="pendingMembersList"></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-        <input id="pplSearch" placeholder="Search name or email…" oninput="applyPeopleFilter()"
+        <input id="pplSearch" placeholder="Search name, email, group, phone…" oninput="applyPeopleFilter()"
                style="flex:1;min-width:180px;padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;" />
-        <select id="pplGiftFilter" onchange="applyPeopleFilter()"
-                style="padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;background:#fff;"><option value="">All Gifts</option></select>
-        <select id="pplDiscFilter" onchange="applyPeopleFilter()"
-                style="padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;background:#fff;">
-          <option value="">All Personalities</option>
-          <option value="D">D</option><option value="I">I</option><option value="S">S</option><option value="C">C</option>
-        </select>
-        <select id="pplGroupFilter" onchange="applyPeopleFilter()"
-                style="padding:.55rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;background:#fff;"><option value="">All Groups</option></select>
       </div>
       <div id="peopleTableWrap"></div>
     </div>
 
-    <!-- MY GROUP (small group leader) -->
-    <div class="tab-panel" id="panelMygroup">
-      <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:14px;">
-        Members of your groups who chose to share their assessment results with you.
-      </p>
-      <div id="myGroupTableWrap"></div>
+    <!-- BAPTISM -->
+    <div class="tab-panel" id="panelBaptism">
+      <div id="myBaptismBox"></div>
+      <div class="action-bar">
+        <h2>Baptism</h2>
+        <button class="btn btn-primary" onclick="openBaptismModal()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Record Baptism
+        </button>
+      </div>
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <table><thead><tr><th>Name</th><th>Email</th><th>Date</th><th>Notes</th><th>Actions</th></tr></thead>
+        <tbody id="baptismTable"></tbody></table>
+        <div class="empty" id="baptismEmpty" style="display:none;">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 0 12 0"/><path d="M8 12V6a4 4 0 0 1 8 0v6"/><line x1="3" y1="20" x2="21" y2="20"/><circle cx="12" cy="4" r="1.5"/></svg>
+          <h3>No baptisms recorded yet</h3><p>Record your first baptism using the button above.</p>
+        </div>
+      </div>
+      <div class="table-wrap" style="padding:20px;">
+        <h3 style="font-size:.95rem;margin-bottom:4px;">Not Yet Baptized</h3>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:4px;">Approved members with no baptism on record.</p>
+        <div id="baptismNotYetBox"></div>
+      </div>
+    </div>
+
+    <!-- CONNECT -->
+    <div class="tab-panel" id="panelConnect">
+      <div class="action-bar">
+        <h2>Connect Submissions</h2>
+        <span id="connectCountLabel" style="margin-left:auto; font-size:.82rem; color:var(--text-muted);"></span>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Name &amp; Contact</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="connectGrid"></tbody></table>
+      </div>
+      <div class="empty" id="connectEmpty" style="display:none;">
+        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        <h3>No connect submissions yet</h3><p>When visitors submit the Connect card, they'll appear here.</p>
+      </div>
     </div>
 
     <!-- GROWTH TRACK -->
     <div class="tab-panel" id="panelGrowthtrack">
+      <div id="myGrowthTrackBox"></div>
       <div class="action-bar">
         <h2>Growth Track</h2>
       </div>
       <div id="gtCards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;"></div>
     </div>
 
+    <!-- IMPACT TEAMS -->
+    <div class="tab-panel" id="panelImpactteams">
+      <div id="myImpactTeamsBox"></div>
+      <div class="action-bar">
+        <h2>Manage Impact Teams</h2>
+        <select id="teamPublishedFilter" onchange="renderImpactTeamsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
+          <option value="">All Statuses</option>
+          <option value="published">Published Only</option>
+          <option value="draft">Draft Only</option>
+        </select>
+        <button class="btn btn-primary" id="addImpactTeamBtn" onclick="openImpactTeamModal()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Team
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Team Name</th><th>Department</th><th>Members</th><th>Leaders</th><th>Published</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="impactTeamsTable"></tbody></table>
+        <div class="empty" id="impactTeamsEmpty" style="display:none;">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          <h3>No impact teams yet</h3><p>Add your first serving team using the button above.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-panel" id="panelAnalytics">
       <div class="action-bar">
         <h2>Assessment Analytics</h2>
+        <button class="btn btn-primary" onclick="openRecordAssessmentModal()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Record Assessment
+        </button>
       </div>
       <div class="chart-card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;">
         <h3 style="font-size:1.05rem;margin-bottom:14px;">Journey Funnel</h3>
-        <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
           <div class="stat-card"><div class="num" id="analyticsMilestoneGtRegistered">–</div><div class="lbl">Registered for Growth Track</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneGtAttended">–</div><div class="lbl">Attended Growth Track</div></div>
+          <div class="stat-card"><div class="num" id="analyticsMilestoneBecameMember">–</div><div class="lbl">Became a Member</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneDisc">–</div><div class="lbl">Completed DISC</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneGifts">–</div><div class="lbl">Completed Spiritual Gifts</div></div>
           <div class="stat-card"><div class="num" id="analyticsMilestoneGroupMember">–</div><div class="lbl">Joined a Small Group</div></div>
@@ -1312,6 +1451,10 @@
         <div class="field"><label>Location *</label><input type="text" id="evLocation" placeholder="e.g. 6909 Cornhusker Rd" /></div>
       </div>
       <div class="form-row full"><div class="field"><label>Description *</label><textarea id="evDescription" placeholder="Brief description…"></textarea></div></div>
+      <div class="form-row">
+        <div class="field"><label>Event Leader <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span></label><input type="text" id="evLeader" placeholder="e.g. Sarah Jennings" /></div>
+        <div class="field"><label>Leader Email <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(gets sign-up + edit access via My Profile)</span></label><input type="email" id="evLeaderEmail" placeholder="leader@email.com" /></div>
+      </div>
       <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:8px;">Event Image</label>
       <div class="img-picker">
         <div class="img-picker-tabs">
@@ -1360,6 +1503,75 @@
         📅 Google Calendar
       </button>
       <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT SIGN-UPS MODAL (per-event popup, distinct from the global
+     Event RSVPs tab under Operations) -->
+<div class="modal-overlay" id="eventSignupsModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="eventSignupsTitle">Sign-Ups</h3><button class="modal-close" onclick="closeEventSignupsModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="table-wrap" style="margin:0;">
+        <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Signed Up</th><th></th></tr></thead>
+        <tbody id="eventSignupsTable"></tbody></table>
+        <div id="eventSignupsEmpty" class="empty" style="display:none;padding:24px 0;">
+          <p style="margin:0;color:var(--text-muted);">No sign-ups yet for this event.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeEventSignupsModal()">Close</button></div>
+  </div>
+</div>
+
+<!-- RECORD ASSESSMENT MODAL -->
+<div class="modal-overlay" id="recordAssessmentModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3>Record Assessment Result</h3><button class="modal-close" onclick="closeRecordAssessmentModal()">✕</button></div>
+    <div class="modal-body">
+
+      <div id="raaPersonPicker">
+        <label style="font-size:.85rem;font-weight:600;margin-bottom:6px;display:block;">Person</label>
+        <input type="text" id="raaSearchInput" placeholder="Search by name or email…" oninput="raaFilterPeople()"
+          style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;box-sizing:border-box;" />
+        <div class="raa-search-results" id="raaSearchResults" style="display:none;"></div>
+      </div>
+      <div id="raaPersonChip" style="display:none;margin-bottom:16px;">
+        <span class="raa-person-chip">Recording for: <strong id="raaPersonName"></strong> (<span id="raaPersonEmail"></span>) <button onclick="raaClearPerson()">Change</button></span>
+      </div>
+
+      <div class="raa-toggle-row" style="margin-top:20px;">
+        <button type="button" class="raa-toggle-btn active" id="raaTypeDisc" onclick="raaSetType('disc')">DISC</button>
+        <button type="button" class="raa-toggle-btn" id="raaTypeGifts" onclick="raaSetType('gifts')">Spiritual Gifts</button>
+      </div>
+      <div class="raa-toggle-row">
+        <button type="button" class="raa-toggle-btn active" id="raaModeAnswers" onclick="raaSetMode('answers')">Enter Answers</button>
+        <button type="button" class="raa-toggle-btn" id="raaModeDirect" onclick="raaSetMode('direct')">Enter Result Directly</button>
+      </div>
+
+      <div id="raaAnswersForm">
+        <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:8px;" id="raaProgressLabel">0 of 0 answered</div>
+        <div id="raaQList"></div>
+      </div>
+
+      <div id="raaDirectForm" style="display:none;">
+        <div id="raaDiscDirectWrap">
+          <label style="font-size:.85rem;font-weight:600;margin-bottom:6px;display:block;">DISC Blend</label>
+          <select id="raaDiscBlendSelect" style="width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;">
+            <option value="">— Select —</option>
+          </select>
+        </div>
+        <div id="raaGiftsDirectWrap" style="display:none;">
+          <label style="font-size:.85rem;font-weight:600;margin-bottom:6px;display:block;">Top Gifts (check all that apply)</label>
+          <div id="raaGiftsChecklist"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeRecordAssessmentModal()">Close</button>
+      <button class="btn btn-primary" id="raaSaveBtn" onclick="raaSave()" disabled>Save Result</button>
     </div>
   </div>
 </div>
@@ -1448,7 +1660,7 @@
         <div><div class="ptlabel">Published</div><div class="ptsub">Visible to the public on the Growth Track page</div></div>
         <label class="toggle-switch"><input type="checkbox" id="gtpPublished" /><span class="toggle-slider"></span></label>
       </div>
-      <div class="form-row full"><div class="field"><label>Title *</label><input type="text" id="gtpTitle" placeholder="e.g. About Us" /></div></div>
+      <div class="form-row full"><div class="field"><label>Title *</label><input type="text" id="gtpTitle" placeholder="e.g. Plant" /></div></div>
       <div class="form-row full"><div class="field"><label>Description *</label><textarea id="gtpDescription" placeholder="Describe this part of the Growth Track…"></textarea></div></div>
       <div class="form-row">
         <div class="field"><label>Which Sunday</label>
@@ -1516,6 +1728,91 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="exportGroupRosterCsv()">⬇ Export CSV</button>
       <button class="btn btn-ghost" onclick="closeGroupRoster()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPACT TEAM ADD/EDIT MODAL -->
+<div class="modal-overlay" id="impactTeamModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="impactTeamModalTitle">Add Impact Team</h3><button class="modal-close" onclick="closeImpactTeamModal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="itId" />
+      <div class="publish-toggle-row">
+        <div><div class="ptlabel">Published</div><div class="ptsub">Visible to the public on a Serve page (if/when built)</div></div>
+        <label class="toggle-switch"><input type="checkbox" id="itPublished" checked /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Team Name *</label><input type="text" id="itName" placeholder="e.g. Worship Tech" /></div>
+        <div class="field"><label>Department <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span></label><input type="text" id="itDepartment" placeholder="e.g. Production" /></div>
+      </div>
+      <div class="form-row full"><div class="field"><label>Description</label><textarea id="itDescription" placeholder="Describe what this team does…"></textarea></div></div>
+      <div class="form-row full"><div class="field"><label>Image URL <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span></label><input type="url" id="itImage" placeholder="https://…" /></div></div>
+      <div class="form-row full" style="margin-top:4px;"><div class="field checkbox"><input type="checkbox" id="itOpen" checked /><label for="itOpen">Team is open / accepting new members</label></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeImpactTeamModal()">Cancel</button><button class="btn btn-primary" onclick="saveImpactTeamForm()">Save Team</button></div>
+  </div>
+</div>
+
+<!-- IMPACT TEAM ROSTER MODAL -->
+<div class="modal-overlay" id="impactTeamRosterModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="itRosterModalTitle">Team Members</h3>
+      <button class="modal-close" onclick="closeImpactTeamRoster()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Add / Edit Member Form -->
+      <div id="addItMemberForm" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;">
+        <h4 id="itmFormTitle" style="font-size:.95rem;font-weight:700;margin-bottom:16px;">Add a Member</h4>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Name <span style="color:#ef4444;">*</span></label>
+            <input id="itmName" type="text" placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label>Email <span style="color:#ef4444;">*</span></label>
+            <input id="itmEmail" type="email" placeholder="email@example.com" />
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Phone <span style="font-size:.75rem;color:var(--text-muted);font-weight:400;">(optional)</span></label>
+            <input id="itmPhone" type="tel" placeholder="(402) 555-0100" />
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select id="itmRole"><option value="member">Member</option><option value="leader">Leader</option></select>
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Note <span style="font-size:.75rem;color:var(--text-muted);font-weight:400;">(optional)</span></label>
+            <input id="itmNote" type="text" placeholder="Admin note…" />
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field checkbox"><input type="checkbox" id="itmTrained" onchange="document.getElementById('itmTrainedAtRow').style.display=this.checked?'':'none';" /><label for="itmTrained">Trained for this team</label></div>
+          <div class="field" id="itmTrainedAtRow" style="display:none;"><label>Trained on</label><input id="itmTrainedAt" type="date" /></div>
+        </div>
+        <div id="itmError" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:.875rem;color:#b91c1c;margin-bottom:12px;"></div>
+        <button id="itmSaveBtn" class="btn btn-primary btn-sm" onclick="saveImpactTeamMember()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add to Team
+        </button>
+        <button id="itmCancelEditBtn" class="btn btn-ghost btn-sm" onclick="cancelEditImpactTeamMember()" style="display:none;">Cancel</button>
+      </div>
+
+      <!-- Member List -->
+      <div id="itRosterList">
+        <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:.9rem;">Loading…</div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="exportImpactTeamRosterCsv()">⬇ Export CSV</button>
+      <button class="btn btn-ghost" onclick="closeImpactTeamRoster()">Close</button>
     </div>
   </div>
 </div>
@@ -1820,6 +2117,7 @@
         <div class="field"><label>Date</label><input type="date" id="attEditDate" /></div>
         <div class="field"><label>Worship Attendance</label><input type="number" id="attEditWorship" min="0" /></div>
       </div>
+      <div class="field"><label>Offerings</label><input type="number" id="attEditOfferings" min="0" step="0.01" placeholder="Optional" /></div>
       <div class="field"><label>Notes</label><input type="text" id="attEditNotes" placeholder="Optional" /></div>
     </div>
     <div class="modal-footer">
@@ -1916,8 +2214,7 @@
           <select id="userRole">
             <option value="">Select a role…</option>
             <option value="admin">Admin — Full access to all sections</option>
-            <option value="event_manager">Event Manager — Events, RSVPs, Sermons, Email</option>
-            <option value="small_group_leader">Small Group Leader — Groups, Sign-Ups, Applications, Subscribers</option>
+            <option value="event_manager">Event Manager — Events (including sign-ups), Sermons, Email</option>
           </select>
         </div>
       </div>
@@ -1932,6 +2229,35 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeUserModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE USER MODAL (branded invite link) -->
+<div class="modal-overlay" id="createUserModal" onclick="if(event.target===this)closeCreateUserModal()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3>Create User</h3>
+      <button class="modal-close" onclick="closeCreateUserModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-muted);line-height:1.6;">Sends a Heritage Hill-branded email with a secure sign-in link. They'll set their own password on first click — nothing to email or reset manually.</p>
+      <div class="form-row full" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Name <span style="color:var(--danger);">*</span></label>
+          <input type="text" id="createUserName" placeholder="Jane Smith" />
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field">
+          <label>Email Address <span style="color:var(--danger);">*</span></label>
+          <input type="email" id="createUserEmail" placeholder="jane@example.com" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCreateUserModal()">Cancel</button>
+      <button class="btn btn-primary" id="createUserSaveBtn" onclick="submitCreateUser()">Send Invite</button>
     </div>
   </div>
 </div>
@@ -2018,7 +2344,7 @@
       </div>
       <div class="field" style="margin-bottom:16px;">
         <label>Subject</label>
-        <input type="text" id="gtCancelEmailSubject" placeholder="e.g. About Us — Sep 6 Session Cancelled" />
+        <input type="text" id="gtCancelEmailSubject" placeholder="e.g. Plant — Sep 6 Session Cancelled" />
       </div>
       <div class="field" style="margin-bottom:4px;">
         <label style="margin-bottom:8px;display:block;">Message</label>
@@ -2067,21 +2393,42 @@
   </div>
 </div>
 
+<!-- BAPTISM RECORD MODAL (used by both the Baptism tab and the People panel's quick action) -->
+<div class="modal-overlay" id="baptismModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header"><h3 id="baptismModalTitle">Record Baptism</h3><button class="modal-close" onclick="closeBaptismModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label>Name *</label><input type="text" id="baptismName" placeholder="Full name" /></div>
+        <div class="field"><label>Email *</label><input type="email" id="baptismEmail" placeholder="email@example.com" /></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Phone <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional)</span></label><input type="tel" id="baptismPhone" placeholder="(402) 555-0100" /></div>
+        <div class="field"><label>Date *</label><input type="date" id="baptismDate" /></div>
+      </div>
+      <div class="form-row full"><div class="field"><label>Notes <span style="font-weight:400;color:var(--text-muted);font-size:.78rem;">(optional — e.g. location, baptized by)</span></label><input type="text" id="baptismNotes" placeholder="e.g. Main Campus, baptized by Pastor Lee" /></div></div>
+      <p id="baptismError" style="color:var(--danger);font-size:.82rem;margin-top:4px;display:none;"></p>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeBaptismModal()">Cancel</button><button class="btn btn-primary" onclick="saveBaptismRecord()">Save</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/supabase-client.js"></script>
 <script src="../js/db.js"></script>
+<script src="../js/assessments.js"></script>
+<script src="../js/member-dashboard.js"></script>
 <script src="../js/main.js"></script>
 <script>
 // Role-based access map
 const ROLE_TABS = {
-  admin:               ['events','groups','signups','applications','subscribers','rsvps','prayer','retreat','attendance','sermons','email','settings','users','people','analytics','growthtrack'],
-  event_manager:       ['events','rsvps','sermons','email'],
-  small_group_leader:  ['groups','signups','mygroup'],
+  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users'],
+  event_manager:       ['events','sermons','email'],
 };
-const ROLE_LABELS = { admin:'Admin', event_manager:'Event Manager', small_group_leader:'Small Group Leader' };
+const ROLE_LABELS = { admin:'Admin', event_manager:'Event Manager' };
 
 function applyRoleVisibility() {
   const allowed = ROLE_TABS[window._userRole] || ROLE_TABS.admin;
@@ -2090,7 +2437,7 @@ function applyRoleVisibility() {
     el.style.display = allowed.includes(el.dataset.tab) ? '' : 'none';
   });
   // Hide section headers if all items beneath them are hidden
-  ['navSectionContent','navSectionPeople','navSectionMedia','navSectionSite'].forEach(secId => {
+  ['navSectionFound','navSectionFilled','navSectionFreed','navSectionForged','navSectionOperations'].forEach(secId => {
     const sec = document.getElementById(secId);
     if (!sec) return;
     let next = sec.nextElementSibling, anyVisible = false;
@@ -2115,7 +2462,10 @@ function applyRoleVisibility() {
   if (!user) { window.location.href = 'login.html?next=dashboard.html'; return; }
   window._currentUser = user;
   const roleData = await SupaDB.getUserRoleByEmail(user.email);
-  if (!roleData) { window.location.href = 'my-profile.html'; return; }
+  // Small group leaders manage their group from my-profile.html now, not
+  // this dashboard -- treat that role the same as having no staff role at
+  // all here, rather than falling through to ROLE_TABS.admin below.
+  if (!roleData || roleData.role === 'small_group_leader') { window.location.href = 'my-profile.html'; return; }
   window._userRole = roleData.role;
   window._currentUserName = (roleData && roleData.displayName) ? roleData.displayName : '';
   // Force password change before loading dashboard
@@ -2124,13 +2474,6 @@ function applyRoleVisibility() {
       window._passwordChangeDone = resolve;
       document.getElementById('forcePasswordModal').style.display = 'flex';
     });
-  }
-  window._myGroups = [];
-  window._myGroupIds = [];
-  if (window._userRole === 'small_group_leader') {
-    const allGroups = await SupaDB.adminGetAllGroups();
-    window._myGroups = allGroups.filter(g => g.leaderEmail && g.leaderEmail.toLowerCase() === user.email.toLowerCase());
-    window._myGroupIds = window._myGroups.map(g => g.id);
   }
   applyRoleVisibility();
   SupaDB.getMyProfile().then(profile => {
@@ -2156,7 +2499,7 @@ function applyRoleVisibility() {
   }
 })();
 
-const ALL_TABS = ['events','groups','signups','applications','subscribers','rsvps','prayer','retreat','attendance','sermons','email','settings','users','people','analytics','mygroup','growthtrack'];
+const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users'];
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
   document.getElementById('sidebarBackdrop').classList.toggle('open');
@@ -2179,14 +2522,14 @@ function switchTab(tab) {
   const c = tab[0].toUpperCase()+tab.slice(1);
   const p = document.getElementById('panel'+c), s = document.getElementById('side'+c);
   if(p) p.classList.add('active'); if(s) s.classList.add('active');
-  const titles = {events:'Events',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',rsvps:'Event RSVPs',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Members & Assessments',analytics:'Analytics',mygroup:'My Group',growthtrack:'Growth Track'};
+  const titles = {events:'Events',connect:'Connect Submissions',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Membership',baptism:'Baptism',analytics:'Analytics',growthtrack:'Growth Track',impactteams:'Impact Teams'};
   document.getElementById('topbarTitle').textContent = titles[tab]||tab;
   if(tab==='events') renderEventsTable();
+  else if(tab==='connect') renderConnectPanel();
   else if(tab==='groups') renderGroupsTable();
   else if(tab==='signups') renderSignupsPanel();
   else if(tab==='applications') renderApplicationsTable();
   else if(tab==='subscribers') renderSubscribersTable();
-  else if(tab==='rsvps') renderRsvpsPanel();
   else if(tab==='prayer')  renderPrayerTable();
   else if(tab==='retreat') renderRetreatTable();
   else if(tab==='attendance') renderAttendanceTable();
@@ -2195,9 +2538,10 @@ function switchTab(tab) {
   else if(tab==='settings') { loadBannerSettings(); loadSaveDatesSettings(); loadSemesters(); }
   else if(tab==='users') renderUsersTable();
   else if(tab==='people')  renderPeoplePanel();
+  else if(tab==='baptism') renderBaptismTab();
   else if(tab==='analytics') renderAnalyticsTab();
-  else if(tab==='mygroup') renderMyGroupPanel();
   else if(tab==='growthtrack') renderGrowthTrackTab();
+  else if(tab==='impactteams') renderImpactTeamsTable();
 }
 
 async function updateStats() {
@@ -2231,12 +2575,38 @@ async function renderEventsTable() {
       <td>${ev.published?'<span class="badge badge-green">Published</span>':'<span class="badge badge-gray">Draft</span>'}</td>
       <td><div class="td-actions">
         <button class="btn btn-ghost btn-sm" onclick="editEvent(${ev.id})">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="openEventSignupsModal(${ev.id})">👥 Sign-Ups</button>
         <button class="btn btn-ghost btn-sm" onclick="openMediaModal(${ev.id})" style="color:var(--primary);">📣 Media</button>
         <button class="btn btn-ghost btn-sm" onclick="openGCalForEvent(${ev.id})" style="color:var(--secondary);">📅 Calendar</button>
         <button class="btn btn-ghost btn-sm" onclick="copyEventLink(${ev.id})" style="color:var(--text-muted);">🔗 Copy Link</button>
         <button class="btn btn-danger btn-sm" onclick="deleteItem('event',${ev.id},'${ev.title.replace(/'/g,"\\'")}')">Delete</button>
       </div></td>
     </tr>`).join('');
+}
+
+async function openEventSignupsModal(eventId) {
+  const ev = _cachedEvents.find(e => e.id === eventId);
+  document.getElementById('eventSignupsTitle').textContent = ev ? `Sign-Ups — ${ev.title}` : 'Sign-Ups';
+  const tbody = document.getElementById('eventSignupsTable'), empty = document.getElementById('eventSignupsEmpty');
+  tbody.innerHTML = '';
+  document.getElementById('eventSignupsModal').classList.add('open');
+  const rsvps = await SupaDB.getRsvpsForEvent(eventId);
+  if (!rsvps.length) { empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = rsvps.map(r => `
+    <tr>
+      <td><strong>${escapeHtml(r.fullName)}</strong></td>
+      <td><a href="mailto:${escapeHtml(r.email)}" style="color:var(--primary);">${escapeHtml(r.email)}</a></td>
+      <td>${escapeHtml(r.phone || '—')}</td>
+      <td style="font-size:.82rem;color:var(--text-muted);">${new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeEventSignup(${eventId},'${r.id}')">Remove</button></td>
+    </tr>`).join('');
+}
+function closeEventSignupsModal() { document.getElementById('eventSignupsModal').classList.remove('open'); }
+async function removeEventSignup(eventId, rsvpId) {
+  if (!confirm('Remove this sign-up?')) return;
+  await SupaDB.deleteEventRsvp(rsvpId);
+  openEventSignupsModal(eventId);
 }
 
 function copyEventLink(id) {
@@ -2279,6 +2649,8 @@ function openEventModal(ev) {
   document.getElementById('evId').value=ev?ev.id:'';
   document.getElementById('evPublished').checked=ev?ev.published!==false:true;
   document.getElementById('evRsvpEnabled').checked=ev?!!ev.rsvpEnabled:false;
+  document.getElementById('evLeader').value=ev?(ev.leader||''):'';
+  document.getElementById('evLeaderEmail').value=ev?(ev.leaderEmail||''):'';
   document.getElementById('evTitle').value=ev?ev.title:'';
   document.getElementById('evCategory').value=ev?ev.category:'Worship';
   const hasDate=ev&&ev.dateSort&&ev.dateSort!=='2099-12-31';
@@ -2327,7 +2699,9 @@ async function saveEvent(){
   const endDate=isRec?'':(document.getElementById('evEndDate').value.trim()||'');
   const endDateSort=isRec?'':(document.getElementById('evEndDateSort').value.trim()||'');
   if(endDateSort && dateSort && endDateSort <= dateSort){showToast('End date must be after the start date.',true);return;}
-  const newEv={id:id?parseInt(id):undefined,published:document.getElementById('evPublished').checked,rsvpEnabled:document.getElementById('evRsvpEnabled').checked,title,date,dateSort,endDate,endDateSort,time,location:loc,category:document.getElementById('evCategory').value,description:desc,image,recurring:isRec};
+  const leader=document.getElementById('evLeader').value.trim();
+  const leaderEmail=document.getElementById('evLeaderEmail').value.trim();
+  const newEv={id:id?parseInt(id):undefined,published:document.getElementById('evPublished').checked,rsvpEnabled:document.getElementById('evRsvpEnabled').checked,title,date,dateSort,endDate,endDateSort,time,location:loc,category:document.getElementById('evCategory').value,description:desc,image,recurring:isRec,leader,leaderEmail};
   const result = await SupaDB.saveEvent(newEv);
   if(result.error){showToast('Error saving event: '+result.error,true);return;}
   // Update in-memory cache so the table re-renders with the fresh data
@@ -2395,15 +2769,10 @@ function openGCalForEvent(id){const ev=_cachedEvents.find(e=>e.id===id);if(ev)wi
 let _cachedGroups = [];
 let _semestersForGroupModal = [];
 async function renderGroupsTable(){
+  renderMyGroupsCard();
   _cachedGroups = await SupaDB.adminGetAllGroups();
   _semestersForGroupModal = await SupaDB.getSemesters();
-  const isLeader = window._userRole === 'small_group_leader';
-  let groups = isLeader ? _cachedGroups.filter(g => window._myGroupIds.includes(g.id)) : _cachedGroups;
-  // Show/hide Add Group and Email All Leaders buttons based on role
-  const addBtn = document.getElementById('addGroupBtn');
-  if (addBtn) addBtn.style.display = isLeader ? 'none' : '';
-  const emailAllBtn = document.getElementById('emailAllLeadersBtn');
-  if (emailAllBtn) emailAllBtn.style.display = isLeader ? 'none' : '';
+  let groups = _cachedGroups;
   const semSelEl = document.getElementById('groupSemesterFilter');
   if (semSelEl && semSelEl.options.length <= 2) {
     semSelEl.innerHTML = '<option value="">All Semesters</option><option value="__current__">Current Semester</option>'
@@ -2450,7 +2819,7 @@ async function renderGroupsTable(){
           Email Group
         </button>
         <button class="btn btn-ghost btn-sm" onclick="printGroupSignupSheet(${g.id})">🖨️ Print Sign-Up Sheet</button>
-        ${!isLeader?`<button class="btn btn-danger btn-sm" onclick="deleteItem('group',${g.id},'${g.name.replace(/'/g,"\\'")}')">Delete</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('group',${g.id},'${g.name.replace(/'/g,"\\'")}')">Delete</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -2629,6 +2998,227 @@ function exportGroupRosterCsv() {
   a.download = `${slug}-members-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
+
+/* ── IMPACT TEAMS ─────────────────────────────────────────── */
+let _cachedImpactTeams = [];
+async function renderImpactTeamsTable(){
+  renderMyImpactTeamsCard();
+  _cachedImpactTeams = await SupaDB.adminGetAllImpactTeams();
+  const allMembers = await SupaDB.adminGetAllCurrentImpactTeamMembers();
+  let teams = _cachedImpactTeams;
+  const pubSelEl = document.getElementById('teamPublishedFilter');
+  const pubFilterVal = pubSelEl ? pubSelEl.value : '';
+  if (pubFilterVal === 'published') teams = teams.filter(t => t.published);
+  else if (pubFilterVal === 'draft') teams = teams.filter(t => !t.published);
+  const tbody=document.getElementById('impactTeamsTable'), empty=document.getElementById('impactTeamsEmpty');
+  if(!teams.length){tbody.innerHTML='';empty.style.display='';return;}empty.style.display='none';
+  tbody.innerHTML=teams.map(t=>{
+    const roster = allMembers.filter(m=>m.teamId===t.id);
+    const leaderCount = roster.filter(m=>m.role==='leader').length;
+    const memberCount = roster.length - leaderCount;
+    return `<tr>
+      <td><strong>${escapeHtml(t.name)}</strong></td>
+      <td>${escapeHtml(t.department || '—')}</td>
+      <td>${memberCount}</td>
+      <td>${leaderCount}</td>
+      <td>${t.published?'<span class="badge badge-green">Published</span>':'<span class="badge badge-gray">Draft</span>'}</td>
+      <td>${t.open?'<span class="badge badge-amber">Open</span>':'<span class="badge badge-red">Full</span>'}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openImpactTeamRoster(${t.id})">Members</button>
+        <button class="btn btn-ghost btn-sm" onclick="editImpactTeam(${t.id})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('impactteam',${t.id},'${t.name.replace(/'/g,"\\'")}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function openImpactTeamModal(t){
+  document.getElementById('impactTeamModalTitle').textContent=t?'Edit Team':'Add Team';
+  document.getElementById('itId').value=t?t.id:'';
+  document.getElementById('itPublished').checked=t?t.published!==false:true;
+  document.getElementById('itName').value=t?t.name:'';
+  document.getElementById('itDepartment').value=t?(t.department||''):'';
+  document.getElementById('itDescription').value=t?(t.description||''):'';
+  document.getElementById('itImage').value=t?(t.image||''):'';
+  document.getElementById('itOpen').checked=t?t.open!==false:true;
+  document.getElementById('impactTeamModal').classList.add('open');
+}
+function closeImpactTeamModal(){document.getElementById('impactTeamModal').classList.remove('open');}
+function editImpactTeam(id){const t=_cachedImpactTeams.find(t=>t.id===id);if(t)openImpactTeamModal(t);}
+async function saveImpactTeamForm(){
+  const id=document.getElementById('itId').value;
+  const name=document.getElementById('itName').value.trim();
+  if(!name){showToast('Team name is required.',true);return;}
+  const payload={
+    id: id || undefined,
+    name,
+    department: document.getElementById('itDepartment').value.trim(),
+    description: document.getElementById('itDescription').value.trim(),
+    image: document.getElementById('itImage').value.trim(),
+    open: document.getElementById('itOpen').checked,
+    published: document.getElementById('itPublished').checked,
+  };
+  const result = await SupaDB.saveImpactTeam(payload);
+  if(result?.error){showToast(result.error,true);return;}
+  closeImpactTeamModal();
+  await renderImpactTeamsTable();
+  showToast(`✓ ${name} saved`);
+}
+
+/* ── IMPACT TEAM ROSTER ───────────────────────────────────── */
+let _rosterTeamId = null;
+let _rosterTeamMembers = [];
+let _editingTeamMembershipId = null;
+
+async function openImpactTeamRoster(teamId) {
+  _rosterTeamId = teamId;
+  const team = _cachedImpactTeams.find(t => t.id === teamId);
+  document.getElementById('itRosterModalTitle').textContent = team ? `Members — ${team.name}` : 'Team Members';
+  cancelEditImpactTeamMember();
+  document.getElementById('impactTeamRosterModal').classList.add('open');
+  await renderImpactTeamRoster();
+}
+function closeImpactTeamRoster() {
+  document.getElementById('impactTeamRosterModal').classList.remove('open');
+  _rosterTeamId = null;
+}
+async function renderImpactTeamRoster() {
+  const container = document.getElementById('itRosterList');
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.9rem;">Loading…</div>';
+  const members = await SupaDB.adminGetImpactTeamMembers(_rosterTeamId);
+  _rosterTeamMembers = members;
+  if (!members.length) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:.9rem;">No members yet — add the first one above.</div>';
+    return;
+  }
+  container.innerHTML = `
+    <h4 style="font-size:.95rem;font-weight:700;margin-bottom:12px;">Current Members (${members.length})</h4>
+    <div class="table-wrap" style="margin:0;">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Trained</th><th>Note</th><th>Joined</th><th></th></tr></thead>
+        <tbody>
+          ${members.map(m => `
+            <tr>
+              <td><strong>${escapeHtml(m.name)}</strong></td>
+              <td><a href="mailto:${escapeHtml(m.email)}" style="color:var(--primary);">${escapeHtml(m.email)}</a></td>
+              <td>${escapeHtml(m.phone || '—')}</td>
+              <td>${m.role==='leader'?'<span class="badge badge-amber">Leader</span>':'<span class="badge badge-blue">Member</span>'}</td>
+              <td style="font-size:.82rem;">${m.trained?`<span class="badge badge-green">✓${m.trainedAt?' '+new Date(m.trainedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</span>`:'<span class="badge badge-gray">Not yet</span>'}</td>
+              <td style="font-size:.82rem;color:var(--text-muted);">${escapeHtml(m.notes || '—')}</td>
+              <td style="font-size:.82rem;color:var(--text-muted);">${new Date(m.joinedAt+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+              <td style="white-space:nowrap;">
+                <button class="btn btn-ghost btn-sm" onclick="editImpactTeamMember(${m.id})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="removeImpactTeamMember(${m.id})">Remove</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+function editImpactTeamMember(membershipId) {
+  const m = _rosterTeamMembers.find(x => x.id === membershipId);
+  if (!m) return;
+  _editingTeamMembershipId = membershipId;
+  document.getElementById('itmName').value = m.name;
+  document.getElementById('itmEmail').value = m.email;
+  document.getElementById('itmPhone').value = m.phone || '';
+  document.getElementById('itmRole').value = m.role || 'member';
+  document.getElementById('itmNote').value = m.notes || '';
+  document.getElementById('itmTrained').checked = !!m.trained;
+  document.getElementById('itmTrainedAt').value = m.trainedAt || '';
+  document.getElementById('itmTrainedAtRow').style.display = m.trained ? '' : 'none';
+  document.getElementById('itmError').style.display = 'none';
+  document.getElementById('itmFormTitle').textContent = 'Edit Member';
+  document.getElementById('itmSaveBtn').innerHTML = 'Save Changes';
+  document.getElementById('itmCancelEditBtn').style.display = '';
+  document.getElementById('addItMemberForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function cancelEditImpactTeamMember() {
+  _editingTeamMembershipId = null;
+  document.getElementById('itmName').value = '';
+  document.getElementById('itmEmail').value = '';
+  document.getElementById('itmPhone').value = '';
+  document.getElementById('itmRole').value = 'member';
+  document.getElementById('itmNote').value = '';
+  document.getElementById('itmTrained').checked = false;
+  document.getElementById('itmTrainedAt').value = '';
+  document.getElementById('itmTrainedAtRow').style.display = 'none';
+  document.getElementById('itmError').style.display = 'none';
+  document.getElementById('itmFormTitle').textContent = 'Add a Member';
+  document.getElementById('itmSaveBtn').innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Team';
+  document.getElementById('itmCancelEditBtn').style.display = 'none';
+}
+async function saveImpactTeamMember() {
+  const name  = document.getElementById('itmName').value.trim();
+  const email = document.getElementById('itmEmail').value.trim();
+  const phone = document.getElementById('itmPhone').value.trim();
+  const role  = document.getElementById('itmRole').value;
+  const note  = document.getElementById('itmNote').value.trim();
+  const trained = document.getElementById('itmTrained').checked;
+  const trainedAt = document.getElementById('itmTrainedAt').value || null;
+  const errEl = document.getElementById('itmError');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = ''; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'A valid email is required.'; errEl.style.display = ''; return;
+  }
+
+  const team = _cachedImpactTeams.find(t => t.id === _rosterTeamId);
+  if (!team) return;
+
+  if (_editingTeamMembershipId) {
+    const result = await SupaDB.adminUpdateImpactTeamMember(_editingTeamMembershipId, { name, email, phone, role, notes: note, trained, trainedAt });
+    if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
+    showToast(`✓ ${name} updated`);
+    cancelEditImpactTeamMember();
+    await renderImpactTeamRoster();
+    await renderImpactTeamsTable();
+    return;
+  }
+
+  const result = await SupaDB.adminAddImpactTeamMember({
+    teamId: team.id, name, email, phone, role, notes: note, trained, trainedAt,
+  });
+
+  if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
+
+  document.getElementById('itmName').value = '';
+  document.getElementById('itmEmail').value = '';
+  document.getElementById('itmPhone').value = '';
+  document.getElementById('itmRole').value = 'member';
+  document.getElementById('itmNote').value = '';
+  document.getElementById('itmTrained').checked = false;
+  document.getElementById('itmTrainedAt').value = '';
+  document.getElementById('itmTrainedAtRow').style.display = 'none';
+  showToast(`✓ ${name} added to ${team.name}`);
+  await renderImpactTeamRoster();
+  await renderImpactTeamsTable();
+}
+async function removeImpactTeamMember(membershipId) {
+  if (!confirm('Remove this member from the team?')) return;
+  await SupaDB.adminRemoveImpactTeamMember(membershipId);
+  showToast('Member removed.');
+  await renderImpactTeamRoster();
+  await renderImpactTeamsTable();
+}
+function exportImpactTeamRosterCsv() {
+  if (!_rosterTeamMembers.length) { showToast('No members to export.', true); return; }
+  const team = _cachedImpactTeams.find(t => t.id === _rosterTeamId);
+  const headers = ['Name', 'Email', 'Phone', 'Role', 'Trained', 'Note', 'Joined'];
+  const rows = _rosterTeamMembers.map(m => [
+    m.name, m.email, m.phone || '', m.role || 'member',
+    m.trained ? (m.trainedAt || 'Yes') : 'No', m.notes || '',
+    m.joinedAt ? new Date(m.joinedAt + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+  ]);
+  const csv = [headers, ...rows].map(r =>
+    r.map(v => `"${csvSafe(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+  const slug = (team ? team.name : 'team').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  a.download = `${slug}-members-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
 async function saveGroup(){
   const id=document.getElementById('grId').value;
   const name=document.getElementById('grName').value.trim();
@@ -2693,18 +3283,12 @@ function generateAIImage(){
 let _cachedSignups = [], _cachedSignupGroups = [];
 let _semestersForSignups = [];
 async function renderSignupsPanel(){
-  const isLeader = window._userRole === 'small_group_leader';
   [_cachedSignups, _cachedSignupGroups, _semestersForSignups] = await Promise.all([
     SupaDB.adminGetAllSignups(), SupaDB.adminGetAllGroups(), SupaDB.getSemesters()
   ]);
   // Populate filter dropdown once after data loads — don't touch it on filter changes
-  const visibleGroups = isLeader ? _cachedSignupGroups.filter(g => window._myGroupIds.includes(g.id)) : _cachedSignupGroups;
   const sel=document.getElementById('signupFilterGroup');
-  // Single-group leaders don't need "All" since there's nothing else to show
-  const showAllOption = !isLeader || visibleGroups.length > 1;
-  sel.innerHTML=(showAllOption?'<option value="">All Groups</option>':'')+visibleGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
-  if (isLeader && visibleGroups.length === 1) sel.value = String(visibleGroups[0].id);
-  sel.disabled = isLeader && visibleGroups.length <= 1;
+  sel.innerHTML='<option value="">All Groups</option>'+_cachedSignupGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
   const semSelEl = document.getElementById('signupFilterSemester');
   if (semSelEl && semSelEl.options.length <= 2) {
     semSelEl.innerHTML = '<option value="">All Semesters</option><option value="__current__">Current Semester</option>'
@@ -2713,14 +3297,10 @@ async function renderSignupsPanel(){
   applySignupsFilter();
 }
 async function applySignupsFilter(){
-  const isLeader = window._userRole === 'small_group_leader';
   const filterGroupId=document.getElementById('signupFilterGroup').value;
   const filterStatus=document.getElementById('signupFilterStatus').value;
   const filterSemester=document.getElementById('signupFilterSemester').value;
   let signups=[..._cachedSignups];
-  // Leaders: first restrict to their own groups, then apply dropdown selection
-  if (isLeader) signups=signups.filter(s=>window._myGroupIds.includes(s.groupId));
-  // Apply group dropdown for everyone (leaders picking one of their groups, admins picking any)
   if(filterGroupId)signups=signups.filter(s=>String(s.groupId)===String(filterGroupId));
   if(filterStatus==='new')signups=signups.filter(s=>!s.contacted);
   if(filterStatus==='contacted')signups=signups.filter(s=>s.contacted);
@@ -2765,6 +3345,33 @@ async function toggleSignupContacted(id){
   const newVal=!s.contacted;
   await SupaDB.updateSignup(id,{contacted:newVal});
   renderSignupsPanel();showToast(newVal?'Marked as contacted ✓':'Marked as uncontacted');
+}
+let _cachedConnectSubmissions = [];
+async function renderConnectPanel(){
+  _cachedConnectSubmissions = await SupaDB.adminGetConnectSubmissions();
+  const grid=document.getElementById('connectGrid'),empty=document.getElementById('connectEmpty');
+  const countLabel=document.getElementById('connectCountLabel');
+  countLabel.textContent=`${_cachedConnectSubmissions.length} submission${_cachedConnectSubmissions.length!==1?'s':''}`;
+  if(!_cachedConnectSubmissions.length){grid.innerHTML='';empty.style.display='';}
+  else{
+    empty.style.display='none';
+    grid.innerHTML=_cachedConnectSubmissions.map(c=>{
+      const ds=c.createdAt?new Date(c.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+      return`<tr>
+        <td><strong>${escapeHtml(c.name)}</strong><br><a href="mailto:${escapeHtml(c.email)}" style="font-size:.8rem;color:var(--primary);">${escapeHtml(c.email)}</a>${c.phone?`<br><span style="font-size:.8rem;color:var(--text-muted);">${escapeHtml(c.phone)}</span>`:''}</td>
+        <td style="font-size:.82rem;color:var(--text-muted);">${ds}</td>
+        <td>${c.contacted?'<span class="badge badge-green">Contacted</span>':'<span class="badge badge-amber">New</span>'}</td>
+        <td><button class="btn btn-sm ${c.contacted?'btn-ghost':'btn-success'}" onclick="toggleConnectContacted(${c.id})">${c.contacted?'↩ Mark Uncontacted':'✓ Mark Contacted'}</button></td>
+      </tr>`;
+    }).join('');
+  }
+}
+async function toggleConnectContacted(id){
+  const c=_cachedConnectSubmissions.find(c=>c.id===id);
+  if(!c)return;
+  const newVal=!c.contacted;
+  await SupaDB.adminMarkConnectContacted(id, newVal, window._currentUser ? window._currentUser.email : '');
+  renderConnectPanel();showToast(newVal?'Marked as contacted ✓':'Marked as uncontacted');
 }
 function emailGroupSignups(){
   const filterGroupId=document.getElementById('signupFilterGroup').value;
@@ -4317,7 +4924,7 @@ let _deleteType,_deleteId;
 function deleteItem(type,id,name){_deleteType=type;_deleteId=id;document.getElementById('deleteItemName').textContent=name;document.getElementById('deleteModal').classList.add('open');}
 function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('open');}
 async function confirmDelete(){
-  const delFns={event:SupaDB.deleteEvent,group:SupaDB.deleteGroup,signup:SupaDB.deleteSignup,application:SupaDB.deleteApplication,subscriber:SupaDB.deleteSubscriber,sermon:SupaDB.deleteSermon};
+  const delFns={event:SupaDB.deleteEvent,group:SupaDB.deleteGroup,signup:SupaDB.deleteSignup,application:SupaDB.deleteApplication,subscriber:SupaDB.deleteSubscriber,sermon:SupaDB.deleteSermon,impactteam:SupaDB.deleteImpactTeam};
   const fn=delFns[_deleteType];
   if(fn)await fn.call(SupaDB,_deleteId);
   closeDeleteModal();
@@ -4327,6 +4934,7 @@ async function confirmDelete(){
   else if(_deleteType==='application')renderApplicationsTable();
   else if(_deleteType==='subscriber')renderSubscribersTable();
   else if(_deleteType==='sermon')renderSermonsTable();
+  else if(_deleteType==='impactteam')renderImpactTeamsTable();
   updateStats();showToast('Deleted successfully.');
 }
 
@@ -4335,62 +4943,6 @@ function showToast(msg,isError=false){const t=document.getElementById('toast');t
 async function logout(){await SupaDB.signOut();window.location.href='login.html';}
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
-
-/* ── EVENT RSVPs ────────────────────────────────────────── */
-let _cachedRsvps = [];
-async function renderRsvpsPanel() {
-  _cachedRsvps = await SupaDB.adminGetAllRsvps();
-  const filterSel = document.getElementById('rsvpFilterEvent');
-  const q = (document.getElementById('rsvpSearch').value||'').toLowerCase();
-  const filterEvent = filterSel ? filterSel.value : '';
-
-  // Populate event filter dropdown
-  if (filterSel) {
-    const events = [...new Set(_cachedRsvps.map(r => r.eventTitle))].sort();
-    const current = filterSel.value;
-    filterSel.innerHTML = '<option value="">All Events</option>' + events.map(t=>`<option value="${t}"${t===current?' selected':''}>${t}</option>`).join('');
-  }
-
-  let rsvps = [..._cachedRsvps];
-  if (filterEvent) rsvps = rsvps.filter(r => r.eventTitle === filterEvent);
-  if (q) rsvps = rsvps.filter(r => r.fullName.toLowerCase().includes(q) || r.email.toLowerCase().includes(q));
-
-  document.getElementById('rsvpCount').textContent = `${rsvps.length} record${rsvps.length!==1?'s':''}`;
-  const tbody = document.getElementById('rsvpsTable');
-  const empty = document.getElementById('rsvpsEmpty');
-
-  if (!rsvps.length) { tbody.innerHTML=''; empty.style.display=''; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = rsvps.map((r,i) => `
-    <tr>
-      <td style="color:var(--text-muted);font-size:.82rem;">${i+1}</td>
-      <td><strong>${r.eventTitle}</strong></td>
-      <td>${r.fullName}</td>
-      <td><a href="mailto:${r.email}" style="color:var(--primary);">${r.email}</a></td>
-      <td>${r.phone || '<span style="color:var(--text-muted);">—</span>'}</td>
-      <td style="font-size:.82rem;color:var(--text-muted);">${r.date ? new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteRsvp(${r.id},'${r.fullName.replace(/'/g,"\\'")}')">Delete</button></td>
-    </tr>`).join('');
-}
-
-async function deleteRsvp(id, name) {
-  if (!confirm(`Remove RSVP from ${name}?`)) return;
-  await SupaDB.deleteEventRsvp(id);
-  _cachedRsvps = _cachedRsvps.filter(r => r.id !== id);
-  renderRsvpsPanel();
-  showToast('RSVP removed.');
-}
-
-function exportRsvpsCsv() {
-  if (!_cachedRsvps.length) { showToast('No RSVPs to export.',true); return; }
-  const rows = [['Event','Full Name','Email','Phone','Date Submitted']];
-  _cachedRsvps.forEach(r => rows.push([r.eventTitle, r.fullName, r.email, r.phone||'', r.date ? new Date(r.date).toLocaleDateString() : '']));
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'event-rsvps.csv';
-  a.click();
-}
 
 /* ── SETTINGS: Banner ───────────────────────────────────── */
 let _bannerEnabled = true;
@@ -5346,6 +5898,8 @@ async function renderAttendanceTable() {
       .reduce((sum, ga) => sum + (ga.headcount || 0), 0);
   };
 
+  const fmtMoney = v => v != null ? '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '–';
+
   tbody.innerHTML = _cachedAttendance.map(r => {
     const sgCount = sgSumForDate(r.serviceDate);
     const sgDisplay = sgCount > 0 ? sgCount.toLocaleString() : '–';
@@ -5357,6 +5911,7 @@ async function renderAttendanceTable() {
       <td>${r.worshipCount != null ? r.worshipCount.toLocaleString() : '–'}</td>
       <td>${sgDisplay}</td>
       <td><span style="background:rgba(188,122,30,.1);color:var(--primary);font-size:.8rem;font-weight:700;padding:2px 8px;border-radius:20px;">${rate}</span></td>
+      <td>${fmtMoney(r.offerings)}</td>
       <td style="color:var(--text-muted);font-size:.85rem;">${r.notes || ''}</td>
       <td><div class="td-actions">
         <button class="btn btn-ghost btn-sm" onclick="editAttEntry('${r.id}')">Edit</button>
@@ -5372,50 +5927,64 @@ async function addAttendanceEntry() {
   const okEl  = document.getElementById('attAddSuccess');
   errEl.style.display = 'none'; okEl.style.display = 'none';
 
-  const date    = document.getElementById('attDate').value;
-  const worship = document.getElementById('attWorship').value;
-  const notes   = document.getElementById('attNotes').value.trim();
+  const date      = document.getElementById('attDate').value;
+  const worship   = document.getElementById('attWorship').value;
+  const offerings = document.getElementById('attOfferings').value;
+  const notes     = document.getElementById('attNotes').value.trim();
 
   if (!date)    { errEl.textContent = 'Please select a date.';              errEl.style.display = ''; return; }
   if (!worship) { errEl.textContent = 'Please enter the worship headcount.'; errEl.style.display = ''; return; }
 
   btn.disabled = true;
-  const res = await SupaDB.adminAddAttendance({ serviceDate: date, worshipCount: parseInt(worship), notes });
+  const res = await SupaDB.adminAddAttendance({
+    serviceDate: date, worshipCount: parseInt(worship),
+    offerings: offerings !== '' ? parseFloat(offerings) : null, notes,
+  });
   btn.disabled = false;
 
   if (res.error) {
     errEl.textContent = res.error.includes('23505') ? 'An entry for this date already exists.' : res.error;
     errEl.style.display = ''; return;
   }
-  ['attDate','attWorship','attNotes'].forEach(id => document.getElementById(id).value = '');
+  ['attDate','attWorship','attOfferings','attNotes'].forEach(id => document.getElementById(id).value = '');
   okEl.style.display = '';
   setTimeout(() => okEl.style.display = 'none', 2500);
+  // A group meeting for this week may already have been logged before this
+  // weekly entry existed -- recompute now so the new row's small_group_count
+  // isn't left null until the next unrelated group-attendance write.
+  await SupaDB.adminRecomputeSmallGroupCounts();
   renderAttendanceTable();
 }
 
 function editAttEntry(id) {
   const r = _cachedAttendance.find(x => x.id === id);
   if (!r) return;
-  document.getElementById('attEditId').value      = id;
-  document.getElementById('attEditDate').value    = r.serviceDate;
-  document.getElementById('attEditWorship').value = r.worshipCount ?? '';
-  document.getElementById('attEditNotes').value   = r.notes || '';
+  document.getElementById('attEditId').value        = id;
+  document.getElementById('attEditDate').value      = r.serviceDate;
+  document.getElementById('attEditWorship').value   = r.worshipCount ?? '';
+  document.getElementById('attEditOfferings').value = r.offerings ?? '';
+  document.getElementById('attEditNotes').value     = r.notes || '';
   document.getElementById('attEditModal').classList.add('open');
 }
 function closeAttEditModal() { document.getElementById('attEditModal').classList.remove('open'); }
 
 async function saveAttEdit() {
-  const id      = document.getElementById('attEditId').value;
-  const date    = document.getElementById('attEditDate').value;
-  const worship = document.getElementById('attEditWorship').value;
-  const notes   = document.getElementById('attEditNotes').value.trim();
+  const id        = document.getElementById('attEditId').value;
+  const date      = document.getElementById('attEditDate').value;
+  const worship   = document.getElementById('attEditWorship').value;
+  const offerings = document.getElementById('attEditOfferings').value;
+  const notes     = document.getElementById('attEditNotes').value.trim();
   const res = await SupaDB.adminUpdateAttendance(id, {
     serviceDate: date,
     worshipCount: worship !== '' ? parseInt(worship) : null,
+    offerings: offerings !== '' ? parseFloat(offerings) : null,
     notes,
   });
   if (res.error) { alert('Error: ' + res.error); return; }
   closeAttEditModal();
+  // The date may have shifted, changing which group meetings fall in this
+  // row's window -- recompute so small_group_count stays accurate.
+  await SupaDB.adminRecomputeSmallGroupCounts();
   renderAttendanceTable();
 }
 
@@ -5450,7 +6019,7 @@ function escapeHtml(s) {
   }[c]));
 }
 
-let _pplProfiles = [], _pplLatest = {}, _pplGifts = []; // _pplLatest[userId] = {disc, gifts}
+let _pplProfiles = [];
 
 function latestByUser(attempts) {
   const map = {};
@@ -5518,6 +6087,7 @@ async function renderAnalyticsTab() {
   ]);
   document.getElementById('analyticsMilestoneGtRegistered').textContent = milestoneCounts.growth_track_registered || 0;
   document.getElementById('analyticsMilestoneGtAttended').textContent = milestoneCounts.growth_track_attended || 0;
+  document.getElementById('analyticsMilestoneBecameMember').textContent = milestoneCounts.became_member || 0;
   document.getElementById('analyticsMilestoneDisc').textContent = milestoneCounts.assessment_disc_completed || 0;
   document.getElementById('analyticsMilestoneGifts').textContent = milestoneCounts.assessment_gifts_completed || 0;
   document.getElementById('analyticsMilestoneGroupMember').textContent = milestoneCounts.small_group_member || 0;
@@ -5640,6 +6210,186 @@ async function generateClaudeAnalysis() {
   }
 }
 
+/* ── RECORD ASSESSMENT (admin-entered paper results) ────── */
+let _raaProfiles = [];
+let _raaContent = null;
+let _raaSelectedPerson = null;
+let _raaType = 'disc';
+let _raaMode = 'answers';
+const RAA_SCALES = {
+  disc: [[1,'Never'],[2,'Rarely'],[3,'Sometimes'],[4,'Often'],[5,'Always']],
+  gifts: [[1,'Almost Never'],[2,'Sometimes'],[3,'Almost Always']],
+};
+
+async function openRecordAssessmentModal() {
+  document.getElementById('recordAssessmentModal').classList.add('open');
+  const [profiles, content] = await Promise.all([
+    SupaDB.adminGetAllMemberProfiles(), SupaDB.getAssessmentContent(),
+  ]);
+  _raaProfiles = profiles;
+  _raaContent = Assessments.splitContent(content);
+  raaClearPerson();
+  raaSetType('disc');
+  raaSetMode('answers');
+}
+function closeRecordAssessmentModal() {
+  document.getElementById('recordAssessmentModal').classList.remove('open');
+}
+
+function raaFilterPeople() {
+  const q = document.getElementById('raaSearchInput').value.trim().toLowerCase();
+  const results = document.getElementById('raaSearchResults');
+  if (!q) { results.style.display = 'none'; results.innerHTML = ''; return; }
+  const matches = _raaProfiles.filter(p =>
+    (p.name && p.name.toLowerCase().includes(q)) || (p.email && p.email.toLowerCase().includes(q))
+  ).slice(0, 8);
+  results.style.display = 'block';
+  if (!matches.length) {
+    results.innerHTML = '<div class="raa-search-row" style="color:var(--text-muted);">No matches</div>';
+    return;
+  }
+  results.innerHTML = matches.map(p => `
+    <div class="raa-search-row" onclick="raaSelectPerson('${p.userId}')">
+      <div>${escapeHtml(p.name || '(no name)')}</div>
+      <div class="email">${escapeHtml(p.email)}</div>
+    </div>`).join('');
+}
+
+function raaSelectPerson(userId) {
+  const p = _raaProfiles.find(x => x.userId === userId);
+  if (!p) return;
+  _raaSelectedPerson = p;
+  document.getElementById('raaPersonPicker').style.display = 'none';
+  document.getElementById('raaPersonChip').style.display = 'block';
+  document.getElementById('raaPersonName').textContent = p.name || '(no name)';
+  document.getElementById('raaPersonEmail').textContent = p.email;
+  document.getElementById('raaSearchInput').value = '';
+  document.getElementById('raaSearchResults').style.display = 'none';
+  raaUpdateSaveEnabled();
+}
+function raaClearPerson() {
+  _raaSelectedPerson = null;
+  document.getElementById('raaPersonPicker').style.display = 'block';
+  document.getElementById('raaPersonChip').style.display = 'none';
+  raaUpdateSaveEnabled();
+}
+
+function raaSetType(type) {
+  _raaType = type;
+  document.getElementById('raaTypeDisc').classList.toggle('active', type === 'disc');
+  document.getElementById('raaTypeGifts').classList.toggle('active', type === 'gifts');
+  raaRenderQuestions();
+  raaRenderDirectForm();
+}
+function raaSetMode(mode) {
+  _raaMode = mode;
+  document.getElementById('raaModeAnswers').classList.toggle('active', mode === 'answers');
+  document.getElementById('raaModeDirect').classList.toggle('active', mode === 'direct');
+  document.getElementById('raaAnswersForm').style.display = mode === 'answers' ? 'block' : 'none';
+  document.getElementById('raaDirectForm').style.display = mode === 'direct' ? 'block' : 'none';
+  raaUpdateSaveEnabled();
+}
+
+function raaCurrentQuestions() {
+  if (!_raaContent) return [];
+  return _raaType === 'disc' ? _raaContent.discQuestions : _raaContent.giftQuestions;
+}
+
+function raaRenderQuestions() {
+  const questions = raaCurrentQuestions();
+  const scale = RAA_SCALES[_raaType];
+  document.getElementById('raaQList').innerHTML = questions.map((q, i) => `
+    <div class="raa-q-block">
+      <div class="raa-q-text">${i + 1}. ${escapeHtml(q.text)}</div>
+      <div class="raa-q-scale">${scale.map(([v, label]) => `
+        <label><input type="radio" name="raaq${q.id}" value="${v}" onchange="raaOnAnswer()" /><span>${label}</span></label>`).join('')}
+      </div>
+    </div>`).join('');
+  raaOnAnswer();
+}
+
+function raaCollectAnswers() {
+  const answers = {};
+  raaCurrentQuestions().forEach(q => {
+    const sel = document.querySelector(`input[name="raaq${q.id}"]:checked`);
+    if (sel) answers[q.id] = Number(sel.value);
+  });
+  return answers;
+}
+
+function raaOnAnswer() {
+  const answers = raaCollectAnswers();
+  const total = raaCurrentQuestions().length;
+  const done = Object.keys(answers).length;
+  document.getElementById('raaProgressLabel').textContent = `${done} of ${total} answered`;
+  raaUpdateSaveEnabled();
+}
+
+function raaRenderDirectForm() {
+  if (!_raaContent) return;
+  document.getElementById('raaDiscDirectWrap').style.display = _raaType === 'disc' ? 'block' : 'none';
+  document.getElementById('raaGiftsDirectWrap').style.display = _raaType === 'gifts' ? 'block' : 'none';
+
+  const blendSelect = document.getElementById('raaDiscBlendSelect');
+  blendSelect.innerHTML = '<option value="">— Select —</option>' +
+    _raaContent.discBlends.map(b => `<option value="${b.code}">${b.code} — ${escapeHtml((b.extra && b.extra.name) || '')}</option>`).join('');
+  blendSelect.onchange = raaUpdateSaveEnabled;
+
+  document.getElementById('raaGiftsChecklist').innerHTML = _raaContent.gifts.map(g => `
+    <label class="raa-gift-check"><input type="checkbox" value="${escapeHtml((g.extra && g.extra.name) || g.code)}" onchange="raaUpdateSaveEnabled()" /> ${escapeHtml((g.extra && g.extra.name) || g.code)}</label>`).join('');
+}
+
+function raaUpdateSaveEnabled() {
+  let ready = !!_raaSelectedPerson;
+  if (ready) {
+    if (_raaMode === 'answers') {
+      const total = raaCurrentQuestions().length;
+      const done = Object.keys(raaCollectAnswers()).length;
+      ready = total > 0 && done === total;
+    } else if (_raaType === 'disc') {
+      ready = !!document.getElementById('raaDiscBlendSelect').value;
+    } else {
+      ready = document.querySelectorAll('#raaGiftsChecklist input:checked').length > 0;
+    }
+  }
+  document.getElementById('raaSaveBtn').disabled = !ready;
+}
+
+async function raaSave() {
+  const btn = document.getElementById('raaSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  let answers = {}, scores = {}, result;
+  if (_raaMode === 'answers') {
+    answers = raaCollectAnswers();
+    if (_raaType === 'disc') {
+      const r = Assessments.scoreDisc(answers, raaCurrentQuestions());
+      scores = r.totals; result = r.result;
+    } else {
+      const r = Assessments.scoreGifts(answers, raaCurrentQuestions(), _raaContent.gifts);
+      scores = r.totals; result = JSON.stringify(r.result);
+    }
+  } else if (_raaType === 'disc') {
+    result = document.getElementById('raaDiscBlendSelect').value;
+  } else {
+    const names = [...document.querySelectorAll('#raaGiftsChecklist input:checked')].map(el => el.value);
+    result = JSON.stringify(names);
+  }
+  const saved = await SupaDB.adminAddAssessmentAttempt({
+    userId: _raaSelectedPerson.userId, assessmentType: _raaType, answers, scores, result,
+  });
+  btn.textContent = 'Save Result';
+  if (saved.error) {
+    showToast('Error: ' + saved.error, true);
+    btn.disabled = false;
+    return;
+  }
+  showToast(`✓ Recorded ${_raaType === 'disc' ? 'DISC' : 'Spiritual Gifts'} result for ${_raaSelectedPerson.name || _raaSelectedPerson.email}`);
+  raaClearPerson();
+  raaSetType(_raaType);
+  document.getElementById('raaSearchInput').focus();
+  renderAnalyticsTab();
+}
+
 async function bulkRegisterLeadersAttendees() {
   if (!confirm('Register all current small group leaders and attendees as site members? This creates login accounts (password HHTemp!) for anyone who doesn\'t already have one.')) return;
   const btn = document.getElementById('bulkRegisterBtn');
@@ -5682,12 +6432,149 @@ async function bulkRegisterLeadersAttendees() {
   }
 }
 
-async function renderPeoplePanel() {
-  const [profiles, attempts, groups, content] = await Promise.all([
-    SupaDB.adminGetAllMemberProfiles(), SupaDB.getVisibleAttempts(),
-    SupaDB.adminGetAllGroups(), SupaDB.getAssessmentContent(),
+/* ── MY JOURNEY DATA (shared by the personal cards blended into Found/
+   Filled/Freed/Forged below -- Baptism, Small Groups, Growth Track, and
+   Impact Teams each show the viewer's own status alongside the admin
+   tools on that same tab, rather than as one separate page). ── */
+let _myJourneyCache = null;
+async function getMyJourneyData(fresh) {
+  if (_myJourneyCache && !fresh) return _myJourneyCache;
+  // Lazy-create the profile/person row, same as my-profile.html -- staff
+  // logging in here for the first time won't already have one.
+  let profile = await SupaDB.getMyProfile();
+  if (!profile) {
+    await SupaDB.createMyProfile();
+    profile = await SupaDB.getMyProfile();
+  }
+  if (!profile) return null;
+
+  const [attempts, content, gtRegs, memberships, groups, teamMemberships, teams, milestones, semesters] = await Promise.all([
+    SupaDB.getMyAttempts(), SupaDB.getAssessmentContent(),
+    SupaDB.getGrowthTrackRegistrationsForUser(profile.userId), SupaDB.getGroupMembershipsForUser(profile.userId),
+    SupaDB.getPublishedGroups(), SupaDB.getImpactTeamMembershipsForUser(profile.userId), SupaDB.getPublishedImpactTeams(),
+    SupaDB.getMyMilestones(profile.personId), SupaDB.getSemesters(),
   ]);
-  _pplProfiles = profiles; _pplLatest = latestByUser(attempts);
+  _myJourneyCache = {
+    profile, attempts, content: Assessments.splitContent(content), gtRegs,
+    memberships, groups, teamMemberships, teams, milestones, semesters,
+  };
+  return _myJourneyCache;
+}
+
+async function renderMyBaptismCard() {
+  const box = document.getElementById('myBaptismBox');
+  const data = await getMyJourneyData();
+  if (!data) { box.innerHTML = ''; return; }
+  const fmt = d => new Date(d.slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const baptism = data.milestones.find(m => m.milestone === 'baptized');
+  box.innerHTML = `
+    <div class="table-wrap" style="padding:20px;margin-bottom:24px;">
+      <h3 style="font-size:.95rem;margin-bottom:10px;">My Baptism</h3>
+      ${baptism
+        ? `<p style="margin-bottom:12px;">Baptized <strong>${fmt(baptism.achievedAt)}</strong>${baptism.notes ? ' · ' + escapeHtml(baptism.notes) : ''}</p>
+           <button class="btn btn-secondary btn-sm" onclick="showToast('Printable certificates are coming soon.')">Print Certificate</button>`
+        : `<p style="color:var(--text-muted);">Not on record yet -- talk to a staff member to get your baptism added.</p>`}
+    </div>`;
+}
+
+async function renderMyGroupsCard() {
+  const box = document.getElementById('myGroupsBox');
+  const data = await getMyJourneyData();
+  if (!data) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="table-wrap" style="padding:20px;margin-bottom:24px;"><h3 style="font-size:.95rem;margin-bottom:10px;">My Small Groups</h3><div id="myGroupsHistory"></div></div>`;
+  MemberDashboard.renderGroupHistory(document.getElementById('myGroupsHistory'), data.memberships, data.groups, data.profile.email, data.semesters);
+}
+
+async function renderMyGrowthTrackCard() {
+  const box = document.getElementById('myGrowthTrackBox');
+  const data = await getMyJourneyData();
+  if (!data) { box.innerHTML = ''; return; }
+  const fmt = d => d ? new Date(d.slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+  // Every attended date, not just the latest -- someone can attend the same
+  // part more than once.
+  const attendedByPart = { about_us: [], about_you: [], get_involved: [] };
+  data.gtRegs.forEach(r => { if (r.attended && attendedByPart[r.part]) attendedByPart[r.part].push(r.sessionDate); });
+  const datesLine = part => {
+    const dates = attendedByPart[part].filter(Boolean).sort();
+    return dates.length
+      ? `<div style="font-size:.85rem;color:var(--text-muted);margin:4px 0;">Attended: ${dates.map(fmt).join(', ')}</div>`
+      : `<div style="font-size:.85rem;color:var(--text-muted);margin:4px 0;">Not attended yet.</div>`;
+  };
+
+  const memberSince = data.profile.memberSince;
+  const plantExtra = memberSince
+    ? `<div style="font-size:.85rem;">Member since <strong>${fmt(memberSince)}</strong> · <button class="btn btn-ghost btn-sm" onclick="showToast('Printable member cards are coming soon.')">Print Member Card</button></div>`
+    : `<div style="font-size:.85rem;color:var(--text-muted);">Attend Plant to become a member.</div>`;
+
+  const discAttempts = data.attempts.filter(a => a.assessmentType === 'disc');
+  const giftsAttempts = data.attempts.filter(a => a.assessmentType === 'gifts');
+  const discoverExtra = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+      <a href="test-personality.html" class="btn btn-secondary btn-sm">${discAttempts.length ? 'Retake' : 'Take'} DISC Survey</a>
+      <a href="test-gifts.html" class="btn btn-secondary btn-sm">${giftsAttempts.length ? 'Retake' : 'Take'} Spiritual Gifts Survey</a>
+    </div>`;
+
+  const growExtra = `<div style="font-size:.85rem;"><a href="#" onclick="switchTab('impactteams');return false;" style="color:var(--primary);">See what Impact Teams are available →</a></div>`;
+
+  box.innerHTML = `
+    <div class="table-wrap" style="padding:20px;margin-bottom:24px;">
+      <h3 style="font-size:.95rem;margin-bottom:14px;">My Growth Track</h3>
+      <div style="margin-bottom:14px;"><strong>${GT_LABELS.about_us}</strong>${datesLine('about_us')}${plantExtra}</div>
+      <div style="margin-bottom:14px;"><strong>${GT_LABELS.about_you}</strong>${datesLine('about_you')}${discoverExtra}</div>
+      <div style="margin-bottom:4px;"><strong>${GT_LABELS.get_involved}</strong>${datesLine('get_involved')}${growExtra}</div>
+      <div style="margin-top:16px;">
+        <h4 style="font-size:.85rem;font-weight:700;margin-bottom:8px;">My Spiritual Gifts</h4>
+        <div id="myGiftsResult"></div>
+      </div>
+      <div style="margin-top:16px;">
+        <h4 style="font-size:.85rem;font-weight:700;margin-bottom:8px;">My DISC Profile</h4>
+        <div id="myDiscResult"></div>
+      </div>
+    </div>`;
+
+  const discBox = document.getElementById('myDiscResult');
+  if (discAttempts.length) MemberDashboard.renderDiscResult(discBox, discAttempts[0], data.content.discBlends, discAttempts.length);
+  else discBox.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">Not taken yet.</p>';
+
+  const giftsBox = document.getElementById('myGiftsResult');
+  if (giftsAttempts.length) MemberDashboard.renderGiftsResult(giftsBox, giftsAttempts[0], data.content.gifts, giftsAttempts.length);
+  else giftsBox.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">Not taken yet.</p>';
+}
+
+async function renderMyImpactTeamsCard() {
+  const box = document.getElementById('myImpactTeamsBox');
+  const data = await getMyJourneyData();
+  if (!data) { box.innerHTML = ''; return; }
+  const fmt = d => d ? new Date(d.slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const email = data.profile.email || '';
+
+  const rows = data.teamMemberships.filter(m => !m.leftAt).map(m => {
+    const team = data.teams.find(t => String(t.id) === String(m.teamId));
+    return { name: team ? team.name : 'Unknown Team', role: m.role, trained: m.trained, trainedAt: m.trainedAt };
+  });
+  const ledGroups = (email
+    ? data.groups.filter(g => g.leaderEmail && g.leaderEmail.toLowerCase() === email.toLowerCase())
+    : []
+  ).map(g => ({ name: g.name + ' (Small Group)', role: 'leader', trained: undefined }));
+  const allRows = rows.concat(ledGroups);
+
+  box.innerHTML = `
+    <div class="table-wrap" style="padding:20px;margin-bottom:24px;">
+      <h3 style="font-size:.95rem;margin-bottom:10px;">My Impact Teams</h3>
+      ${allRows.length ? allRows.map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);">
+          <span>${escapeHtml(r.name)} <span class="badge ${r.role === 'leader' ? 'badge-amber' : 'badge-blue'}" style="margin-left:6px;">${r.role === 'leader' ? 'Leads' : 'Member'}</span></span>
+          <span style="font-size:.82rem;color:var(--text-muted);">${r.trained === undefined ? '' : (r.trained ? '✓ Trained' + (r.trainedAt ? ' · ' + fmt(r.trainedAt) : '') : 'Not yet trained')}</span>
+        </div>`).join('') : '<p style="color:var(--text-muted);font-size:.9rem;">You are not on an impact team yet.</p>'}
+    </div>`;
+}
+
+async function renderPeoplePanel() {
+  const [profiles, groups] = await Promise.all([
+    SupaDB.adminGetAllMemberProfiles(), SupaDB.adminGetAllGroups(),
+  ]);
+  _pplProfiles = profiles;
   window._pplGroups = groups;
 
   const pending = profiles.filter(p => p.status === 'pending');
@@ -5705,14 +6592,6 @@ async function renderPeoplePanel() {
       <button class="btn btn-danger btn-sm" onclick="deleteMember('${p.userId}')">Delete</button>
     </div>`).join('');
 
-  const gsel = document.getElementById('pplGroupFilter');
-  gsel.innerHTML = '<option value="">All Groups</option>' +
-    groups.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
-  const gifts = content.filter(c => c.kind === 'gift');
-  _pplGifts = gifts;
-  document.getElementById('pplGiftFilter').innerHTML = '<option value="">All Gifts</option>' +
-    gifts.map(g => `<option>${escapeHtml((g.extra && g.extra.name) || g.code)}</option>`).join('');
-
   applyPeopleFilter();
 }
 
@@ -5721,42 +6600,143 @@ function groupName(id) {
   return g ? g.name : '—';
 }
 
-function applyPeopleFilter() {
-  const q = document.getElementById('pplSearch').value.toLowerCase();
-  const gift = document.getElementById('pplGiftFilter').value;
-  const disc = document.getElementById('pplDiscFilter').value;
-  const grp  = document.getElementById('pplGroupFilter').value;
-  let rows = _pplProfiles.filter(p => p.status === 'approved');
-  if (q) rows = rows.filter(p => p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q));
-  if (grp) rows = rows.filter(p => String(p.groupId) === String(grp));
-  if (disc) rows = rows.filter(p => {
-    const a = (_pplLatest[p.userId] || {}).disc;
-    return a && a.result[0] === disc;
-  });
-  if (gift) rows = rows.filter(p => {
-    const a = (_pplLatest[p.userId] || {}).gifts;
-    return a && giftNames(a).includes(gift);
-  });
-  document.getElementById('peopleTableWrap').innerHTML = memberTable(rows);
+let _pplSortDir = 'asc';
+function togglePeopleSort() {
+  _pplSortDir = _pplSortDir === 'asc' ? 'desc' : 'asc';
+  applyPeopleFilter();
 }
 
-function memberTable(rows) {
+function applyPeopleFilter() {
+  const q = document.getElementById('pplSearch').value.toLowerCase();
+  let rows = _pplProfiles.filter(p => p.status === 'approved');
+  if (q) rows = rows.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    p.email.toLowerCase().includes(q) ||
+    (p.phone || '').toLowerCase().includes(q) ||
+    (p.yearsAttending || '').toLowerCase().includes(q) ||
+    groupName(p.groupId).toLowerCase().includes(q)
+  );
+  rows = rows.slice().sort((a, b) => _pplSortDir === 'desc'
+    ? b.name.localeCompare(a.name)
+    : a.name.localeCompare(b.name));
+  document.getElementById('peopleTableWrap').innerHTML = membershipTable(rows);
+}
+
+// The Membership tab's own table -- just who's a member and since when.
+// The full profile (groups, Growth Track, assessments, impact teams) lives
+// one click away via "View".
+function membershipTable(rows) {
   if (!rows.length) return '<p style="color:var(--text-muted); padding:20px;">No members match.</p>';
   const isAdmin = window._userRole === 'admin';
+  const fmt = d => d ? new Date(d.slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+  const sortArrow = _pplSortDir === 'desc' ? ' ▾' : ' ▴';
   return `<table><thead><tr>
-    <th>Name</th><th>Group</th><th>Personality</th><th>Top Gifts</th><th>Last Test</th><th></th>
-  </tr></thead><tbody>${rows.map(p => {
-    const d = (_pplLatest[p.userId] || {}).disc, g = (_pplLatest[p.userId] || {}).gifts;
-    const last = [d, g].filter(Boolean).map(a => a.completedAt).sort().pop();
-    return `<tr>
-      <td><strong>${escapeHtml(p.name)}</strong><br><span style="font-size:.8rem; color:var(--text-muted);">${escapeHtml(p.email)}</span></td>
-      <td>${escapeHtml(groupName(p.groupId))}</td>
-      <td>${d ? escapeHtml(d.result) : '—'}</td>
-      <td>${g ? giftNames(g).slice(0,3).map(escapeHtml).join(', ') : '—'}</td>
-      <td>${last ? new Date(last).toLocaleDateString() : '—'}</td>
+    <th onclick="togglePeopleSort()" style="cursor:pointer;user-select:none;">Name${sortArrow}</th><th>Email</th><th>Member Since</th><th></th>
+  </tr></thead><tbody>${rows.map(p => `
+    <tr>
+      <td><strong>${escapeHtml(p.name)}</strong></td>
+      <td><a href="mailto:${escapeHtml(p.email)}" style="color:var(--primary);">${escapeHtml(p.email)}</a></td>
+      <td>${fmt(p.memberSince)}</td>
       <td>${isAdmin ? `<a class="btn btn-secondary btn-sm" href="member-dashboard.html?id=${encodeURIComponent(p.userId)}">View</a>` : ''}</td>
-    </tr>`;
-  }).join('')}</tbody></table>`;
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// opts: { name, email, phone, date, notes } -- all optional prefill values.
+// Save always goes through SupaDB.adminAddBaptism, which finds-or-creates the
+// person by email and upserts their baptism row -- so this same modal serves
+// "add a new record", "record baptism for this not-yet-baptized member", and
+// "edit an existing record" without needing separate code paths.
+function openBaptismModal(opts) {
+  opts = opts || {};
+  document.getElementById('baptismModalTitle').textContent = opts.email ? 'Edit Baptism Record' : 'Record Baptism';
+  document.getElementById('baptismName').value = opts.name || '';
+  document.getElementById('baptismEmail').value = opts.email || '';
+  document.getElementById('baptismPhone').value = opts.phone || '';
+  document.getElementById('baptismDate').value = opts.date ? opts.date.slice(0, 10) : '';
+  document.getElementById('baptismNotes').value = opts.notes || '';
+  document.getElementById('baptismError').style.display = 'none';
+  document.getElementById('baptismModal').classList.add('open');
+}
+function closeBaptismModal() { document.getElementById('baptismModal').classList.remove('open'); }
+async function saveBaptismRecord() {
+  const name = document.getElementById('baptismName').value.trim();
+  const email = document.getElementById('baptismEmail').value.trim();
+  const phone = document.getElementById('baptismPhone').value.trim();
+  const date = document.getElementById('baptismDate').value;
+  const notes = document.getElementById('baptismNotes').value.trim();
+  const errEl = document.getElementById('baptismError');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'Name is required.'; errEl.style.display = ''; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'A valid email is required.'; errEl.style.display = ''; return;
+  }
+  if (!date) { errEl.textContent = 'Date is required.'; errEl.style.display = ''; return; }
+  const result = await SupaDB.adminAddBaptism({ name, email, phone, date, notes });
+  if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
+  closeBaptismModal();
+  showToast('Baptism record saved');
+  if (window._userRole === 'admin' && document.getElementById('panelPeople').classList.contains('active')) renderPeoplePanel();
+  if (document.getElementById('panelBaptism').classList.contains('active')) renderBaptismTab();
+}
+
+/* ── BAPTISM ── */
+let _baptisms = [], _notYetBaptized = [];
+async function renderBaptismTab() {
+  renderMyBaptismCard();
+  const [baptisms, profiles] = await Promise.all([
+    SupaDB.adminGetAllBaptisms(), SupaDB.adminGetAllMemberProfiles(),
+  ]);
+  _baptisms = baptisms;
+  // achieved_at is a timestamptz but only ever carries a calendar date --
+  // take just the first 10 chars and parse as local midnight, so it isn't
+  // shifted a day by the UTC offset Postgres stores it with.
+  const fmt = d => new Date(d.slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const tbody = document.getElementById('baptismTable'), empty = document.getElementById('baptismEmpty');
+  if (!baptisms.length) { tbody.innerHTML = ''; empty.style.display = ''; }
+  else {
+    empty.style.display = 'none';
+    tbody.innerHTML = baptisms.map(b => `
+      <tr>
+        <td><strong>${escapeHtml(b.name || b.email)}</strong></td>
+        <td><a href="mailto:${escapeHtml(b.email)}" style="color:var(--primary);">${escapeHtml(b.email)}</a></td>
+        <td>${fmt(b.achievedAt)}</td>
+        <td style="color:var(--text-muted);">${escapeHtml(b.notes || '—')}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editBaptismRecord('${b.personId}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="removeBaptismRecord('${b.personId}','${escapeHtml(b.name || b.email).replace(/'/g,"\\'")}')">Remove</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  // Not-yet-baptized: approved members with no baptism row, for a one-click start.
+  const baptizedIds = new Set(baptisms.map(b => b.personId));
+  _notYetBaptized = profiles.filter(p => p.status === 'approved' && p.personId && !baptizedIds.has(p.personId));
+  const notYetBox = document.getElementById('baptismNotYetBox');
+  notYetBox.innerHTML = _notYetBaptized.length
+    ? _notYetBaptized.map(p => `
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--border);">
+        <span style="flex:1;">${escapeHtml(p.name)} <span style="color:var(--text-muted);font-size:.82rem;">${escapeHtml(p.email)}</span></span>
+        <button class="btn btn-secondary btn-sm" onclick="recordBaptismFor('${p.personId}')">Record Baptism</button>
+      </div>`).join('')
+    : '<p style="color:var(--text-muted);font-size:.88rem;padding-top:8px;">Every approved member has a baptism on record.</p>';
+}
+function editBaptismRecord(personId) {
+  const b = _baptisms.find(x => x.personId === personId);
+  if (!b) return;
+  openBaptismModal({ name: b.name, email: b.email, phone: b.phone, date: b.achievedAt, notes: b.notes });
+}
+function recordBaptismFor(personId) {
+  const p = _notYetBaptized.find(x => x.personId === personId);
+  if (!p) return;
+  openBaptismModal({ name: p.name, email: p.email, phone: p.phone });
+}
+async function removeBaptismRecord(personId, name) {
+  if (!confirm(`Remove ${name}'s baptism record?`)) return;
+  const result = await SupaDB.adminRemoveBaptism(personId);
+  if (result?.error) { showToast(result.error, true); return; }
+  showToast('Baptism record removed');
+  renderBaptismTab();
 }
 
 async function approveMember(userId) {
@@ -5776,25 +6756,13 @@ async function deleteMember(userId) {
   renderPeoplePanel();
 }
 
-
-/* MY GROUP (leader view — RLS already scopes the data) */
-async function renderMyGroupPanel() {
-  const [profiles, attempts] = await Promise.all([
-    SupaDB.getVisibleMemberProfiles(), SupaDB.getVisibleAttempts(),
-  ]);
-  const me = (window._currentUser && window._currentUser.id) || '';
-  _pplProfiles = profiles.filter(p => p.userId !== me);
-  _pplLatest = latestByUser(attempts);
-  window._pplGroups = window._myGroups || [];
-  document.getElementById('myGroupTableWrap').innerHTML = memberTable(_pplProfiles);
-}
-
 /* GROWTH TRACK */
 let _gtPartsAdmin = [], _gtCancellationsAdmin = [];
-const GT_LABELS = { about_us: 'About Us', about_you: 'About You', get_involved: 'Get Involved' };
+const GT_LABELS = { about_us: 'Plant', about_you: 'Discover', get_involved: 'Grow' };
 const SUNDAY_LABELS = { 1: '1st Sunday', 2: '2nd Sunday', 3: '3rd Sunday' };
 
 async function renderGrowthTrackTab() {
+  renderMyGrowthTrackCard();
   [_gtPartsAdmin, _gtCancellationsAdmin] = await Promise.all([
     SupaDB.adminGetAllGrowthTrackParts(),
     SupaDB.getGrowthTrackCancellations(),
@@ -6429,16 +7397,38 @@ async function renderEmailHistory() {
 
 /* ── USER PERMISSIONS ─────────────────────────────────────── */
 let _cachedUsers = [];
-const _roleLabels = { admin:'Admin', event_manager:'Event Manager', small_group_leader:'Small Group Leader' };
-const _roleBadgeClass = { admin:'badge-blue', event_manager:'badge-amber', small_group_leader:'badge-green' };
+const _roleLabels = { admin:'Admin', event_manager:'Event Manager' };
+const _roleBadgeClass = { admin:'badge-blue', event_manager:'badge-amber' };
+
+let _usrSortDir = 'asc';
+function toggleUsersSort() {
+  _usrSortDir = _usrSortDir === 'asc' ? 'desc' : 'asc';
+  applyUsersFilter();
+}
 
 async function renderUsersTable() {
   _cachedUsers = await SupaDB.adminGetAllUserRoles();
+  applyUsersFilter();
+}
+
+function applyUsersFilter() {
+  const q = (document.getElementById('usrSearch').value || '').toLowerCase();
+  let rows = _cachedUsers;
+  if (q) rows = rows.filter(u =>
+    u.email.toLowerCase().includes(q) ||
+    (u.displayName || '').toLowerCase().includes(q) ||
+    (_roleLabels[u.role] || u.role || '').toLowerCase().includes(q)
+  );
+  rows = rows.slice().sort((a, b) => _usrSortDir === 'desc'
+    ? b.email.localeCompare(a.email)
+    : a.email.localeCompare(b.email));
+  document.getElementById('usrSortArrow').textContent = _usrSortDir === 'desc' ? ' ▾' : ' ▴';
+
   const tbody = document.getElementById('usersTable');
   const empty = document.getElementById('usersEmpty');
-  if (!_cachedUsers.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  if (!rows.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
   empty.style.display = 'none';
-  tbody.innerHTML = _cachedUsers.map(u => `
+  tbody.innerHTML = rows.map(u => `
     <tr>
       <td><strong>${u.email}</strong></td>
       <td style="color:var(--text-muted);">${u.displayName || '—'}</td>
@@ -6497,6 +7487,30 @@ async function deleteUser(email) {
   renderUsersTable();
 }
 
+function openCreateUserModal() {
+  document.getElementById('createUserName').value = '';
+  document.getElementById('createUserEmail').value = '';
+  document.getElementById('createUserModal').classList.add('open');
+}
+function closeCreateUserModal() { document.getElementById('createUserModal').classList.remove('open'); }
+
+async function submitCreateUser() {
+  const name = document.getElementById('createUserName').value.trim();
+  const email = document.getElementById('createUserEmail').value.trim().toLowerCase();
+  if (!name)  { alert('Name is required.'); return; }
+  if (!email) { alert('Email is required.'); return; }
+  const btn = document.getElementById('createUserSaveBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const res = await SupaDB.adminInviteUser({ name, email });
+    if (res.error) { alert('Error: ' + res.error); return; }
+    closeCreateUserModal();
+    showToast(`Invite sent to ${email}.`);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send Invite';
+  }
+}
+
 async function setupUserAccount(email) {
   if (!confirm(`Create or reset the account for ${email} with the default password (HHTemp!)?`)) return;
   const btn = event.target;
@@ -6519,7 +7533,7 @@ async function setupUserAccount(email) {
 async function sendPasswordReset(email) {
   if (!confirm(`Send a password reset email to ${email}?`)) return;
   const { error } = await db().auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/admin/login.html',
+    redirectTo: window.location.origin + window.location.pathname.replace(/dashboard\.html$/, 'login.html'),
   });
   if (error) { alert('Error: ' + error.message + '\n\nNote: the user must have an account in Supabase Authentication before a reset email can be sent.'); return; }
   showToast('Reset email sent to ' + email);

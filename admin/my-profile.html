@@ -11,97 +11,187 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/portal.css" />
+  <link rel="stylesheet" href="../css/journey-pipeline.css" />
+  <link rel="stylesheet" href="../css/dashboard-shell.css" />
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
+  <style>
+    /* my-profile.html doesn't use portal.css's centered single-column
+       layout anymore -- the shell handles page structure instead. */
+    .portal-page { max-width: none; margin: 0; padding: 0; }
+    .portal-card { margin-bottom: 20px; }
+    .portal-card:last-child { margin-bottom: 0; }
+  </style>
 </head>
 <body>
 
-<div class="portal-topbar">
-  <span class="bar-title">My Profile — Heritage Hill</span>
-  <div class="bar-actions">
-    <a href="dashboard.html" id="dashLink" style="display:none;">Dashboard</a>
-    <a href="../index.html">Website</a>
-    <button onclick="signOut()">Sign Out</button>
+<div class="shell">
+  <aside class="shell-sidebar" id="shellSidebar">
+    <div class="shell-sidebar-brand">
+      <img src="../assets/logos/logo-left-full-dark.png" alt="Heritage Hill" onerror="this.style.display='none'" />
+      <span>My Profile</span>
+    </div>
+    <nav class="shell-nav">
+      <div class="nav-section nav-stage" id="navFound">
+        <span class="nav-stage-circle">01</span>
+        <span class="nav-stage-text"><span class="nav-stage-name">Found</span><span class="nav-section-verse">by God</span></span>
+      </div>
+      <a onclick="switchPanel('baptism')" id="navBaptism" data-panel="baptism" class="active nav-sub">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 0 12 0"/><path d="M8 12V6a4 4 0 0 1 8 0v6"/><line x1="3" y1="20" x2="21" y2="20"/><circle cx="12" cy="4" r="1.5"/></svg>
+        Baptism
+      </a>
+      <a onclick="switchPanel('events')" id="navEvents" data-panel="events" class="nav-sub">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Events
+      </a>
+
+      <div class="nav-section nav-stage" id="navFilled">
+        <span class="nav-stage-circle">02</span>
+        <span class="nav-stage-text"><span class="nav-stage-name">Filled</span><span class="nav-section-verse">by the Spirit</span></span>
+      </div>
+      <a onclick="switchPanel('groups')" id="navGroups" data-panel="groups" class="nav-sub">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Small Groups
+      </a>
+
+      <div class="nav-section nav-stage" id="navFreed">
+        <span class="nav-stage-circle">03</span>
+        <span class="nav-stage-text"><span class="nav-stage-name">Freed</span><span class="nav-section-verse">to live like Jesus</span></span>
+      </div>
+      <a onclick="switchPanel('growthtrack')" id="navGrowthtrack" data-panel="growthtrack" class="nav-sub">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Growth Track
+      </a>
+
+      <div class="nav-section nav-stage" id="navForged">
+        <span class="nav-stage-circle">04</span>
+        <span class="nav-stage-text"><span class="nav-stage-name">Forged</span><span class="nav-section-verse">for mission</span></span>
+      </div>
+      <a onclick="switchPanel('impactteams')" id="navImpactteams" data-panel="impactteams" class="nav-sub">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Impact Teams
+      </a>
+
+      <div class="nav-section" id="navAccountSection">Account</div>
+      <a onclick="switchPanel('account')" id="navAccount" data-panel="account">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        My Info
+      </a>
+    </nav>
+    <div class="shell-sidebar-footer">
+      <a href="dashboard.html" id="dashLink" style="display:none;">Dashboard</a>
+      <a href="../index.html">View Website</a>
+      <button onclick="signOut()">Sign Out</button>
+    </div>
+  </aside>
+  <div class="shell-sidebar-backdrop" id="shellBackdrop" onclick="closeShellSidebar()"></div>
+
+  <div class="shell-main">
+    <div class="shell-topbar">
+      <div style="display:flex;align-items:center;">
+        <button class="shell-mobile-hamburger" onclick="toggleShellSidebar()" aria-label="Toggle navigation">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 id="shellTitle">Baptism</h1>
+      </div>
+    </div>
+
+    <div class="shell-content">
+      <div id="pendingBanner" class="banner-pending" style="display:none;">
+        Your profile is awaiting approval from church staff. You can take your
+        assessments now — results will appear to staff once you're approved.
+      </div>
+
+      <div class="shell-panel active" id="panelBaptism">
+        <div id="baptismCardBox"><p style="color:var(--text-muted);">Loading…</p></div>
+      </div>
+
+      <div class="shell-panel" id="panelEvents">
+        <div id="eventsCardBox"><p style="color:var(--text-muted);">Loading…</p></div>
+      </div>
+
+      <div class="shell-panel" id="panelGroups">
+        <div id="groupsCardBox"><p style="color:var(--text-muted);">Loading…</p></div>
+      </div>
+
+      <div class="shell-panel" id="panelGrowthtrack">
+        <div id="growthtrackCardBox"><p style="color:var(--text-muted);">Loading…</p></div>
+      </div>
+
+      <div class="shell-panel" id="panelImpactteams">
+        <div id="impactteamsCardBox"><p style="color:var(--text-muted);">Loading…</p></div>
+      </div>
+
+      <div class="shell-panel" id="panelAccount">
+        <div class="portal-card" id="profileCard">
+          <h2>My Information</h2>
+          <p class="sub">Keep your contact info and group up to date.</p>
+          <div class="form-group"><label>Full Name</label><input id="pfName" /></div>
+          <div class="form-group"><label>Email</label><input id="pfEmail" disabled /></div>
+          <div class="form-group"><label>Phone</label><input id="pfPhone" /></div>
+          <div class="form-group"><label>Small Group</label><select id="pfGroup"></select></div>
+          <div class="form-group"><label>How long at Heritage Hill?</label>
+            <select id="pfYears">
+              <option value="">— Select —</option>
+              <option>Less than 1 year</option><option>1–3 years</option>
+              <option>3–5 years</option><option>More than 5 years</option>
+            </select></div>
+          <div class="toggle-row" style="margin:18px 0;">
+            <div><strong>Share my results with my group leader</strong>
+              <div class="sub" style="margin:0;">Your leader can see your personality and gifts to help you find your place.</div></div>
+            <input type="checkbox" id="pfShare" style="width:22px;height:22px;" />
+          </div>
+          <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+          <div class="msg-success" id="pfSaved">Saved.</div>
+          <div class="msg-error" id="pfError"></div>
+        </div>
+
+        <div class="portal-card">
+          <h2>Profile Photo</h2>
+          <p class="sub">Shown next to your name across the site.</p>
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px;">
+            <div id="avatarPreview" style="width:80px; height:80px; border-radius:50%; background:#F4F4F2; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;"></div>
+            <div>
+              <input type="file" id="avatarFile" accept="image/*" onchange="handleAvatarFile(this)" style="display:none;" />
+              <button type="button" class="btn-primary" onclick="document.getElementById('avatarFile').click()">Choose Photo</button>
+              <button type="button" class="btn-ghost" onclick="saveAvatar()" id="avatarSaveBtn" style="display:none; margin-left:8px;">Save Photo</button>
+              <br />
+              <button type="button" class="btn-ghost" onclick="removeAvatar()" id="avatarRemoveBtn" style="margin-top:8px; display:none;">Remove Photo</button>
+            </div>
+          </div>
+          <div class="msg-success" id="avatarSaved">Saved.</div>
+          <div class="msg-error" id="avatarError"></div>
+        </div>
+
+        <div class="portal-card">
+          <h2>Change Password</h2>
+          <div class="form-group"><label>New Password</label><input type="password" id="pwNew" /></div>
+          <div class="form-group"><label>Confirm</label><input type="password" id="pwConfirm" /></div>
+          <button class="btn-primary" onclick="changePassword()">Update Password</button>
+          <div class="msg-success" id="pwSaved">Password updated.</div>
+          <div class="msg-error" id="pwError"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="portal-page">
-  <div id="pendingBanner" class="banner-pending" style="display:none;">
-    Your profile is awaiting approval from church staff. You can take your
-    assessments now — results will appear to staff once you're approved.
+<!-- GROUP DETAILS MODAL (near-full-screen -- full admin toolset for the
+     group's leader, read-only info + Email Leader for anyone else) -->
+<div class="modal-overlay" id="groupDetailsModal">
+  <div class="modal modal-full">
+    <div class="modal-header"><h3 id="groupDetailsTitle">Group</h3><button class="modal-close" onclick="closeGroupDetails()">✕</button></div>
+    <div class="modal-body" id="groupDetailsBody"></div>
+    <div class="modal-footer"><button class="btn-ghost" onclick="closeGroupDetails()">Close</button></div>
   </div>
+</div>
 
-  <div class="portal-card" id="profileCard">
-    <h2>My Information</h2>
-    <p class="sub">Keep your contact info and group up to date.</p>
-    <div class="form-group"><label>Full Name</label><input id="pfName" /></div>
-    <div class="form-group"><label>Email</label><input id="pfEmail" disabled /></div>
-    <div class="form-group"><label>Phone</label><input id="pfPhone" /></div>
-    <div class="form-group"><label>Small Group</label><select id="pfGroup"></select></div>
-    <div class="form-group"><label>How long at Heritage Hill?</label>
-      <select id="pfYears">
-        <option value="">— Select —</option>
-        <option>Less than 1 year</option><option>1–3 years</option>
-        <option>3–5 years</option><option>More than 5 years</option>
-      </select></div>
-    <div class="toggle-row" style="margin:18px 0;">
-      <div><strong>Share my results with my group leader</strong>
-        <div class="sub" style="margin:0;">Your leader can see your personality and gifts to help you find your place.</div></div>
-      <input type="checkbox" id="pfShare" style="width:22px;height:22px;" />
-    </div>
-    <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
-    <div class="msg-success" id="pfSaved">Saved.</div>
-    <div class="msg-error" id="pfError"></div>
-  </div>
-
-  <div class="portal-card">
-    <h2>Profile Photo</h2>
-    <p class="sub">Shown next to your name across the site.</p>
-    <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px;">
-      <div id="avatarPreview" style="width:80px; height:80px; border-radius:50%; background:#F4F4F2; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;"></div>
-      <div>
-        <input type="file" id="avatarFile" accept="image/*" onchange="handleAvatarFile(this)" style="display:none;" />
-        <button type="button" class="btn-primary" onclick="document.getElementById('avatarFile').click()">Choose Photo</button>
-        <button type="button" class="btn-ghost" onclick="saveAvatar()" id="avatarSaveBtn" style="display:none; margin-left:8px;">Save Photo</button>
-        <br />
-        <button type="button" class="btn-ghost" onclick="removeAvatar()" id="avatarRemoveBtn" style="margin-top:8px; display:none;">Remove Photo</button>
-      </div>
-    </div>
-    <div class="msg-success" id="avatarSaved">Saved.</div>
-    <div class="msg-error" id="avatarError"></div>
-  </div>
-
-  <div class="portal-card" id="discCard">
-    <h2>Personality Assessment</h2>
-    <p class="sub">20 questions · about 3 minutes</p>
-    <div id="discResult"></div>
-    <a href="test-personality.html" class="btn-primary" id="discCta">Take the Assessment</a>
-  </div>
-
-  <div class="portal-card" id="giftsCard">
-    <h2>Spiritual Gifts Assessment</h2>
-    <p class="sub">72 questions · about 6 minutes</p>
-    <div id="giftsResult"></div>
-    <a href="test-gifts.html" class="btn-primary" id="giftsCta">Take the Assessment</a>
-  </div>
-
-  <div class="portal-card">
-    <h2>Growth Track</h2>
-    <p class="sub">Your progress through About Us, About You, and Get Involved.</p>
-    <div id="gtProgressBox"></div>
-  </div>
-
-  <div class="portal-card">
-    <h2>Small Group History</h2>
-    <p class="sub">Groups you've been part of at Heritage Hill.</p>
-    <div id="groupHistoryBox"></div>
-  </div>
-
-  <div class="portal-card">
-    <h2>Change Password</h2>
-    <div class="form-group"><label>New Password</label><input type="password" id="pwNew" /></div>
-    <div class="form-group"><label>Confirm</label><input type="password" id="pwConfirm" /></div>
-    <button class="btn-primary" onclick="changePassword()">Update Password</button>
-    <div class="msg-success" id="pwSaved">Password updated.</div>
-    <div class="msg-error" id="pwError"></div>
+<!-- EVENT DETAILS MODAL (near-full-screen, leader only -- Description +
+     Sign-Ups tabs, same pattern as the group leader modal above) -->
+<div class="modal-overlay" id="eventDetailsModal">
+  <div class="modal modal-full">
+    <div class="modal-header"><h3 id="eventDetailsTitle">Event</h3><button class="modal-close" onclick="closeEventDetails()">✕</button></div>
+    <div class="modal-body" id="eventDetailsBody"></div>
+    <div class="modal-footer"><button class="btn-ghost" onclick="closeEventDetails()">Close</button></div>
   </div>
 </div>
 
@@ -110,16 +200,20 @@
 <script src="../js/db.js"></script>
 <script src="../js/assessments.js"></script>
 <script src="../js/member-dashboard.js"></script>
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
-let _profile = null, _content = null;
+let _profile = null, _journeyData = null;
+const PANELS = ['baptism', 'events', 'groups', 'growthtrack', 'impactteams', 'account'];
+const PANEL_TITLES = { baptism: 'Baptism', events: 'Events', groups: 'Small Groups', growthtrack: 'Growth Track', impactteams: 'Impact Teams', account: 'My Info' };
 
 (async () => {
   const user = await SupaDB.getUser();
   if (!user) { window.location.href = 'login.html?next=my-profile.html'; return; }
 
-  // Staff get a Dashboard link in the topbar
+  // Staff get a Dashboard link in the sidebar -- except small_group_leader,
+  // which no longer has a dashboard to go to (redirects right back here).
   const roleData = await SupaDB.getUserRoleByEmail(user.email);
-  if (roleData) document.getElementById('dashLink').style.display = '';
+  if (roleData && roleData.role !== 'small_group_leader') document.getElementById('dashLink').style.display = '';
 
   // Lazy-create profile (covers both fresh registrations and existing staff)
   _profile = await SupaDB.getMyProfile();
@@ -132,7 +226,7 @@ let _profile = null, _content = null;
   if (_profile.status === 'pending' && !roleData)
     document.getElementById('pendingBanner').style.display = '';
 
-  // Fill form
+  // Fill Account form
   document.getElementById('pfName').value  = _profile.name;
   document.getElementById('pfEmail').value = _profile.email;
   document.getElementById('pfPhone').value = _profile.phone;
@@ -146,36 +240,892 @@ let _profile = null, _content = null;
     groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
   sel.value = _profile.groupId || '';
 
-  // Results
-  const [attempts, content, gtRegs, memberships, semesters] = await Promise.all([
+  // Load everything the four journey cards (+ Events, if leading any) need, once.
+  const [attempts, content, gtRegs, memberships, semesters, teamMemberships, teams, milestones, events] = await Promise.all([
     SupaDB.getMyAttempts(), SupaDB.getAssessmentContent(),
     SupaDB.getGrowthTrackRegistrationsForUser(user.id), SupaDB.getGroupMembershipsForUser(user.id),
     SupaDB.getSemesters(),
+    SupaDB.getImpactTeamMembershipsForUser(user.id), SupaDB.getPublishedImpactTeams(),
+    SupaDB.getMyMilestones(_profile.personId),
+    SupaDB.adminGetAllEvents(),
   ]);
-  _content = Assessments.splitContent(content);
-  renderResult('disc',  attempts.filter(a => a.assessmentType === 'disc'));
-  renderResult('gifts', attempts.filter(a => a.assessmentType === 'gifts'));
-  MemberDashboard.renderGrowthTrackProgress(document.getElementById('gtProgressBox'), gtRegs);
-  MemberDashboard.renderGroupHistory(document.getElementById('groupHistoryBox'), memberships, groups, _profile.email, semesters);
+  _journeyData = {
+    content: Assessments.splitContent(content), gtRegs, memberships, groups, semesters, teamMemberships, teams, events,
+    discAttempts: attempts.filter(a => a.assessmentType === 'disc'),
+    giftsAttempts: attempts.filter(a => a.assessmentType === 'gifts'),
+    baptism: milestones.find(m => m.milestone === 'baptized'),
+  };
+
+  renderBaptismPanel();
+  renderEventsPanel();
+  renderGroupsPanel();
+  renderGrowthTrackPanel();
+  renderImpactTeamsPanel();
 })();
+
+function renderBaptismPanel() {
+  MemberDashboard.renderBaptismCard(document.getElementById('baptismCardBox'), {
+    baptism: _journeyData.baptism,
+    onPrintCertificate: () => alert('Printable certificates are coming soon.'),
+  });
+}
+function renderGroupsPanel() {
+  MemberDashboard.renderGroupsCard(document.getElementById('groupsCardBox'), {
+    memberships: _journeyData.memberships, groups: _journeyData.groups,
+    email: _profile.email, semesters: _journeyData.semesters,
+    onGroupClick: openGroupDetails,
+  });
+}
+
+/* ── GROUP DETAILS MODAL (near-full-screen) ───────────────────────────
+   Clicking any group opens this. A member just sees read-only info +
+   Email Leader; the group's leader gets the full toolset (Edit Details/
+   Manage Members/Attendance/Email Group) built right into the same
+   modal. Every element/state key those leader-tool functions use is
+   suffixed with the group's id (_ledId) so nothing collides if this is
+   reopened for a different group, or if the same person leads more
+   than one (each open is a fresh render either way, but the ids stay
+   unique on principle). */
+const _ledId = (base, gid) => `${base}-${gid}`;
+
+function openGroupDetails(groupId) {
+  const group = _journeyData.groups.find(g => String(g.id) === String(groupId));
+  if (!group) return;
+  const myEmail = (_profile.email || '').toLowerCase();
+  const isLeader = !!(group.leaderEmail && myEmail && group.leaderEmail.toLowerCase() === myEmail);
+
+  document.getElementById('groupDetailsTitle').textContent = group.name;
+
+  if (!isLeader) {
+    const myMembership = _journeyData.memberships.find(m => String(m.groupId) === String(group.id) && !m.leftAt);
+    document.getElementById('groupDetailsBody').innerHTML = `
+      ${group.image ? `<img src="${escapeHtml(group.image)}" alt="${escapeHtml(group.name)}" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px;margin-bottom:14px;" />` : ''}
+      <p style="color:var(--text-muted);margin-bottom:10px;">${escapeHtml(group.day || '')} ${escapeHtml(group.time || '')}${group.location ? ' · ' + escapeHtml(group.location) : ''}</p>
+      ${group.description ? `<p style="margin-bottom:14px;">${escapeHtml(group.description)}</p>` : ''}
+      <p style="margin-bottom:4px;"><strong>Leader:</strong> ${escapeHtml(group.leader || '—')}
+        ${group.leaderEmail ? ` · <a href="mailto:${escapeHtml(group.leaderEmail)}" style="color:var(--primary);">Email Leader</a>` : ''}
+      </p>
+      <p style="margin-bottom:0;">${group.open ? '<span style="color:var(--success);">Open to new members</span>' : '<span style="color:var(--text-muted);">Not currently accepting new members</span>'}</p>
+      ${myMembership ? `
+        <div id="${_ledId('withdrawBox', group.id)}" style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
+          <button type="button" class="btn-ghost" style="color:var(--error);" onclick="showWithdrawForm(${group.id})">Withdraw from Group</button>
+        </div>
+      ` : ''}
+    `;
+  } else {
+    document.getElementById('groupDetailsBody').innerHTML = `
+      <div class="gd-tabs">
+        <button type="button" class="gd-tab active" onclick="switchGroupTab(this,'description')">Description</button>
+        <button type="button" class="gd-tab" onclick="switchGroupTab(this,'members')">Members</button>
+        <button type="button" class="gd-tab" onclick="switchGroupTab(this,'attendance')">Attendance</button>
+        <button type="button" class="gd-tab" onclick="switchGroupTab(this,'email')">Email Group</button>
+      </div>
+      <div class="gd-tab-panel active" id="gdPanel-description">
+        <div id="${_ledId('groupInfo', group.id)}"></div>
+      </div>
+      <div class="gd-tab-panel" id="gdPanel-members">
+        <div id="${_ledId('rosterForm', group.id)}"></div>
+        <div id="${_ledId('rosterList', group.id)}"><p style="color:var(--text-muted);">Loading…</p></div>
+      </div>
+      <div class="gd-tab-panel" id="gdPanel-attendance">
+        <div id="${_ledId('attForm', group.id)}"></div>
+        <div id="${_ledId('attList', group.id)}"><p style="color:var(--text-muted);">Loading…</p></div>
+      </div>
+      <div class="gd-tab-panel" id="gdPanel-email">
+        <div id="${_ledId('emailForm', group.id)}"></div>
+      </div>
+    `;
+    renderGroupInfoFor(group.id);
+    initRosterFor(group.id);
+    initAttendanceFor(group.id);
+    initEmailFor(group.id);
+  }
+  document.getElementById('groupDetailsModal').classList.add('open');
+}
+function closeGroupDetails() { document.getElementById('groupDetailsModal').classList.remove('open'); }
+
+/* Withdraw from a group (member's own view only) -- a two-step reveal
+   (click Withdraw -> optional reason + Confirm) rather than a native
+   confirm(), so cancelling is just as easy as confirming. */
+function showWithdrawForm(gid) {
+  document.getElementById(_ledId('withdrawBox', gid)).innerHTML = `
+    <div class="form-group"><label>Reason <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
+      <textarea id="${_ledId('withdrawReason', gid)}" rows="2" placeholder="Let the leader know why, if you'd like…"></textarea></div>
+    <div class="msg-error" id="${_ledId('withdrawError', gid)}"></div>
+    <button class="btn-primary" style="background:var(--error);border-color:var(--error);" onclick="confirmWithdraw(${gid})">Confirm Withdrawal</button>
+    <button class="btn-ghost" onclick="cancelWithdraw(${gid})" style="margin-left:8px;">Cancel</button>
+  `;
+}
+function cancelWithdraw(gid) {
+  document.getElementById(_ledId('withdrawBox', gid)).innerHTML = `
+    <button type="button" class="btn-ghost" style="color:var(--error);" onclick="showWithdrawForm(${gid})">Withdraw from Group</button>
+  `;
+}
+async function confirmWithdraw(gid) {
+  const reason = document.getElementById(_ledId('withdrawReason', gid)).value.trim();
+  const membership = _journeyData.memberships.find(m => String(m.groupId) === String(gid) && !m.leftAt);
+  const group = _journeyData.groups.find(g => String(g.id) === String(gid));
+  const errEl = document.getElementById(_ledId('withdrawError', gid));
+  errEl.classList.remove('show'); errEl.textContent = '';
+  if (!membership) { errEl.textContent = 'Could not find your membership record.'; errEl.classList.add('show'); return; }
+
+  const result = await SupaDB.adminRemoveGroupMember(membership.id);
+  if (result?.error) { errEl.textContent = result.error; errEl.classList.add('show'); return; }
+  membership.leftAt = new Date().toISOString().slice(0, 10);
+
+  // Let the leader know -- best-effort, doesn't block the withdrawal if it fails.
+  if (group && group.leaderEmail) {
+    const bodyParts = [`<p>${escapeHtml(_profile.name)} (${escapeHtml(_profile.email)}) has withdrawn from <strong>${escapeHtml(group.name)}</strong>.</p>`];
+    if (reason) bodyParts.push(`<p><strong>Reason given:</strong> ${escapeHtml(reason)}</p>`);
+    try {
+      await fetch(SUPABASE_URL + '/functions/v1/send-group-email', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: `${_profile.name} has left ${group.name}`,
+          htmlBody: bodyParts.join(''),
+          recipients: [group.leaderEmail],
+          fromName: 'Heritage Hill Church',
+          fromEmail: 'noreply@heritagehill.church',
+          replyTo: _profile.email,
+        }),
+      });
+    } catch (e) { /* non-blocking -- withdrawal already succeeded */ }
+  }
+
+  closeGroupDetails();
+  renderGroupsPanel();
+}
+
+function switchGroupTab(btnEl, tab) {
+  const tabsRow = btnEl.closest('.gd-tabs');
+  tabsRow.querySelectorAll('.gd-tab').forEach(b => b.classList.remove('active'));
+  btnEl.classList.add('active');
+  tabsRow.parentElement.querySelectorAll('.gd-tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('gdPanel-' + tab).classList.add('active');
+}
+
+/* Description tab: always-editable group details + the same 3-way image
+   picker (URL/Upload/AI) the admin dashboard's group editor uses. */
+function renderGroupInfoFor(gid) {
+  const group = _journeyData.groups.find(g => String(g.id) === String(gid));
+  const box = document.getElementById(_ledId('groupInfo', gid));
+  const hasUrlImage = !!(group.image && !group.image.startsWith('data:'));
+  box.innerHTML = `
+    <div class="gd-preview-row">
+      <div class="gd-preview-col">
+        <p class="gd-preview-label">This is how your group looks to visitors on the Small Groups page:</p>
+        <div class="gd-preview-card" id="${_ledId('previewCard', gid)}"></div>
+      </div>
+      <div class="gd-photo-col">
+        <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:8px;">Group Photo</label>
+        <div class="img-picker">
+          <div class="img-picker-tabs">
+            <button type="button" class="img-tab active" onclick="switchGroupImgTab(${gid},'url',this)">🔗 Paste URL</button>
+            <button type="button" class="img-tab" onclick="switchGroupImgTab(${gid},'upload',this)">⬆️ Upload Photo</button>
+            <button type="button" class="img-tab" onclick="switchGroupImgTab(${gid},'ai',this)">✨ AI Generate</button>
+          </div>
+          <div class="img-panel active" id="${_ledId('imgPanelUrl', gid)}">
+            <div class="form-group" style="margin:0;"><input type="url" id="${_ledId('giImageUrl', gid)}" placeholder="https://…" value="${hasUrlImage ? escapeHtml(group.image) : ''}" oninput="previewGroupImageFromUrl(${gid}, this.value)" /></div>
+            <div class="img-preview"><p class="img-preview-label">Preview</p><img id="${_ledId('previewUrl', gid)}" alt="Preview" class="${hasUrlImage ? 'visible' : ''}" src="${hasUrlImage ? escapeHtml(group.image) : ''}" /></div>
+          </div>
+          <div class="img-panel" id="${_ledId('imgPanelUpload', gid)}">
+            <div class="upload-drop" id="${_ledId('uploadDrop', gid)}" onclick="document.getElementById('${_ledId('giImageFile', gid)}').click()" ondragover="handleGroupDragOver(event,'${_ledId('uploadDrop', gid)}')" ondragleave="handleGroupDragLeave(event,'${_ledId('uploadDrop', gid)}')" ondrop="handleGroupDrop(event,${gid})">
+              <p><strong>Click to upload</strong> or drag &amp; drop</p><p style="font-size:.75rem;margin-top:4px;">JPG, PNG, WEBP · Auto-optimized</p>
+              <input type="file" id="${_ledId('giImageFile', gid)}" accept="image/*" onchange="handleGroupImageUpload(${gid}, this)" />
+            </div>
+            <div class="img-preview"><p class="img-preview-label">Preview (optimized)</p><img id="${_ledId('previewUpload', gid)}" alt="Upload preview" /></div>
+          </div>
+          <div class="img-panel" id="${_ledId('imgPanelAi', gid)}">
+            <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:10px;">Describe the image you want, or use the group description.</p>
+            <div class="ai-row">
+              <div class="form-group"><textarea id="${_ledId('giAiPrompt', gid)}" rows="2" placeholder="e.g. Small group studying Bible together…" style="min-height:60px;"></textarea></div>
+              <button type="button" class="btn-ghost" onclick="generateGroupAIImage(${gid})" id="${_ledId('aiGenBtn', gid)}" style="white-space:nowrap;height:fit-content;align-self:center;">Generate</button>
+            </div>
+            <div class="ai-status" id="${_ledId('aiStatus', gid)}"></div>
+            <div class="img-preview"><p class="img-preview-label">Generated image</p><img id="${_ledId('previewAi', gid)}" alt="AI preview" /></div>
+          </div>
+        </div>
+        <input type="hidden" id="${_ledId('giImageFinal', gid)}" value="${escapeHtml(group.image || '')}" />
+      </div>
+    </div>
+
+    <div class="form-group"><label>Day</label>
+      <select id="${_ledId('giDay', gid)}" onchange="updateGroupPreview(${gid})">
+        ${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(d => `<option ${group.day === d ? 'selected' : ''}>${d}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Time</label><input id="${_ledId('giTime', gid)}" value="${escapeHtml(group.time || '')}" oninput="updateGroupPreview(${gid})" /></div>
+    <div class="form-group"><label>Location</label><input id="${_ledId('giLocation', gid)}" value="${escapeHtml(group.location || '')}" oninput="updateGroupPreview(${gid})" /></div>
+    <div class="form-group"><label>Description</label><textarea id="${_ledId('giDescription', gid)}" rows="4" oninput="updateGroupPreview(${gid})">${escapeHtml(group.description || '')}</textarea></div>
+    <div class="toggle-row" style="margin:14px 0;">
+      <div><strong>Open to new members</strong></div>
+      <input type="checkbox" id="${_ledId('giOpen', gid)}" ${group.open ? 'checked' : ''} style="width:22px;height:22px;" onchange="updateGroupPreview(${gid})" />
+    </div>
+    <div class="msg-error" id="${_ledId('giError', gid)}"></div>
+    <div class="msg-success" id="${_ledId('giSaved', gid)}">Saved.</div>
+    <button class="btn-primary" onclick="saveGroupInfoFor(${gid})">Save Changes</button>
+  `;
+  updateGroupPreview(gid);
+}
+
+// Builds the same markup shape as small-groups.html's renderGroupCard(),
+// just with scoped .gd-preview-* classes instead of that page's .card/
+// .group-card/.group-tag (which live in css/style.css, not loaded here).
+function groupPreviewHtml(g) {
+  const openBadge = g.open
+    ? `<span class="gd-preview-tag" style="background:rgba(22,163,74,.1);color:#16a34a;">Open</span>`
+    : `<span class="gd-preview-tag" style="background:rgba(239,68,68,.1);color:#ef4444;">Full</span>`;
+  const img = g.image || 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80';
+  return `
+    <div class="gd-preview-img"><img src="${escapeHtml(img)}" alt="" /></div>
+    <div class="gd-preview-body">
+      <div class="gd-preview-tags">
+        ${openBadge}
+        ${g.type ? `<span class="gd-preview-tag">${escapeHtml(g.type)}</span>` : ''}
+        ${g.audience ? `<span class="gd-preview-tag" style="background:rgba(21,92,162,.1);color:#155CA2;">${escapeHtml(g.audience)}</span>` : ''}
+      </div>
+      <h3>${escapeHtml(g.name)}</h3>
+      <div class="gd-preview-meta">
+        <span>📅 ${escapeHtml(g.day || '')}s at ${escapeHtml(g.time || '')}</span>
+        <span>📍 ${escapeHtml((g.location || '').split('–')[0].trim())}</span>
+      </div>
+      <p class="gd-preview-desc">${escapeHtml(g.description || '')}</p>
+      <div class="gd-preview-footer">
+        <span>Led by ${escapeHtml(g.leader || '')}</span>
+        <span class="gd-preview-btn">Join Group</span>
+      </div>
+    </div>`;
+}
+function updateGroupPreview(gid) {
+  const group = _journeyData.groups.find(g => String(g.id) === String(gid));
+  if (!group) return;
+  const overrides = Object.assign({}, group, {
+    day: document.getElementById(_ledId('giDay', gid)).value,
+    time: document.getElementById(_ledId('giTime', gid)).value,
+    location: document.getElementById(_ledId('giLocation', gid)).value,
+    description: document.getElementById(_ledId('giDescription', gid)).value,
+    open: document.getElementById(_ledId('giOpen', gid)).checked,
+    image: document.getElementById(_ledId('giImageFinal', gid)).value || group.image,
+  });
+  document.getElementById(_ledId('previewCard', gid)).innerHTML = groupPreviewHtml(overrides);
+}
+
+function switchGroupImgTab(gid, tab, btnEl) {
+  const root = btnEl.closest('.img-picker');
+  root.querySelectorAll('.img-tab').forEach(b => b.classList.remove('active'));
+  root.querySelectorAll('.img-panel').forEach(p => p.classList.remove('active'));
+  btnEl.classList.add('active');
+  const panels = { url: 'imgPanelUrl', upload: 'imgPanelUpload', ai: 'imgPanelAi' };
+  document.getElementById(_ledId(panels[tab], gid)).classList.add('active');
+}
+function previewGroupImageFromUrl(gid, url) {
+  const img = document.getElementById(_ledId('previewUrl', gid));
+  const finalEl = document.getElementById(_ledId('giImageFinal', gid));
+  if (url) { img.src = url; img.classList.add('visible'); finalEl.value = url; }
+  else { img.classList.remove('visible'); finalEl.value = ''; }
+  updateGroupPreview(gid);
+}
+function handleGroupDragOver(e, dropId) { e.preventDefault(); document.getElementById(dropId).classList.add('dragover'); }
+function handleGroupDragLeave(e, dropId) { document.getElementById(dropId).classList.remove('dragover'); }
+function handleGroupDrop(e, gid) {
+  e.preventDefault();
+  document.getElementById(_ledId('uploadDrop', gid)).classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) processGroupImageFile(gid, f);
+}
+function handleGroupImageUpload(gid, input) {
+  if (input.files && input.files[0]) processGroupImageFile(gid, input.files[0]);
+}
+function processGroupImageFile(gid, file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 900;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+      const preview = document.getElementById(_ledId('previewUpload', gid));
+      preview.src = dataUrl; preview.classList.add('visible');
+      document.getElementById(_ledId('giImageFinal', gid)).value = dataUrl;
+      document.getElementById(_ledId('uploadDrop', gid)).querySelector('p').innerHTML = `<strong>✓ Image optimized</strong> — ${w}×${h}px · ~${sizeKB}KB`;
+      updateGroupPreview(gid);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function generateGroupAIImage(gid) {
+  const prompt = document.getElementById(_ledId('giAiPrompt', gid)).value.trim()
+    || document.getElementById(_ledId('giDescription', gid)).value.trim();
+  if (!prompt) { alert('Enter a description or prompt first.'); return; }
+  const btn = document.getElementById(_ledId('aiGenBtn', gid));
+  const status = document.getElementById(_ledId('aiStatus', gid));
+  const preview = document.getElementById(_ledId('previewAi', gid));
+  btn.disabled = true; btn.textContent = 'Generating…';
+  status.className = 'ai-status loading'; status.textContent = 'Creating your image — this takes 10–20 seconds…';
+  preview.classList.remove('visible');
+  const seed = Math.floor(Math.random() * 99999);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', warm church community, photorealistic, natural lighting')}?width=800&height=500&nologo=true&seed=${seed}`;
+  const finish = dataUrl => {
+    preview.src = dataUrl || url; preview.classList.add('visible');
+    document.getElementById(_ledId('giImageFinal', gid)).value = dataUrl || url;
+    status.className = 'ai-status'; status.textContent = '✓ Image generated! Save to keep it.';
+    btn.disabled = false; btn.textContent = 'Regenerate';
+    updateGroupPreview(gid);
+  };
+  const testImg = new Image();
+  testImg.crossOrigin = 'anonymous';
+  testImg.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = testImg.naturalWidth || 800; canvas.height = testImg.naturalHeight || 500;
+    canvas.getContext('2d').drawImage(testImg, 0, 0);
+    let dataUrl; try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (e) { dataUrl = url; }
+    finish(dataUrl);
+  };
+  testImg.onerror = () => finish(url);
+  testImg.src = url;
+}
+
+async function saveGroupInfoFor(gid) {
+  const group = _journeyData.groups.find(g => String(g.id) === String(gid));
+  if (!group) return;
+  const image = document.getElementById(_ledId('giImageFinal', gid)).value.trim() || group.image;
+  const updated = Object.assign({}, group, {
+    image,
+    day: document.getElementById(_ledId('giDay', gid)).value,
+    time: document.getElementById(_ledId('giTime', gid)).value.trim(),
+    location: document.getElementById(_ledId('giLocation', gid)).value.trim(),
+    description: document.getElementById(_ledId('giDescription', gid)).value.trim(),
+    open: document.getElementById(_ledId('giOpen', gid)).checked,
+  });
+  const errEl = document.getElementById(_ledId('giError', gid));
+  errEl.classList.remove('show'); errEl.textContent = '';
+  const result = await SupaDB.saveGroup(updated);
+  if (result?.error) {
+    errEl.textContent = result.error; errEl.classList.add('show');
+    return;
+  }
+  Object.assign(group, updated);
+  const okEl = document.getElementById(_ledId('giSaved', gid));
+  okEl.classList.add('show');
+  setTimeout(() => okEl.classList.remove('show'), 2500);
+}
+
+/* Manage Members */
+let _rosterMembersByGroup = {}, _editingMembershipByGroup = {};
+
+function initRosterFor(gid) {
+  _editingMembershipByGroup[gid] = null;
+  document.getElementById(_ledId('rosterForm', gid)).innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="form-group" style="margin:0;"><label>Name</label><input id="${_ledId('rmName', gid)}" /></div>
+        <div class="form-group" style="margin:0;"><label>Email</label><input id="${_ledId('rmEmail', gid)}" type="email" /></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="form-group" style="margin:0;"><label>Phone</label><input id="${_ledId('rmPhone', gid)}" type="tel" /></div>
+        <div class="form-group" style="margin:0;"><label>Note</label><input id="${_ledId('rmNote', gid)}" /></div>
+      </div>
+      <div class="msg-error" id="${_ledId('rmError', gid)}"></div>
+      <button class="btn-primary" id="${_ledId('rmSaveBtn', gid)}" onclick="saveRosterMemberFor(${gid})">Add to Group</button>
+      <button class="btn-ghost" id="${_ledId('rmCancelBtn', gid)}" onclick="cancelEditRosterMemberFor(${gid})" style="display:none;margin-left:8px;">Cancel</button>
+    </div>
+  `;
+  renderLeaderRosterFor(gid);
+}
+
+async function renderLeaderRosterFor(gid) {
+  const members = await SupaDB.adminGetGroupMembers(gid);
+  _rosterMembersByGroup[gid] = members;
+  const box = document.getElementById(_ledId('rosterList', gid));
+  if (!members.length) { box.innerHTML = '<p style="color:var(--text-muted);">No members yet.</p>'; return; }
+  box.innerHTML = `
+    <div style="text-align:right;margin-bottom:8px;">
+      <button class="btn-ghost" style="padding:.3rem .7rem;font-size:.78rem;" onclick="exportRosterCsvFor(${gid})">⬇ Export CSV</button>
+    </div>
+    <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th></th></tr></thead>
+    <tbody>${members.map(m => `
+      <tr>
+        <td>${escapeHtml(m.name)}</td>
+        <td><a href="mailto:${escapeHtml(m.email)}" style="color:var(--primary);">${escapeHtml(m.email)}</a></td>
+        <td>${escapeHtml(m.phone || '—')}</td>
+        <td>${m.joinedAt ? new Date(m.joinedAt + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-ghost" style="padding:.3rem .7rem;font-size:.78rem;" onclick="editRosterMemberFor(${gid},'${m.id}')">Edit</button>
+          <button class="btn-ghost" style="padding:.3rem .7rem;font-size:.78rem;color:var(--error);" onclick="removeRosterMemberFor(${gid},'${m.id}')">Remove</button>
+        </td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+function editRosterMemberFor(gid, id) {
+  const m = (_rosterMembersByGroup[gid] || []).find(x => String(x.id) === String(id));
+  if (!m) return;
+  _editingMembershipByGroup[gid] = id;
+  document.getElementById(_ledId('rmName', gid)).value = m.name;
+  document.getElementById(_ledId('rmEmail', gid)).value = m.email;
+  document.getElementById(_ledId('rmPhone', gid)).value = m.phone || '';
+  document.getElementById(_ledId('rmNote', gid)).value = m.notes || '';
+  document.getElementById(_ledId('rmSaveBtn', gid)).textContent = 'Save Changes';
+  document.getElementById(_ledId('rmCancelBtn', gid)).style.display = '';
+}
+function cancelEditRosterMemberFor(gid) {
+  _editingMembershipByGroup[gid] = null;
+  document.getElementById(_ledId('rmName', gid)).value = '';
+  document.getElementById(_ledId('rmEmail', gid)).value = '';
+  document.getElementById(_ledId('rmPhone', gid)).value = '';
+  document.getElementById(_ledId('rmNote', gid)).value = '';
+  document.getElementById(_ledId('rmSaveBtn', gid)).textContent = 'Add to Group';
+  document.getElementById(_ledId('rmCancelBtn', gid)).style.display = 'none';
+}
+async function saveRosterMemberFor(gid) {
+  const name = document.getElementById(_ledId('rmName', gid)).value.trim();
+  const email = document.getElementById(_ledId('rmEmail', gid)).value.trim();
+  const phone = document.getElementById(_ledId('rmPhone', gid)).value.trim();
+  const note = document.getElementById(_ledId('rmNote', gid)).value.trim();
+  const errEl = document.getElementById(_ledId('rmError', gid));
+  errEl.classList.remove('show'); errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Name is required.'; errEl.classList.add('show'); return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'A valid email is required.'; errEl.classList.add('show'); return; }
+
+  const editingId = _editingMembershipByGroup[gid];
+  const result = editingId
+    ? await SupaDB.adminUpdateGroupMember(editingId, { name, email, phone, notes: note })
+    : await SupaDB.adminAddGroupMember({ groupId: gid, name, email, phone, notes: note });
+  if (result?.error) { errEl.textContent = result.error; errEl.classList.add('show'); return; }
+  cancelEditRosterMemberFor(gid);
+  await renderLeaderRosterFor(gid);
+}
+async function removeRosterMemberFor(gid, id) {
+  if (!confirm('Remove this member from the group?')) return;
+  await SupaDB.adminRemoveGroupMember(id);
+  await renderLeaderRosterFor(gid);
+}
+function csvSafe(v) {
+  const s = String(v == null ? '' : v);
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
+}
+function exportRosterCsvFor(gid) {
+  const members = _rosterMembersByGroup[gid] || [];
+  if (!members.length) return;
+  const group = _journeyData.groups.find(g => String(g.id) === String(gid));
+  const headers = ['Name', 'Email', 'Phone', 'Note', 'Joined'];
+  const rows = members.map(m => [
+    m.name, m.email, m.phone || '', m.notes || '',
+    m.joinedAt ? new Date(m.joinedAt + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+  ]);
+  const csv = [headers, ...rows].map(r =>
+    r.map(v => `"${csvSafe(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+  const slug = (group ? group.name : 'group').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  a.download = `${slug}-members-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+}
+
+/* Attendance */
+let _attendanceByGroup = {}, _editingAttendanceByGroup = {};
+
+function initAttendanceFor(gid) {
+  _editingAttendanceByGroup[gid] = null;
+  document.getElementById(_ledId('attForm', gid)).innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="form-group" style="margin:0;"><label>Date</label><input type="date" id="${_ledId('attDate', gid)}" /></div>
+        <div class="form-group" style="margin:0;"><label>Headcount</label><input type="number" id="${_ledId('attCount', gid)}" min="0" placeholder="0" /></div>
+        <div class="form-group" style="margin:0;"><label>Notes</label><input id="${_ledId('attNotes', gid)}" placeholder="Optional" /></div>
+      </div>
+      <div class="msg-error" id="${_ledId('attError', gid)}"></div>
+      <button class="btn-primary" id="${_ledId('attSaveBtn', gid)}" onclick="saveAttendanceEntryFor(${gid})">Add Entry</button>
+      <button class="btn-ghost" id="${_ledId('attCancelBtn', gid)}" onclick="cancelEditAttendanceFor(${gid})" style="display:none;margin-left:8px;">Cancel</button>
+    </div>
+  `;
+  renderAttendanceListFor(gid);
+}
+
+async function renderAttendanceListFor(gid) {
+  const all = await SupaDB.adminGetAllGroupAttendance();
+  const records = all.filter(r => String(r.groupId) === String(gid));
+  _attendanceByGroup[gid] = records;
+  const box = document.getElementById(_ledId('attList', gid));
+  const fmt = d => { if (!d) return '—'; const [y, m, day] = d.split('-'); return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
+  if (!records.length) { box.innerHTML = '<p style="color:var(--text-muted);">No attendance recorded yet.</p>'; return; }
+  box.innerHTML = `
+    <table><thead><tr><th>Date</th><th>Headcount</th><th>Notes</th><th></th></tr></thead>
+    <tbody>${records.map(r => `
+      <tr>
+        <td>${fmt(r.meetingDate)}</td>
+        <td><strong>${r.headcount}</strong></td>
+        <td style="color:var(--text-muted);font-size:.85rem;">${escapeHtml(r.notes || '—')}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-ghost" style="padding:.3rem .7rem;font-size:.78rem;" onclick="editAttendanceEntryFor(${gid},'${r.id}')">Edit</button>
+          <button class="btn-ghost" style="padding:.3rem .7rem;font-size:.78rem;color:var(--error);" onclick="deleteAttendanceEntryFor(${gid},'${r.id}')">Delete</button>
+        </td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+function editAttendanceEntryFor(gid, id) {
+  const r = (_attendanceByGroup[gid] || []).find(x => String(x.id) === String(id));
+  if (!r) return;
+  _editingAttendanceByGroup[gid] = id;
+  document.getElementById(_ledId('attDate', gid)).value = r.meetingDate;
+  document.getElementById(_ledId('attCount', gid)).value = r.headcount;
+  document.getElementById(_ledId('attNotes', gid)).value = r.notes || '';
+  document.getElementById(_ledId('attSaveBtn', gid)).textContent = 'Save Changes';
+  document.getElementById(_ledId('attCancelBtn', gid)).style.display = '';
+}
+function cancelEditAttendanceFor(gid) {
+  _editingAttendanceByGroup[gid] = null;
+  document.getElementById(_ledId('attDate', gid)).value = '';
+  document.getElementById(_ledId('attCount', gid)).value = '';
+  document.getElementById(_ledId('attNotes', gid)).value = '';
+  document.getElementById(_ledId('attSaveBtn', gid)).textContent = 'Add Entry';
+  document.getElementById(_ledId('attCancelBtn', gid)).style.display = 'none';
+}
+async function saveAttendanceEntryFor(gid) {
+  const date = document.getElementById(_ledId('attDate', gid)).value;
+  const count = document.getElementById(_ledId('attCount', gid)).value;
+  const notes = document.getElementById(_ledId('attNotes', gid)).value.trim();
+  const errEl = document.getElementById(_ledId('attError', gid));
+  errEl.classList.remove('show'); errEl.textContent = '';
+  if (!date) { errEl.textContent = 'Pick a date.'; errEl.classList.add('show'); return; }
+  if (count === '') { errEl.textContent = 'Enter a headcount.'; errEl.classList.add('show'); return; }
+
+  const group = _journeyData.groups.find(g => String(g.id) === String(gid));
+  const editingId = _editingAttendanceByGroup[gid];
+  const result = editingId
+    ? await SupaDB.adminUpdateGroupAttendance(editingId, { meetingDate: date, headcount: parseInt(count), notes })
+    : await SupaDB.adminAddGroupAttendance({ groupId: gid, groupName: group ? group.name : '', meetingDate: date, headcount: parseInt(count), notes });
+  if (result?.error) { errEl.textContent = result.error; errEl.classList.add('show'); return; }
+  cancelEditAttendanceFor(gid);
+  await renderAttendanceListFor(gid);
+}
+async function deleteAttendanceEntryFor(gid, id) {
+  if (!confirm('Delete this attendance entry?')) return;
+  await SupaDB.adminDeleteGroupAttendance(id);
+  await renderAttendanceListFor(gid);
+}
+
+/* Email Group */
+let _emailQuillByGroup = {};
+
+async function initEmailFor(gid) {
+  const box = document.getElementById(_ledId('emailForm', gid));
+  const members = await SupaDB.adminGetGroupMembers(gid);
+  const emails = [...new Set(members.map(m => m.email).filter(Boolean))];
+  box.innerHTML = `
+    <div class="form-group"><label>To</label><textarea id="${_ledId('emailTo', gid)}" rows="2">${escapeHtml(emails.join('\n'))}</textarea></div>
+    <div class="form-group"><label>Subject</label><input id="${_ledId('emailSubject', gid)}" /></div>
+    <div class="form-group"><label>Message</label>
+      <div id="${_ledId('emailEditor', gid)}" style="background:#fff;min-height:160px;"></div>
+    </div>
+    <div class="msg-error" id="${_ledId('emailError', gid)}"></div>
+    <div class="msg-success" id="${_ledId('emailSuccess', gid)}">Sent.</div>
+    <button class="btn-primary" id="${_ledId('emailSendBtn', gid)}" onclick="sendGroupEmailFor(${gid})" style="margin-top:10px;">Send Email</button>
+  `;
+  _emailQuillByGroup[gid] = new Quill('#' + _ledId('emailEditor', gid), {
+    theme: 'snow',
+    modules: { toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'], ['clean'],
+    ] },
+  });
+}
+
+async function sendGroupEmailFor(gid) {
+  const toRaw = document.getElementById(_ledId('emailTo', gid)).value;
+  const recipients = toRaw.split(/[\n,]+/).map(e => e.trim()).filter(e => e.includes('@'));
+  const subject = document.getElementById(_ledId('emailSubject', gid)).value.trim();
+  const quill = _emailQuillByGroup[gid];
+  const htmlBody = quill ? quill.root.innerHTML : '';
+  const errEl = document.getElementById(_ledId('emailError', gid)), okEl = document.getElementById(_ledId('emailSuccess', gid));
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+
+  if (!recipients.length) { errEl.textContent = 'Add at least one recipient email.'; errEl.classList.add('show'); return; }
+  if (!subject) { errEl.textContent = 'Subject is required.'; errEl.classList.add('show'); return; }
+  if (!htmlBody || htmlBody === '<p><br></p>') { errEl.textContent = 'Message cannot be empty.'; errEl.classList.add('show'); return; }
+
+  const group = _journeyData.groups.find(g => String(g.id) === String(gid));
+  const senderEmail = (_profile.email || '').toLowerCase();
+  const onDomain = senderEmail.endsWith('@heritagehill.church');
+  const fromEmail = onDomain ? senderEmail : 'noreply@heritagehill.church';
+  const replyTo = onDomain ? '' : senderEmail;
+
+  const btn = document.getElementById(_ledId('emailSendBtn', gid));
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/send-group-email', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subject, htmlBody, recipients,
+        fromName: (group && group.leader) || _profile.name,
+        fromEmail, replyTo,
+      }),
+    });
+    const json = await res.json();
+    if (json.error) { errEl.textContent = 'Error: ' + json.error; errEl.classList.add('show'); return; }
+    okEl.classList.add('show');
+    document.getElementById(_ledId('emailSubject', gid)).value = '';
+    if (quill) quill.setContents([]);
+    setTimeout(() => okEl.classList.remove('show'), 3000);
+  } catch (e) {
+    errEl.textContent = (e && e.message) || 'Could not send the email.'; errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send Email';
+  }
+}
+/* ── MY EVENTS (event leader) ──────────────────────────────────────── */
+function renderEventsPanel() {
+  const email = (_profile.email || '').toLowerCase();
+  const myEvents = email ? _journeyData.events.filter(e => e.leaderEmail && e.leaderEmail.toLowerCase() === email) : [];
+  const box = document.getElementById('eventsCardBox');
+  if (!myEvents.length) {
+    box.innerHTML = '<div class="jp-card"><p class="jp-empty">You are not leading any events yet.</p></div>';
+    return;
+  }
+  box.innerHTML = `
+    <div class="jp-card">
+      <div class="jp-label">My Events</div>
+      <div class="jp-roster">
+        ${myEvents.map(ev => `
+          <div class="jp-roster-row" style="cursor:pointer;" onclick="openEventDetails(${ev.id})">
+            <span class="jp-roster-name">${escapeHtml(ev.title)}</span>
+            <span class="jp-val">${escapeHtml(ev.date)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function openEventDetails(eventId) {
+  const ev = _journeyData.events.find(e => String(e.id) === String(eventId));
+  if (!ev) return;
+  document.getElementById('eventDetailsTitle').textContent = ev.title;
+  document.getElementById('eventDetailsBody').innerHTML = `
+    <div class="gd-tabs">
+      <button type="button" class="gd-tab active" onclick="switchGroupTab(this,'evt-description')">Description</button>
+      <button type="button" class="gd-tab" onclick="switchGroupTab(this,'evt-signups')">Sign-Ups</button>
+    </div>
+    <div class="gd-tab-panel active" id="gdPanel-evt-description">
+      <div id="${_ledId('eventInfo', ev.id)}"></div>
+    </div>
+    <div class="gd-tab-panel" id="gdPanel-evt-signups">
+      <div id="${_ledId('eventSignups', ev.id)}"><p style="color:var(--text-muted);">Loading…</p></div>
+    </div>
+  `;
+  renderEventInfoFor(ev.id);
+  loadEventSignupsFor(ev.id);
+  document.getElementById('eventDetailsModal').classList.add('open');
+}
+function closeEventDetails() { document.getElementById('eventDetailsModal').classList.remove('open'); }
+
+function renderEventInfoFor(eid) {
+  const ev = _journeyData.events.find(e => String(e.id) === String(eid));
+  const box = document.getElementById(_ledId('eventInfo', eid));
+  const hasUrlImage = !!(ev.image && !ev.image.startsWith('data:'));
+  box.innerHTML = `
+    <p style="color:var(--text-muted);margin-bottom:14px;"><strong>${escapeHtml(ev.title)}</strong> — ${escapeHtml(ev.date)}${ev.endDate ? ' – ' + escapeHtml(ev.endDate) : ''}</p>
+
+    <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:8px;">Event Photo</label>
+    <div class="img-picker">
+      <div class="img-picker-tabs">
+        <button type="button" class="img-tab active" onclick="switchEventImgTab(${eid},'url',this)">🔗 Paste URL</button>
+        <button type="button" class="img-tab" onclick="switchEventImgTab(${eid},'upload',this)">⬆️ Upload Photo</button>
+        <button type="button" class="img-tab" onclick="switchEventImgTab(${eid},'ai',this)">✨ AI Generate</button>
+      </div>
+      <div class="img-panel active" id="${_ledId('eiImgPanelUrl', eid)}">
+        <div class="form-group" style="margin:0;"><input type="url" id="${_ledId('eiImageUrl', eid)}" placeholder="https://…" value="${hasUrlImage ? escapeHtml(ev.image) : ''}" oninput="previewEventImageFromUrl(${eid}, this.value)" /></div>
+        <div class="img-preview"><p class="img-preview-label">Preview</p><img id="${_ledId('eiPreviewUrl', eid)}" alt="Preview" class="${hasUrlImage ? 'visible' : ''}" src="${hasUrlImage ? escapeHtml(ev.image) : ''}" /></div>
+      </div>
+      <div class="img-panel" id="${_ledId('eiImgPanelUpload', eid)}">
+        <div class="upload-drop" id="${_ledId('eiUploadDrop', eid)}" onclick="document.getElementById('${_ledId('eiImageFile', eid)}').click()" ondragover="handleEventDragOver(event,'${_ledId('eiUploadDrop', eid)}')" ondragleave="handleEventDragLeave(event,'${_ledId('eiUploadDrop', eid)}')" ondrop="handleEventDrop(event,${eid})">
+          <p><strong>Click to upload</strong> or drag &amp; drop</p><p style="font-size:.75rem;margin-top:4px;">JPG, PNG, WEBP · Auto-optimized</p>
+          <input type="file" id="${_ledId('eiImageFile', eid)}" accept="image/*" onchange="handleEventImageUpload(${eid}, this)" />
+        </div>
+        <div class="img-preview"><p class="img-preview-label">Preview (optimized)</p><img id="${_ledId('eiPreviewUpload', eid)}" alt="Upload preview" /></div>
+      </div>
+      <div class="img-panel" id="${_ledId('eiImgPanelAi', eid)}">
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:10px;">Describe the image you want, or use the event description.</p>
+        <div class="ai-row">
+          <div class="form-group"><textarea id="${_ledId('eiAiPrompt', eid)}" rows="2" placeholder="e.g. Church picnic on a sunny day…" style="min-height:60px;"></textarea></div>
+          <button type="button" class="btn-ghost" onclick="generateEventAIImage(${eid})" id="${_ledId('eiAiGenBtn', eid)}" style="white-space:nowrap;height:fit-content;align-self:center;">Generate</button>
+        </div>
+        <div class="ai-status" id="${_ledId('eiAiStatus', eid)}"></div>
+        <div class="img-preview"><p class="img-preview-label">Generated image</p><img id="${_ledId('eiPreviewAi', eid)}" alt="AI preview" /></div>
+      </div>
+    </div>
+    <input type="hidden" id="${_ledId('eiImageFinal', eid)}" value="${escapeHtml(ev.image || '')}" />
+
+    <div class="form-group"><label>Time</label><input id="${_ledId('eiTime', eid)}" value="${escapeHtml(ev.time || '')}" /></div>
+    <div class="form-group"><label>Location</label><input id="${_ledId('eiLocation', eid)}" value="${escapeHtml(ev.location || '')}" /></div>
+    <div class="form-group"><label>Description</label><textarea id="${_ledId('eiDescription', eid)}" rows="5">${escapeHtml(ev.description || '')}</textarea></div>
+    <div class="msg-error" id="${_ledId('eiError', eid)}"></div>
+    <div class="msg-success" id="${_ledId('eiSaved', eid)}">Saved.</div>
+    <button class="btn-primary" onclick="saveEventInfoFor(${eid})">Save Changes</button>
+  `;
+}
+
+function switchEventImgTab(eid, tab, btnEl) {
+  const root = btnEl.closest('.img-picker');
+  root.querySelectorAll('.img-tab').forEach(b => b.classList.remove('active'));
+  root.querySelectorAll('.img-panel').forEach(p => p.classList.remove('active'));
+  btnEl.classList.add('active');
+  const panels = { url: 'eiImgPanelUrl', upload: 'eiImgPanelUpload', ai: 'eiImgPanelAi' };
+  document.getElementById(_ledId(panels[tab], eid)).classList.add('active');
+}
+function previewEventImageFromUrl(eid, url) {
+  const img = document.getElementById(_ledId('eiPreviewUrl', eid));
+  const finalEl = document.getElementById(_ledId('eiImageFinal', eid));
+  if (url) { img.src = url; img.classList.add('visible'); finalEl.value = url; }
+  else { img.classList.remove('visible'); finalEl.value = ''; }
+}
+function handleEventDragOver(e, dropId) { e.preventDefault(); document.getElementById(dropId).classList.add('dragover'); }
+function handleEventDragLeave(e, dropId) { document.getElementById(dropId).classList.remove('dragover'); }
+function handleEventDrop(e, eid) {
+  e.preventDefault();
+  document.getElementById(_ledId('eiUploadDrop', eid)).classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) processEventImageFile(eid, f);
+}
+function handleEventImageUpload(eid, input) {
+  if (input.files && input.files[0]) processEventImageFile(eid, input.files[0]);
+}
+function processEventImageFile(eid, file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 900;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+      const preview = document.getElementById(_ledId('eiPreviewUpload', eid));
+      preview.src = dataUrl; preview.classList.add('visible');
+      document.getElementById(_ledId('eiImageFinal', eid)).value = dataUrl;
+      document.getElementById(_ledId('eiUploadDrop', eid)).querySelector('p').innerHTML = `<strong>✓ Image optimized</strong> — ${w}×${h}px · ~${sizeKB}KB`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function generateEventAIImage(eid) {
+  const prompt = document.getElementById(_ledId('eiAiPrompt', eid)).value.trim()
+    || document.getElementById(_ledId('eiDescription', eid)).value.trim();
+  if (!prompt) { alert('Enter a description or prompt first.'); return; }
+  const btn = document.getElementById(_ledId('eiAiGenBtn', eid));
+  const status = document.getElementById(_ledId('eiAiStatus', eid));
+  const preview = document.getElementById(_ledId('eiPreviewAi', eid));
+  btn.disabled = true; btn.textContent = 'Generating…';
+  status.className = 'ai-status loading'; status.textContent = 'Creating your image — this takes 10–20 seconds…';
+  preview.classList.remove('visible');
+  const seed = Math.floor(Math.random() * 99999);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', warm church community, photorealistic, natural lighting')}?width=800&height=500&nologo=true&seed=${seed}`;
+  const finish = dataUrl => {
+    preview.src = dataUrl || url; preview.classList.add('visible');
+    document.getElementById(_ledId('eiImageFinal', eid)).value = dataUrl || url;
+    status.className = 'ai-status'; status.textContent = '✓ Image generated! Save to keep it.';
+    btn.disabled = false; btn.textContent = 'Regenerate';
+  };
+  const testImg = new Image();
+  testImg.crossOrigin = 'anonymous';
+  testImg.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = testImg.naturalWidth || 800; canvas.height = testImg.naturalHeight || 500;
+    canvas.getContext('2d').drawImage(testImg, 0, 0);
+    let dataUrl; try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (e) { dataUrl = url; }
+    finish(dataUrl);
+  };
+  testImg.onerror = () => finish(url);
+  testImg.src = url;
+}
+
+async function saveEventInfoFor(eid) {
+  const ev = _journeyData.events.find(e => String(e.id) === String(eid));
+  if (!ev) return;
+  const image = document.getElementById(_ledId('eiImageFinal', eid)).value.trim() || ev.image;
+  const updated = Object.assign({}, ev, {
+    image,
+    time: document.getElementById(_ledId('eiTime', eid)).value.trim(),
+    location: document.getElementById(_ledId('eiLocation', eid)).value.trim(),
+    description: document.getElementById(_ledId('eiDescription', eid)).value.trim(),
+  });
+  const errEl = document.getElementById(_ledId('eiError', eid));
+  errEl.classList.remove('show'); errEl.textContent = '';
+  const result = await SupaDB.saveEvent(updated);
+  if (result?.error) { errEl.textContent = result.error; errEl.classList.add('show'); return; }
+  Object.assign(ev, updated);
+  const okEl = document.getElementById(_ledId('eiSaved', eid));
+  okEl.classList.add('show');
+  setTimeout(() => okEl.classList.remove('show'), 2500);
+}
+
+async function loadEventSignupsFor(eid) {
+  const box = document.getElementById(_ledId('eventSignups', eid));
+  const rsvps = await SupaDB.getRsvpsForEvent(eid);
+  if (!rsvps.length) { box.innerHTML = '<p style="color:var(--text-muted);">No sign-ups yet.</p>'; return; }
+  box.innerHTML = `
+    <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Signed Up</th><th></th></tr></thead>
+    <tbody>${rsvps.map(r => `
+      <tr>
+        <td>${escapeHtml(r.fullName)}</td>
+        <td><a href="mailto:${escapeHtml(r.email)}" style="color:var(--primary);">${escapeHtml(r.email)}</a></td>
+        <td>${escapeHtml(r.phone || '—')}</td>
+        <td>${new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+        <td><button class="btn-ghost" style="padding:.3rem .7rem;font-size:.78rem;color:var(--error);" onclick="removeEventSignupFor(${eid},'${r.id}')">Remove</button></td>
+      </tr>`).join('')}</tbody></table>`;
+}
+async function removeEventSignupFor(eid, rsvpId) {
+  if (!confirm('Remove this sign-up?')) return;
+  await SupaDB.deleteEventRsvp(rsvpId);
+  await loadEventSignupsFor(eid);
+}
+
+function renderGrowthTrackPanel() {
+  MemberDashboard.renderGrowthTrackCard(document.getElementById('growthtrackCardBox'), {
+    gtRegistrations: _journeyData.gtRegs, memberSince: _profile.memberSince,
+    discAttempt: _journeyData.discAttempts[0], giftsAttempt: _journeyData.giftsAttempts[0],
+    discAttemptCount: _journeyData.discAttempts.length, giftsAttemptCount: _journeyData.giftsAttempts.length,
+    discBlends: _journeyData.content.discBlends, giftsContent: _journeyData.content.gifts,
+    assessmentCtaHrefs: { disc: 'test-personality.html', gifts: 'test-gifts.html' },
+    onPrintMemberCard: () => alert('Printable member cards are coming soon.'),
+    onLearnImpactTeams: () => switchPanel('impactteams'),
+  });
+}
+function renderImpactTeamsPanel() {
+  MemberDashboard.renderImpactTeamsCard(document.getElementById('impactteamsCardBox'), {
+    teamMemberships: _journeyData.teamMemberships, teams: _journeyData.teams,
+    groups: _journeyData.groups, email: _profile.email,
+  });
+}
+
+function switchPanel(name) {
+  closeShellSidebar();
+  PANELS.forEach(p => {
+    document.getElementById('panel' + p[0].toUpperCase() + p.slice(1)).classList.remove('active');
+    document.getElementById('nav' + p[0].toUpperCase() + p.slice(1)).classList.remove('active');
+  });
+  document.getElementById('panel' + name[0].toUpperCase() + name.slice(1)).classList.add('active');
+  document.getElementById('nav' + name[0].toUpperCase() + name.slice(1)).classList.add('active');
+  document.getElementById('shellTitle').textContent = PANEL_TITLES[name] || name;
+}
+function toggleShellSidebar() { document.getElementById('shellSidebar').classList.toggle('open'); document.getElementById('shellBackdrop').classList.toggle('open'); }
+function closeShellSidebar() { document.getElementById('shellSidebar').classList.remove('open'); document.getElementById('shellBackdrop').classList.remove('open'); }
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]));
-}
-
-function renderResult(type, attempts) {
-  const box = document.getElementById(type === 'disc' ? 'discResult' : 'giftsResult');
-  const cta = document.getElementById(type === 'disc' ? 'discCta' : 'giftsCta');
-  if (!attempts.length) return;
-  cta.textContent = 'Retake';
-  const latest = attempts[0];
-  if (type === 'disc') {
-    MemberDashboard.renderDiscResult(box, latest, _content.discBlends, attempts.length);
-  } else {
-    MemberDashboard.renderGiftsResult(box, latest, _content.gifts, attempts.length);
-  }
 }
 
 async function saveProfile() {

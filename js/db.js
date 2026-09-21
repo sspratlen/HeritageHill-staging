@@ -23,6 +23,7 @@ function eventFromDb(r) {
     description: r.description, image: r.image,
     recurring: !!r.recurring, published: r.published !== false,
     rsvpEnabled: !!r.rsvp_enabled,
+    leader: r.leader || '', leaderEmail: r.leader_email || '',
   };
 }
 function eventToDb(ev) {
@@ -33,6 +34,7 @@ function eventToDb(ev) {
     description: ev.description, image: ev.image,
     recurring: !!ev.recurring, published: ev.published !== false,
     rsvp_enabled: !!ev.rsvpEnabled,
+    leader: ev.leader || null, leader_email: ev.leaderEmail || null,
   };
   if (ev.id) o.id = ev.id;
   return o;
@@ -125,6 +127,28 @@ function groupMembershipFromDb(r) {
   };
 }
 
+function impactTeamFromDb(r) {
+  return {
+    id: r.id, name: r.name, department: r.department || '',
+    description: r.description || '', image: r.image || '',
+    open: r.open !== false, published: r.published !== false,
+  };
+}
+function impactTeamToDb(t) {
+  return {
+    name: t.name, department: t.department || '', description: t.description || '',
+    image: t.image || '', open: t.open !== false, published: t.published !== false,
+  };
+}
+function impactTeamMembershipFromDb(r) {
+  return {
+    id: r.id, teamId: r.team_id, userId: r.user_id, name: r.name,
+    email: r.email, phone: r.phone || '', role: r.role || 'member',
+    joinedAt: r.joined_at, leftAt: r.left_at, notes: r.notes || '',
+    trained: !!r.trained, trainedAt: r.trained_at || null,
+  };
+}
+
 function signupFromDb(r) {
   return {
     id: r.id, groupId: r.group_id, groupName: r.group_name,
@@ -141,6 +165,14 @@ function signupToDb(s) {
     name: s.name, email: s.email, phone: s.phone || '', message: s.message || '',
     contacted: false,
     semester_id: s.semesterId || null,
+  };
+}
+
+function connectSubmissionFromDb(r) {
+  return {
+    id: r.id, personId: r.person_id, name: r.name, email: r.email, phone: r.phone || '',
+    contacted: !!r.contacted, contactedAt: r.contacted_at || null, contactedBy: r.contacted_by || '',
+    createdAt: r.created_at,
   };
 }
 
@@ -224,7 +256,18 @@ function memberProfileFromDb(r) {
     userId: r.user_id, name: r.name, email: r.email, phone: r.phone || '',
     groupId: r.group_id, yearsAttending: r.years_attending || '',
     status: r.status, shareWithLeader: !!r.share_with_leader, createdAt: r.created_at,
-    avatarUrl: r.avatar_url || null,
+    avatarUrl: r.avatar_url || null, personId: r.person_id || null,
+    memberSince: r.member_since || null,
+  };
+}
+function personMilestoneFromDb(r) {
+  return { id: r.id, personId: r.person_id, milestone: r.milestone, achievedAt: r.achieved_at, notes: r.notes || '' };
+}
+function baptismFromDb(r) {
+  const p = r.people || {};
+  return {
+    personId: r.person_id, achievedAt: r.achieved_at, notes: r.notes || '',
+    name: p.name || '', email: p.email || '', phone: p.phone || '',
   };
 }
 function attemptFromDb(r) {
@@ -369,6 +412,18 @@ window.SupaDB = {
     } catch(e) { console.warn('[SupaDB] recordMilestone failed (non-critical):', e.message); }
   },
 
+  /* ── People backbone: link a person's row to the currently signed-in
+     auth account (only succeeds server-side if the emails match and the
+     row isn't linked yet) -- lets a member's own RLS-scoped reads (their
+     milestones, their people row) actually find their data. ── */
+  async linkMyPersonId(personId) {
+    if (!db() || !personId) return;
+    try {
+      const { error } = await db().rpc('link_person_user_id', { p_person_id: personId });
+      if (error) throw error;
+    } catch(e) { console.warn('[SupaDB] linkMyPersonId failed (non-critical):', e.message); }
+  },
+
   /* ── ADMIN: Journey funnel — count of people at each milestone ── */
   async adminGetMilestoneCounts() {
     if (!db()) return {};
@@ -488,6 +543,181 @@ window.SupaDB = {
     } catch(e) { console.error('[SupaDB] deleteGroup:', e.message); }
   },
 
+  /* ── ADMIN: Impact Teams ─────────────────────────────────── */
+  async adminGetAllImpactTeams() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_teams').select('*').order('name');
+      if (error) throw error;
+      return (data || []).map(impactTeamFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetAllImpactTeams:', e.message); return []; }
+  },
+  async saveImpactTeam(t) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const row = impactTeamToDb(t);
+      const { data, error } = t.id
+        ? await db().from('impact_teams').update(row).eq('id', t.id).select().single()
+        : await db().from('impact_teams').insert(row).select().single();
+      if (error) throw error;
+      return { ok: true, data: impactTeamFromDb(data) };
+    } catch(e) { console.error('[SupaDB] saveImpactTeam:', e.message); return { error: e.message }; }
+  },
+  async deleteImpactTeam(id) {
+    if (!db()) return;
+    try {
+      const { error } = await db().from('impact_teams').delete().eq('id', id);
+      if (error) throw error;
+    } catch(e) { console.error('[SupaDB] deleteImpactTeam:', e.message); }
+  },
+  async adminGetImpactTeamMembers(teamId) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_team_memberships')
+        .select('*').eq('team_id', teamId).is('left_at', null)
+        .order('role', { ascending: true }).order('joined_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(impactTeamMembershipFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetImpactTeamMembers:', e.message); return []; }
+  },
+  async adminGetAllCurrentImpactTeamMembers() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_team_memberships').select('*').is('left_at', null);
+      if (error) throw error;
+      return (data || []).map(impactTeamMembershipFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetAllCurrentImpactTeamMembers:', e.message); return []; }
+  },
+  async adminAddImpactTeamMember(m) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const match = await this.adminFindMemberByEmail(m.email);
+      const personId = await this.upsertPerson({ name: m.name, email: m.email, phone: m.phone });
+      const { error } = await db().from('impact_team_memberships').insert({
+        team_id: m.teamId, name: m.name, email: m.email, phone: m.phone || '',
+        role: m.role === 'leader' ? 'leader' : 'member', notes: m.notes || '',
+        user_id: match ? match.userId : null, person_id: personId,
+        trained: !!m.trained, trained_at: m.trained ? (m.trainedAt || null) : null,
+      });
+      if (error) throw error;
+      if (personId) this.recordMilestone(personId, m.role === 'leader' ? 'impact_team_leader' : 'impact_team_member');
+      return { ok: true };
+    } catch(e) {
+      // 23505 = the active-membership-per-team unique index already covers this person.
+      if (e.code === '23505') return { error: 'This person already has an active role on this team.' };
+      console.error('[SupaDB] adminAddImpactTeamMember:', e.message); return { error: e.message };
+    }
+  },
+  async adminUpdateImpactTeamMember(id, { name, email, phone, role, notes, trained, trainedAt }) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const roleVal = role === 'leader' ? 'leader' : 'member';
+      const { data: existing } = await db().from('impact_team_memberships')
+        .select('person_id, role').eq('id', id).maybeSingle();
+      const { error } = await db().from('impact_team_memberships')
+        .update({
+          name, email, phone: phone || '', role: roleVal, notes: notes || '',
+          trained: !!trained, trained_at: trained ? (trainedAt || null) : null,
+        }).eq('id', id);
+      if (error) throw error;
+      if (existing && existing.person_id && roleVal !== existing.role) {
+        this.recordMilestone(existing.person_id, roleVal === 'leader' ? 'impact_team_leader' : 'impact_team_member');
+      }
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminUpdateImpactTeamMember:', e.message); return { error: e.message }; }
+  },
+  async adminRemoveImpactTeamMember(id) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const now = new Date();
+      const localToday = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const { error } = await db().from('impact_team_memberships').update({ left_at: localToday }).eq('id', id);
+      if (error) throw error;
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminRemoveImpactTeamMember:', e.message); return { error: e.message }; }
+  },
+  async getImpactTeamMembershipsForUser(userId) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_team_memberships')
+        .select('*').eq('user_id', userId).order('joined_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(impactTeamMembershipFromDb);
+    } catch(e) { console.error('[SupaDB] getImpactTeamMembershipsForUser:', e.message); return []; }
+  },
+  async getPublishedImpactTeams() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('impact_teams').select('*')
+        .eq('published', true).order('name');
+      if (error) throw error;
+      return (data || []).map(impactTeamFromDb);
+    } catch(e) { console.error('[SupaDB] getPublishedImpactTeams:', e.message); return []; }
+  },
+
+  /* ── People backbone: a person's own milestone history (RLS-scoped
+     to their own person_id; admins can pass any personId). ── */
+  async getMyMilestones(personId) {
+    if (!db() || !personId) return [];
+    try {
+      const { data, error } = await db().from('person_milestones')
+        .select('*').eq('person_id', personId).order('achieved_at');
+      if (error) throw error;
+      return (data || []).map(personMilestoneFromDb);
+    } catch(e) { console.error('[SupaDB] getMyMilestones:', e.message); return []; }
+  },
+  async adminGetMilestonesByType(milestone) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('person_milestones').select('*').eq('milestone', milestone);
+      if (error) throw error;
+      return (data || []).map(personMilestoneFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetMilestonesByType:', e.message); return []; }
+  },
+  // Baptism has no dedicated table -- it's a person_milestones row like any
+  // other, just settable to a specific historical date (unlike
+  // recordMilestone, which is fire-and-forget "now"). Admin-only (RLS).
+  async adminSetBaptized(personId, baptizedAt, notes) {
+    if (!db() || !personId || !baptizedAt) return { error: 'Person and date are required' };
+    try {
+      const row = { person_id: personId, milestone: 'baptized', achieved_at: baptizedAt };
+      if (notes !== undefined) row.notes = notes || '';
+      const { error } = await db().from('person_milestones')
+        .upsert(row, { onConflict: 'person_id,milestone' });
+      if (error) throw error;
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminSetBaptized:', e.message); return { error: e.message }; }
+  },
+  async adminGetAllBaptisms() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('person_milestones')
+        .select('*, people(name, email, phone)')
+        .eq('milestone', 'baptized').order('achieved_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(baptismFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetAllBaptisms:', e.message); return []; }
+  },
+  // Finds-or-creates the person by email (same convention as adminAddGroupMember)
+  // then records/updates their baptism in one call, for the Baptism tab's add form.
+  async adminAddBaptism({ name, email, phone, date, notes }) {
+    if (!db() || !email || !date) return { error: 'Name, email, and date are required' };
+    try {
+      const personId = await this.upsertPerson({ name, email, phone });
+      if (!personId) return { error: 'Could not save this person' };
+      return await this.adminSetBaptized(personId, date, notes || '');
+    } catch(e) { console.error('[SupaDB] adminAddBaptism:', e.message); return { error: e.message }; }
+  },
+  async adminRemoveBaptism(personId) {
+    if (!db() || !personId) return { error: 'Not configured' };
+    try {
+      const { error } = await db().from('person_milestones')
+        .delete().eq('person_id', personId).eq('milestone', 'baptized');
+      if (error) throw error;
+      return { ok: true };
+    } catch(e) { console.error('[SupaDB] adminRemoveBaptism:', e.message); return { error: e.message }; }
+  },
+
   /* ── ADMIN: Growth Track ─────────────────────────────────── */
   async adminGetAllGrowthTrackParts() {
     if (!db()) return [];
@@ -582,9 +812,15 @@ window.SupaDB = {
     if (!db()) return { error: 'Not configured' };
     try {
       const { data, error } = await db().from('growth_track_registrations')
-        .update({ attended: !!attended }).eq('id', id).select('person_id').single();
+        .update({ attended: !!attended }).eq('id', id).select('person_id, part, user_id').single();
       if (error) throw error;
       if (attended && data && data.person_id) this.recordMilestone(data.person_id, 'growth_track_attended');
+      // "Plant" (part slug about_us) is the membership step -- attending it approves membership
+      // (only if they already have a profile; matches "membership requires
+      // a profile" -- a guest with no account yet just attended a session).
+      if (attended && data && data.part === 'about_us' && data.user_id) {
+        await this.adminSetMemberStatus(data.user_id, 'approved');
+      }
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminSetGtAttended:', e.message); return { error: e.message }; }
   },
@@ -1061,6 +1297,15 @@ window.SupaDB = {
       return (data || []).map(rsvpFromDb);
     } catch(e) { console.error('[SupaDB] adminGetAllRsvps:', e.message); return []; }
   },
+  async getRsvpsForEvent(eventId) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('event_rsvps')
+        .select('*').eq('event_id', eventId).order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(rsvpFromDb);
+    } catch(e) { console.error('[SupaDB] getRsvpsForEvent:', e.message); return []; }
+  },
   async deleteEventRsvp(id) {
     if (!db()) return;
     try {
@@ -1169,27 +1414,30 @@ window.SupaDB = {
       serviceDate:     r.service_date,
       worshipCount:    r.worship_count,
       smallGroupCount: r.small_group_count,
+      offerings:       r.offerings,
       notes:           r.notes,
       createdAt:       r.created_at,
     }));
   },
-  async adminAddAttendance({ serviceDate, worshipCount, smallGroupCount, notes }) {
+  async adminAddAttendance({ serviceDate, worshipCount, smallGroupCount, offerings, notes }) {
     if (!db()) return { error: 'Not configured' };
     const { error } = await db().from('attendance').insert({
       service_date:      serviceDate,
       worship_count:     worshipCount  ?? null,
       small_group_count: smallGroupCount ?? null,
+      offerings:         offerings ?? null,
       notes:             notes || null,
     });
     if (error) return { error: error.message };
     return { success: true };
   },
-  async adminUpdateAttendance(id, { serviceDate, worshipCount, smallGroupCount, notes }) {
+  async adminUpdateAttendance(id, { serviceDate, worshipCount, smallGroupCount, offerings, notes }) {
     if (!db()) return { error: 'Not configured' };
     const { error } = await db().from('attendance').update({
       service_date:      serviceDate,
       worship_count:     worshipCount  ?? null,
       small_group_count: smallGroupCount ?? null,
+      offerings:         offerings ?? null,
       notes:             notes || null,
     }).eq('id', id);
     if (error) return { error: error.message };
@@ -1203,6 +1451,43 @@ window.SupaDB = {
   },
 
 /* ── Small Group Attendance ─────────────────────────────── */
+  // Recomputes every attendance row's small_group_count from group_attendance
+  // (same 7-day-window-ending-on-Sunday logic the Attendance Analytics chart
+  // uses) and persists it. Called after every group attendance write so the
+  // stored value never drifts from what the chart would compute live.
+  // Only sets a row when the window has data (sum > 0) -- never clobbers an
+  // existing value with null just because this week has no group meetings.
+  async adminRecomputeSmallGroupCounts() {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const [{ data: attendanceRows, error: aErr }, { data: groupRows, error: gErr }] = await Promise.all([
+        db().from('attendance').select('id, service_date'),
+        db().from('group_attendance').select('meeting_date, headcount'),
+      ]);
+      if (aErr) throw aErr;
+      if (gErr) throw gErr;
+      const updates = [];
+      for (const row of attendanceRows || []) {
+        const end = new Date(row.service_date + 'T00:00:00');
+        const start = new Date(end.getTime() - 6 * 86400000);
+        const sum = (groupRows || [])
+          .filter(g => { const d = new Date(g.meeting_date + 'T00:00:00'); return d >= start && d <= end; })
+          .reduce((s, g) => s + (g.headcount || 0), 0);
+        if (sum > 0) updates.push({ id: row.id, small_group_count: sum });
+      }
+      if (!updates.length) return { success: true, updated: 0 };
+      // Plain per-row updates, not .upsert() -- these rows always already
+      // exist (never inserting), and .upsert() builds a real INSERT
+      // statement under the hood, which fails NOT NULL constraints (like
+      // service_date) on columns this partial payload doesn't include.
+      const results = await Promise.all(
+        updates.map(u => db().from('attendance').update({ small_group_count: u.small_group_count }).eq('id', u.id))
+      );
+      const failed = results.find(r => r.error);
+      if (failed) throw failed.error;
+      return { success: true, updated: updates.length };
+    } catch(e) { console.error('[SupaDB] adminRecomputeSmallGroupCounts:', e.message); return { error: e.message }; }
+  },
   async adminGetAllGroupAttendance() {
     if (!db()) return [];
     const { data, error } = await db()
@@ -1230,6 +1515,7 @@ window.SupaDB = {
       notes:        notes || null,
     });
     if (error) return { error: error.message };
+    await this.adminRecomputeSmallGroupCounts();
     return { success: true };
   },
   async adminUpdateGroupAttendance(id, { meetingDate, headcount, notes }) {
@@ -1240,12 +1526,14 @@ window.SupaDB = {
       notes:        notes || null,
     }).eq('id', id);
     if (error) return { error: error.message };
+    await this.adminRecomputeSmallGroupCounts();
     return { success: true };
   },
   async adminDeleteGroupAttendance(id) {
     if (!db()) return { error: 'Not configured' };
     const { error } = await db().from('group_attendance').delete().eq('id', id);
     if (error) return { error: error.message };
+    await this.adminRecomputeSmallGroupCounts();
     return { success: true };
   },
 
@@ -1330,6 +1618,7 @@ window.SupaDB = {
     const name = m.name || user.email.split('@')[0];
     const email = user.email.toLowerCase();
     const personId = await this.upsertPerson({ name, email, phone: m.phone });
+    if (personId) this.linkMyPersonId(personId);
     const { error } = await db().from('member_profiles').insert({
       user_id: user.id,
       name, email,
@@ -1370,9 +1659,23 @@ window.SupaDB = {
   },
   async adminSetMemberStatus(userId, status) {
     if (!db()) return { error: 'Not configured' };
-    const { error } = await db().from('member_profiles')
-      .update({ status }).eq('user_id', userId);
+    const updates = { status };
+    if (status === 'approved') {
+      // Membership = "Plant" (part slug about_us) attended (or a manual approve) + a profile.
+      // member_since is set once and never overwritten by a later re-approve.
+      const { data: existing } = await db().from('member_profiles')
+        .select('member_since').eq('user_id', userId).maybeSingle();
+      if (!existing || !existing.member_since) updates.member_since = new Date().toISOString().slice(0, 10);
+      const { data: { user } } = await db().auth.getUser();
+      if (user) {
+        const { data: approver } = await db().from('people').select('id').eq('user_id', user.id).maybeSingle();
+        if (approver) updates.approved_by_person_id = approver.id;
+      }
+    }
+    const { data, error } = await db().from('member_profiles')
+      .update(updates).eq('user_id', userId).select('person_id').single();
     if (error) return { error: error.message };
+    if (status === 'approved' && data && data.person_id) this.recordMilestone(data.person_id, 'became_member');
     return { success: true };
   },
   async adminDeleteMember(userId) {
@@ -1388,6 +1691,25 @@ window.SupaDB = {
           'apikey': SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({ action: 'delete', userId }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) return { error: json.error || ('HTTP ' + res.status) };
+      return { success: true };
+    } catch (e) { return { error: e.message }; }
+  },
+  async adminInviteUser({ name, email }) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const { data: { session } } = await db().auth.getSession();
+      const redirectTo = window.location.origin + window.location.pathname.replace(/dashboard\.html$/, 'login.html');
+      const res = await fetch(SUPABASE_URL + '/functions/v1/admin-invite-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + (session ? session.access_token : ''),
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ name, email, redirectTo }),
       });
       const json = await res.json();
       if (!res.ok || json.error) return { error: json.error || ('HTTP ' + res.status) };
@@ -1413,6 +1735,25 @@ window.SupaDB = {
     });
     if (error) return { error: error.message };
     const { data: person } = await db().from('people').select('id').eq('user_id', user.id).maybeSingle();
+    if (person) this.recordMilestone(person.id, assessmentType === 'disc' ? 'assessment_disc_completed' : 'assessment_gifts_completed');
+    return { success: true };
+  },
+  async adminAddAssessmentAttempt({ userId, assessmentType, answers, scores, result }) {
+    if (!db()) return { error: 'Not configured' };
+    if (!userId) return { error: 'No person selected' };
+    const { error } = await db().from('assessment_attempts').insert({
+      user_id: userId, assessment_type: assessmentType,
+      answers, scores, result,
+    });
+    if (error) return { error: error.message };
+    let { data: person } = await db().from('people').select('id').eq('user_id', userId).maybeSingle();
+    if (!person) {
+      const { data: profile } = await db().from('member_profiles').select('name,email,phone').eq('user_id', userId).maybeSingle();
+      if (profile) {
+        const personId = await this.upsertPerson({ name: profile.name, email: profile.email, phone: profile.phone });
+        if (personId) person = { id: personId };
+      }
+    }
     if (person) this.recordMilestone(person.id, assessmentType === 'disc' ? 'assessment_disc_completed' : 'assessment_gifts_completed');
     return { success: true };
   },
@@ -1460,5 +1801,134 @@ window.SupaDB = {
       console.warn('[SupaDB] getLatestYouTubeVideos:', e.message);
       return [];
     }
+  },
+
+/* ── Tap Redirect (Chair Tags) ──────────────────────────── */
+  async getTapSections() {
+    if (!db()) return [];
+    const { data, error } = await db().from('tap_sections').select('*').order('name');
+    if (error) { console.error('[SupaDB] getTapSections:', error.message); return []; }
+    return (data || []).map(r => ({ id: r.id, slug: r.slug, name: r.name }));
+  },
+  async adminAddTapSection({ slug, name }) {
+    if (!db()) return { error: 'Not configured' };
+    const { data, error } = await db().from('tap_sections').insert({ slug, name }).select().single();
+    if (error) return { error: error.message };
+    return { id: data.id, slug: data.slug, name: data.name };
+  },
+  async adminRenameTapSection(id, name) {
+    if (!db()) return { error: 'Not configured' };
+    const { error } = await db().from('tap_sections').update({ name }).eq('id', id);
+    if (error) return { error: error.message };
+    return { success: true };
+  },
+  async adminDeleteTapSection(id) {
+    if (!db()) return { error: 'Not configured' };
+    const { error } = await db().from('tap_sections').delete().eq('id', id);
+    if (error) return { error: error.message };
+    return { success: true };
+  },
+  async getTapLinks() {
+    if (!db()) return [];
+    const { data, error } = await db().from('tap_links').select('*').order('sort_order');
+    if (error) { console.error('[SupaDB] getTapLinks:', error.message); return []; }
+    return (data || []).map(r => ({ id: r.id, label: r.label, url: r.url, sortOrder: r.sort_order }));
+  },
+  async adminSaveTapLink(link) {
+    if (!db()) return { error: 'Not configured' };
+    const row = { label: link.label, url: link.url, sort_order: link.sortOrder || 0 };
+    if (link.id) row.id = link.id;
+    const { data, error } = await db().from('tap_links').upsert(row).select().single();
+    if (error) return { error: error.message };
+    return { id: data.id, label: data.label, url: data.url, sortOrder: data.sort_order };
+  },
+  async adminDeleteTapLink(id) {
+    if (!db()) return { error: 'Not configured' };
+    const { error } = await db().from('tap_links').delete().eq('id', id);
+    if (error) return { error: error.message };
+    return { success: true };
+  },
+  async getTapCurrent(sectionId) {
+    if (!db()) return null;
+    const { data, error } = await db().from('tap_current').select('*').eq('section_id', sectionId).maybeSingle();
+    if (error) { console.error('[SupaDB] getTapCurrent:', error.message); return null; }
+    if (!data) return null;
+    let label = null, url = null;
+    if (data.custom_url) {
+      url = data.custom_url;
+    } else if (data.link_id) {
+      const { data: link, error: linkErr } = await db().from('tap_links').select('label,url').eq('id', data.link_id).maybeSingle();
+      if (linkErr) console.error('[SupaDB] getTapCurrent (link lookup):', linkErr.message);
+      if (link) { label = link.label; url = link.url; }
+    }
+    return {
+      sectionId: data.section_id, linkId: data.link_id, customUrl: data.custom_url,
+      updatedAt: data.updated_at, updatedBy: data.updated_by, label, url,
+    };
+  },
+  async adminSetTapCurrentLink(sectionId, linkId, updatedBy) {
+    if (!db()) return { error: 'Not configured' };
+    const { error } = await db().from('tap_current').upsert({
+      section_id: sectionId, link_id: linkId, custom_url: null,
+      updated_at: new Date().toISOString(), updated_by: updatedBy,
+    });
+    if (error) return { error: error.message };
+    return { success: true };
+  },
+  async adminSetTapCurrentCustomUrl(sectionId, url, updatedBy) {
+    if (!db()) return { error: 'Not configured' };
+    const { error } = await db().from('tap_current').upsert({
+      section_id: sectionId, link_id: null, custom_url: url,
+      updated_at: new Date().toISOString(), updated_by: updatedBy,
+    });
+    if (error) return { error: error.message };
+    return { success: true };
+  },
+  async getTapEventStats(sectionId, sinceIso) {
+    if (!db()) return { today: 0, sinceChange: 0 };
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+    const { data, error } = await db().from('tap_events')
+      .select('tapped_at').eq('section_id', sectionId)
+      .gte('tapped_at', startOfToday.toISOString())
+      .order('tapped_at', { ascending: false });
+    if (error) { console.error('[SupaDB] getTapEventStats:', error.message); return { today: 0, sinceChange: 0 }; }
+    const rows = data || [];
+    const sinceChange = sinceIso ? rows.filter(r => r.tapped_at >= sinceIso).length : rows.length;
+    return { today: rows.length, sinceChange };
+  },
+
+/* ── PUBLIC: Connect Page ───────────────────────────────── */
+  async submitConnectCard({ name, email, phone }) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const personId = await this.upsertPerson({ name, email, phone });
+      const { error } = await db().from('connect_submissions').insert({
+        person_id: personId, name, email, phone: phone || '',
+      });
+      if (error) throw error;
+      if (personId) this.recordMilestone(personId, 'connect_card_submitted');
+      return { success: true };
+    } catch(e) { console.error('[SupaDB] submitConnectCard:', e.message); return { error: e.message }; }
+  },
+
+/* ── ADMIN: Connect Submissions ─────────────────────────── */
+  async adminGetConnectSubmissions() {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().from('connect_submissions').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(connectSubmissionFromDb);
+    } catch(e) { console.error('[SupaDB] adminGetConnectSubmissions:', e.message); return []; }
+  },
+  async adminMarkConnectContacted(id, contacted, contactedBy) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const updates = contacted
+        ? { contacted: true, contacted_at: new Date().toISOString(), contacted_by: contactedBy || '' }
+        : { contacted: false, contacted_at: null, contacted_by: null };
+      const { error } = await db().from('connect_submissions').update(updates).eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    } catch(e) { console.error('[SupaDB] adminMarkConnectContacted:', e.message); return { error: e.message }; }
   },
 };
