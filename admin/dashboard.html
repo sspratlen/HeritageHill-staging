@@ -2524,8 +2524,11 @@ function closeSidebar() {
 
 function switchTab(tab) {
   // Block access to tabs the current role doesn't have
-  const allowed = ROLE_TABS[window._userRole] || ROLE_TABS.admin;
-  if (!allowed.includes(tab)) return;
+  const allowed = isAdmin()
+    ? ROLE_TABS.admin
+    : Array.from(new Set((window._userRoles || []).flatMap(r => ROLE_TABS[r] || [])));
+  const effectiveAllowed = allowed.length ? allowed : ROLE_TABS.admin;
+  if (!effectiveAllowed.includes(tab)) return;
   closeSidebar();
   ALL_TABS.forEach(t => {
     const c = t[0].toUpperCase()+t.slice(1);
