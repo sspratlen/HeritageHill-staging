@@ -412,6 +412,20 @@
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
       User Permissions
     </a>
+
+    <div class="nav-section" id="navSectionProfile">My Profile</div>
+    <a onclick="switchTab('journey')" id="sideJourney" data-tab="journey">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      My Journey
+    </a>
+    <a onclick="switchTab('account')" id="sideAccount" data-tab="account">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      My Info
+    </a>
+    <a href="my-profile.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      Full Profile
+    </a>
   </nav>
   <div class="sidebar-footer">
     <a href="../index.html" target="_blank">
@@ -457,6 +471,11 @@
     </div>
 
     <!-- EVENTS -->
+    <div id="pendingBanner" class="banner-pending" style="display:none;">
+      Your profile is awaiting approval from church staff. You can take your
+      assessments now — results will appear to staff once you're approved.
+    </div>
+
     <div class="tab-panel" id="panelEvents">
       <div class="action-bar">
         <h2>Manage Events</h2>
@@ -1295,6 +1314,61 @@
         </div>
       </div>
     </div>
+
+      <div class="tab-panel" id="panelJourney">
+        <div id="journeyPipelineBox"></div>
+      </div>
+
+      <div class="tab-panel" id="panelAccount">
+        <div class="portal-card" id="profileCard">
+          <h2>My Information</h2>
+          <p class="sub">Keep your contact info and group up to date.</p>
+          <div class="form-group"><label>Full Name</label><input id="pfName" /></div>
+          <div class="form-group"><label>Email</label><input id="pfEmail" disabled /></div>
+          <div class="form-group"><label>Phone</label><input id="pfPhone" /></div>
+          <div class="form-group"><label>Small Group</label><select id="pfGroup"></select></div>
+          <div class="form-group"><label>How long at Heritage Hill?</label>
+            <select id="pfYears">
+              <option value="">— Select —</option>
+              <option>Less than 1 year</option><option>1–3 years</option>
+              <option>3–5 years</option><option>More than 5 years</option>
+            </select></div>
+          <div class="toggle-row" style="margin:18px 0;">
+            <div><strong>Share my results with my group leader</strong>
+              <div class="sub" style="margin:0;">Your leader can see your personality and gifts to help you find your place.</div></div>
+            <input type="checkbox" id="pfShare" style="width:22px;height:22px;" />
+          </div>
+          <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+          <div class="msg-success" id="pfSaved">Saved.</div>
+          <div class="msg-error" id="pfError"></div>
+        </div>
+
+        <div class="portal-card">
+          <h2>Profile Photo</h2>
+          <p class="sub">Shown next to your name across the site.</p>
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px;">
+            <div id="avatarPreview" style="width:80px; height:80px; border-radius:50%; background:#F4F4F2; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;"></div>
+            <div>
+              <input type="file" id="avatarFile" accept="image/*" onchange="handleAvatarFile(this)" style="display:none;" />
+              <button type="button" class="btn btn-primary" onclick="document.getElementById('avatarFile').click()">Choose Photo</button>
+              <button type="button" class="btn btn-ghost" onclick="saveAvatar()" id="avatarSaveBtn" style="display:none; margin-left:8px;">Save Photo</button>
+              <br />
+              <button type="button" class="btn btn-ghost" onclick="removeAvatar()" id="avatarRemoveBtn" style="margin-top:8px; display:none;">Remove Photo</button>
+            </div>
+          </div>
+          <div class="msg-success" id="avatarSaved">Saved.</div>
+          <div class="msg-error" id="avatarError"></div>
+        </div>
+
+        <div class="portal-card">
+          <h2>Change Password</h2>
+          <div class="form-group"><label>New Password</label><input type="password" id="pwNew" /></div>
+          <div class="form-group"><label>Confirm</label><input type="password" id="pwConfirm" /></div>
+          <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+          <div class="msg-success" id="pwSaved">Password updated.</div>
+          <div class="msg-error" id="pwError"></div>
+        </div>
+      </div>
 
     <!-- PEOPLE (admin) -->
     <div class="tab-panel active" id="panelPeople">
