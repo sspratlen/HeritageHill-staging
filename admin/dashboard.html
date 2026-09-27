@@ -6647,7 +6647,7 @@ function applyPeopleFilter() {
 // one click away via "View".
 function membershipTable(rows) {
   if (!rows.length) return '<p style="color:var(--text-muted); padding:20px;">No members match.</p>';
-  const isAdmin = window._userRole === 'admin';
+  const canManageMembers = isAdmin();
   const fmt = d => d ? new Date(d.slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
   const sortArrow = _pplSortDir === 'desc' ? ' ▾' : ' ▴';
   return `<table><thead><tr>
@@ -6657,7 +6657,7 @@ function membershipTable(rows) {
       <td><strong>${escapeHtml(p.name)}</strong></td>
       <td><a href="mailto:${escapeHtml(p.email)}" style="color:var(--primary);">${escapeHtml(p.email)}</a></td>
       <td>${fmt(p.memberSince)}</td>
-      <td>${isAdmin ? `<a class="btn btn-secondary btn-sm" href="member-dashboard.html?id=${encodeURIComponent(p.userId)}">View</a> <button class="btn btn-danger btn-sm" onclick="deleteMember('${p.userId}')">Delete</button>` : ''}</td>
+      <td>${canManageMembers ? `<a class="btn btn-secondary btn-sm" href="member-dashboard.html?id=${encodeURIComponent(p.userId)}">View</a> <button class="btn btn-danger btn-sm" onclick="deleteMember('${p.userId}')">Delete</button>` : ''}</td>
     </tr>`).join('')}</tbody></table>`;
 }
 
@@ -6695,7 +6695,7 @@ async function saveBaptismRecord() {
   if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
   closeBaptismModal();
   showToast('Baptism record saved');
-  if (window._userRole === 'admin' && document.getElementById('panelPeople').classList.contains('active')) renderPeoplePanel();
+  if (isAdmin() && document.getElementById('panelPeople').classList.contains('active')) renderPeoplePanel();
   if (document.getElementById('panelBaptism').classList.contains('active')) renderBaptismTab();
 }
 
