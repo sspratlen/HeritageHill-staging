@@ -2437,18 +2437,30 @@
 <script>
 // Role-based access map
 const ROLE_TABS = {
-  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users'],
-  event_manager:       ['events','sermons','email'],
+  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey','account'],
+  event_manager:       ['events','sermons','email','journey','account'],
+  member:              ['journey','account'],
 };
 const ROLE_LABELS = { admin:'Admin', event_manager:'Event Manager' };
 
 function isAdmin() { return (window._userRoles || []).includes('admin'); }
 
+// Shared by applyRoleVisibility, switchTab, and the auth-guard IIFE below --
+// previously each computed this independently and all three fell back to
+// ROLE_TABS.admin on an empty/unrecognized role combination. That fallback
+// was harmless only because the auth gate used to redirect anyone who could
+// hit it (no role, or small_group_leader-only) away before this code ever
+// ran. Now that the gate no longer redirects those people away, this MUST
+// fall back to the minimal ROLE_TABS.member tier instead, or a plain member
+// would see the entire admin console.
+function getAllowedTabs() {
+  if (isAdmin()) return ROLE_TABS.admin;
+  const union = Array.from(new Set((window._userRoles || []).flatMap(r => ROLE_TABS[r] || [])));
+  return union.length ? union : ROLE_TABS.member;
+}
+
 function applyRoleVisibility() {
-  const allowed = isAdmin()
-    ? ROLE_TABS.admin
-    : Array.from(new Set((window._userRoles || []).flatMap(r => ROLE_TABS[r] || [])));
-  const effectiveAllowed = allowed.length ? allowed : ROLE_TABS.admin;
+  const effectiveAllowed = getAllowedTabs();
   // Show/hide sidebar items
   document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(el => {
     el.style.display = effectiveAllowed.includes(el.dataset.tab) ? '' : 'none';
@@ -2525,7 +2537,7 @@ function applyRoleVisibility() {
   }
 })();
 
-const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users'];
+const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey','account'];
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
   document.getElementById('sidebarBackdrop').classList.toggle('open');
@@ -2537,10 +2549,7 @@ function closeSidebar() {
 
 function switchTab(tab) {
   // Block access to tabs the current role doesn't have
-  const allowed = isAdmin()
-    ? ROLE_TABS.admin
-    : Array.from(new Set((window._userRoles || []).flatMap(r => ROLE_TABS[r] || [])));
-  const effectiveAllowed = allowed.length ? allowed : ROLE_TABS.admin;
+  const effectiveAllowed = getAllowedTabs();
   if (!effectiveAllowed.includes(tab)) return;
   closeSidebar();
   ALL_TABS.forEach(t => {
