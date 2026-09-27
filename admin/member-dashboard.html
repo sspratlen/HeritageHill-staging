@@ -176,7 +176,7 @@ let _teams = [], _allTeamMemberships = [], _baptizedMap = {};
     const user = await SupaDB.getUser();
     if (!user) { window.location.href = 'login.html'; return; }
     const roleData = await SupaDB.getUserRoleByEmail(user.email);
-    if (!roleData || roleData.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+    if (!roleData || !(roleData.roles || []).includes('admin')) { window.location.href = 'dashboard.html'; return; }
 
     const [profiles, contentRows, groups, attempts, semesters, teams, teamMemberships, baptisms] = await Promise.all([
       SupaDB.adminGetAllMemberProfiles(), SupaDB.getAssessmentContent(), SupaDB.adminGetAllGroups(),

@@ -210,10 +210,13 @@ const PANEL_TITLES = { baptism: 'Baptism', events: 'Events', groups: 'Small Grou
   const user = await SupaDB.getUser();
   if (!user) { window.location.href = 'login.html?next=my-profile.html'; return; }
 
-  // Staff get a Dashboard link in the sidebar -- except small_group_leader,
-  // which no longer has a dashboard to go to (redirects right back here).
+  // Staff get a Dashboard link in the sidebar -- except when small_group_leader
+  // is their ONLY role, which no longer has a dashboard to go to (redirects
+  // right back here). Someone who is both a leader and, say, an admin still
+  // gets the link.
   const roleData = await SupaDB.getUserRoleByEmail(user.email);
-  if (roleData && roleData.role !== 'small_group_leader') document.getElementById('dashLink').style.display = '';
+  const myRoles = (roleData && roleData.roles) || [];
+  if (roleData && !(myRoles.length === 1 && myRoles[0] === 'small_group_leader')) document.getElementById('dashLink').style.display = '';
 
   // Lazy-create profile (covers both fresh registrations and existing staff)
   _profile = await SupaDB.getMyProfile();

@@ -232,8 +232,9 @@ function escapeHtml(s) {
     _user = await SupaDB.getUser();
     if (!_user) { window.location.href = 'login.html?next=tap-control.html'; return; }
     const roleData = await SupaDB.getUserRoleByEmail(_user.email);
-    if (!roleData || roleData.role === 'small_group_leader') { window.location.href = 'my-profile.html'; return; }
-    if (roleData.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+    const rlRoles = (roleData && roleData.roles) || [];
+    if (!roleData || (rlRoles.length === 1 && rlRoles[0] === 'small_group_leader')) { window.location.href = 'my-profile.html'; return; }
+    if (!rlRoles.includes('admin')) { window.location.href = 'dashboard.html'; return; }
     await init();
   } catch (err) {
     document.getElementById('loadingMsg').textContent = 'Error loading page: ' + err.message;
