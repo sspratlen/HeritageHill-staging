@@ -1250,7 +1250,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th onclick="toggleUsersSort()" style="cursor:pointer;user-select:none;">Email<span id="usrSortArrow"></span></th><th>Name</th><th>Role</th><th>Added</th><th>Actions</th></tr></thead>
+          <thead><tr><th onclick="toggleUsersSort()" style="cursor:pointer;user-select:none;">Email<span id="usrSortArrow"></span></th><th>Name</th><th>Added</th><th>Actions</th></tr></thead>
           <tbody id="usersTable"></tbody>
         </table>
         <div class="empty" id="usersEmpty" style="display:none;">
@@ -2209,12 +2209,17 @@
       </div>
       <div class="form-row full" style="margin-bottom:16px;">
         <div class="field">
-          <label>Role <span style="color:var(--danger);">*</span></label>
-          <select id="userRole">
-            <option value="">Select a role…</option>
-            <option value="admin">Admin — Full access to all sections</option>
-            <option value="event_manager">Event Manager — Events (including sign-ups), Sermons, Email</option>
-          </select>
+          <label>Roles <span style="color:var(--danger);">*</span></label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
+              <input type="checkbox" id="userRoleAdmin" style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary);" />
+              Admin — Full access to all sections
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
+              <input type="checkbox" id="userRoleEventManager" style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary);" />
+              Event Manager — Events (including sign-ups), Sermons, Email
+            </label>
+          </div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);">
@@ -2223,6 +2228,10 @@
           <label for="userForcePasswordChange" style="font-size:.875rem;font-weight:600;cursor:pointer;margin:0;">Require password change on next login</label>
           <p style="margin:2px 0 0;font-size:.78rem;color:var(--text-muted);">User will be prompted to set a new password before accessing the dashboard.</p>
         </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button type="button" class="btn btn-success btn-sm" onclick="if(_aupSelectedPerson) setupUserAccount(_aupSelectedPerson.email); else alert('Please select a member first.');">Set Up Account</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="if(_aupSelectedPerson) sendPasswordReset(_aupSelectedPerson.email); else alert('Please select a member first.');">Reset Password</button>
       </div>
     </div>
     <div class="modal-footer">
@@ -7418,7 +7427,6 @@ async function renderEmailHistory() {
 /* ── USER PERMISSIONS ─────────────────────────────────────── */
 let _cachedUsers = [];
 const _roleLabels = { admin:'Admin', event_manager:'Event Manager' };
-const _roleBadgeClass = { admin:'badge-blue', event_manager:'badge-amber' };
 
 let _usrSortDir = 'asc';
 function toggleUsersSort() {
@@ -7480,7 +7488,7 @@ function applyUsersFilter() {
   if (q) rows = rows.filter(u =>
     u.email.toLowerCase().includes(q) ||
     (u.displayName || '').toLowerCase().includes(q) ||
-    (_roleLabels[u.role] || u.role || '').toLowerCase().includes(q)
+    (u.roles || []).map(r => _roleLabels[r] || r).join(' ').toLowerCase().includes(q)
   );
   rows = rows.slice().sort((a, b) => _usrSortDir === 'desc'
     ? b.email.localeCompare(a.email)
@@ -7492,29 +7500,28 @@ function applyUsersFilter() {
   if (!rows.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
   empty.style.display = 'none';
   tbody.innerHTML = rows.map(u => `
-    <tr>
+    <tr onclick="editUser('${u.email.replace(/'/g,"\\'")}')" style="cursor:pointer;">
       <td><strong>${u.email}</strong></td>
       <td style="color:var(--text-muted);">${u.displayName || '—'}</td>
-      <td><span class="badge ${_roleBadgeClass[u.role]||'badge-gray'}">${_roleLabels[u.role]||u.role}</span></td>
       <td style="color:var(--text-muted);font-size:.82rem;">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
       <td><div class="td-actions">
-        <button class="btn btn-ghost btn-sm" onclick="editUser('${u.email.replace(/'/g,"\\'")}')">Edit</button>
-        <button class="btn btn-success btn-sm" onclick="setupUserAccount('${u.email.replace(/'/g,"\\'")}')">Set Up Account</button>
-        <button class="btn btn-secondary btn-sm" onclick="sendPasswordReset('${u.email.replace(/'/g,"\\'")}')">Reset Password</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.email.replace(/'/g,"\\'")}')">Remove</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteUser('${u.email.replace(/'/g,"\\'")}')">Remove</button>
       </div></td>
     </tr>`).join('');
 }
 
 function openUserModal(email) {
   document.getElementById('userModalTitle').textContent = email ? 'Edit User' : 'Add Permissions';
-  document.getElementById('userRole').value        = '';
+  document.getElementById('userRoleAdmin').checked = false;
+  document.getElementById('userRoleEventManager').checked = false;
   document.getElementById('userForcePasswordChange').checked = false;
   aupClearPerson();
   if (email) {
     const u = _cachedUsers.find(x => x.email === email);
     if (u) {
-      document.getElementById('userRole').value        = u.role || '';
+      const roles = u.roles || [];
+      document.getElementById('userRoleAdmin').checked = roles.includes('admin');
+      document.getElementById('userRoleEventManager').checked = roles.includes('event_manager');
       document.getElementById('userForcePasswordChange').checked = !!u.forcePasswordChange;
       if (u.userId) aupSelectPerson(u.userId);
     }
@@ -7525,12 +7532,14 @@ function closeUserModal() { document.getElementById('userModal').classList.remov
 function editUser(email) { openUserModal(email); }
 
 async function saveUser() {
-  const role = document.getElementById('userRole').value;
+  const roles = [];
+  if (document.getElementById('userRoleAdmin').checked) roles.push('admin');
+  if (document.getElementById('userRoleEventManager').checked) roles.push('event_manager');
   const forcePasswordChange = document.getElementById('userForcePasswordChange').checked;
   if (!_aupSelectedPerson) { alert('Please select a member.'); return; }
-  if (!role) { alert('Please select a role.'); return; }
+  if (!roles.length) { alert('Please select at least one role.'); return; }
   const { userId, name: displayName, email } = _aupSelectedPerson;
-  const res = await SupaDB.adminUpsertUserRole({ userId, email, displayName, role, forcePasswordChange });
+  const res = await SupaDB.adminUpsertUserRole({ userId, email, displayName, roles, forcePasswordChange });
   if (res.error) { alert('Error: ' + res.error); return; }
   closeUserModal();
   showToast('User saved.');
