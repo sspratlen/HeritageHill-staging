@@ -336,6 +336,20 @@ const MemberDashboard = {
         giftsBox.innerHTML = '<p class="jp-empty">Not taken yet.</p>';
       }
     }
+
+    // Optional, backward-compatible: pages that want each stage header to
+    // navigate somewhere (e.g. a member's own profile jumping to the full
+    // Baptism/Groups/Growth Track/Impact Teams panel) can pass
+    // onFoundClick/onFilledClick/onFreedClick/onForgedClick. Callers that
+    // don't pass these (e.g. admin/member-dashboard.html, viewing someone
+    // else) get today's plain, non-interactive stage headers, unchanged.
+    const stageClickHandlers = [opts.onFoundClick, opts.onFilledClick, opts.onFreedClick, opts.onForgedClick];
+    containerEl.querySelectorAll('.jp-stage-head').forEach((el, i) => {
+      if (stageClickHandlers[i]) {
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', stageClickHandlers[i]);
+      }
+    });
   },
 
   // ── Standalone Found/Filled/Freed/Forged cards, one stage at a time --
