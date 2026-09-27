@@ -9,6 +9,12 @@
 -- The old `role` column is intentionally left in place, untouched,
 -- as a safety net — dropping it is a separate future cleanup once
 -- `roles` has been live and verified for a while.
+--
+-- Status: applied and verified on staging (govvofbrhhpowtdnuzcw) as
+-- of 2026-09-27 — all rows backfilled correctly, is_admin() confirmed
+-- reading the array. Not yet applied to production
+-- (ktyplbmawlaerzohkdqy) — do not push dependent code to production
+-- until this has been run and verified there too.
 -- ============================================================
 
 alter table public.user_roles
