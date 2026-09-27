@@ -2592,7 +2592,7 @@ function applyRoleVisibility() {
   }
   // Update role badge label
   document.getElementById('roleBadge').textContent =
-    (window._userRoles || []).map(r => ROLE_LABELS[r] || r).join(' + ') || 'Admin';
+    (window._userRoles || []).map(r => ROLE_LABELS[r] || r).join(' + ') || 'Member';
 }
 
 // Auth guard — redirect to login if not signed in; load role before rendering
@@ -2634,7 +2634,14 @@ function applyRoleVisibility() {
   const effectiveAllowed = getAllowedTabs();
   const urlTab = new URLSearchParams(window.location.search).get('tab');
   const startTab = (urlTab && effectiveAllowed.includes(urlTab)) ? urlTab : effectiveAllowed[0];
-  await loadMyJourneyData();
+  // Only staff land on an admin tab by default -- for them, don't make the
+  // page they actually use wait on their own personal-journey data (they
+  // don't need it unless they click My Journey/My Info). Members always
+  // land on 'journey', which DOES need this data before it can render, so
+  // it's awaited first in that case. Either way, switchTab('journey') is
+  // guarded (see below) against firing before this promise settles.
+  window._journeyDataReady = loadMyJourneyData();
+  if (startTab === 'journey' || startTab === 'account') await window._journeyDataReady;
   switchTab(startTab);
   if (isAdmin()) updateStats();
   if (isAdmin()) {
@@ -2690,7 +2697,7 @@ function switchTab(tab) {
   else if(tab==='analytics') renderAnalyticsTab();
   else if(tab==='growthtrack') renderGrowthTrackTab();
   else if(tab==='impactteams') renderImpactTeamsTable();
-  else if(tab==='journey') renderJourneyPanel();
+  else if(tab==='journey') { if (_journeyData) renderJourneyPanel(); else window._journeyDataReady.then(renderJourneyPanel); }
 }
 
 async function updateStats() {
