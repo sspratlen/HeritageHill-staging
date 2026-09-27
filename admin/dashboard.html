@@ -2492,17 +2492,20 @@ function applyRoleVisibility() {
   if (!user) { window.location.href = 'login.html?next=dashboard.html'; return; }
   window._currentUser = user;
   const roleData = await SupaDB.getUserRoleByEmail(user.email);
-  // Small group leaders manage their group from my-profile.html now, not
-  // this dashboard -- treat that as having no staff role at all here,
-  // rather than falling through to ROLE_TABS.admin below. Only redirects
-  // when small_group_leader is their ONLY role -- someone who is both a
-  // small group leader and, say, an admin still belongs on this dashboard.
-  const roleList = (roleData && roleData.roles) || [];
-  if (!roleData || (roleList.length === 1 && roleList[0] === 'small_group_leader')) {
-    window.location.href = 'my-profile.html'; return;
-  }
-  window._userRoles = roleList;
+  window._userRoles = (roleData && roleData.roles) || [];
   window._currentUserName = (roleData && roleData.displayName) ? roleData.displayName : '';
+
+  // Every authenticated visitor gets a profile row -- self-registered
+  // members are lazily provisioned here, the same way my-profile.html
+  // already does it. This page no longer redirects anyone away.
+  _profile = await SupaDB.getMyProfile();
+  if (!_profile) {
+    const r = await SupaDB.createMyProfile();
+    if (!r.error) _profile = await SupaDB.getMyProfile();
+  }
+  if (!_profile) { alert('Could not load your profile. Please try again.'); return; }
+  if (_profile.status === 'pending' && !roleData) document.getElementById('pendingBanner').style.display = '';
+
   // Force password change before loading dashboard
   if (roleData && roleData.forcePasswordChange) {
     await new Promise(resolve => {
@@ -2511,22 +2514,19 @@ function applyRoleVisibility() {
     });
   }
   applyRoleVisibility();
-  SupaDB.getMyProfile().then(profile => {
-    const link = document.getElementById('topbarAvatarLink');
-    if (!link) return;
-    link.innerHTML = buildAvatarHtml({
-      name: profile ? profile.name : (window._currentUserName || ''),
-      email: window._currentUser ? window._currentUser.email : '',
-      avatarUrl: profile ? profile.avatarUrl : null,
+  const topbarLink = document.getElementById('topbarAvatarLink');
+  if (topbarLink) {
+    topbarLink.innerHTML = buildAvatarHtml({
+      name: _profile.name || window._currentUserName || '',
+      email: window._currentUser.email,
+      avatarUrl: _profile.avatarUrl,
     }, 34);
-  }).catch(() => {});
-  const allowed = isAdmin()
-    ? ROLE_TABS.admin
-    : Array.from(new Set(window._userRoles.flatMap(r => ROLE_TABS[r] || [])));
-  const effectiveAllowed = allowed.length ? allowed : ROLE_TABS.admin;
+  }
+  const effectiveAllowed = getAllowedTabs();
   const urlTab = new URLSearchParams(window.location.search).get('tab');
   const startTab = (urlTab && effectiveAllowed.includes(urlTab)) ? urlTab : effectiveAllowed[0];
   switchTab(startTab);
+  await loadMyJourneyData();
   if (isAdmin()) updateStats();
   if (isAdmin()) {
     SupaDB.adminGetAllMemberProfiles().then(ps => {
@@ -2538,6 +2538,7 @@ function applyRoleVisibility() {
 })();
 
 const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey','account'];
+let _profile = null, _journeyData = null;
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
   document.getElementById('sidebarBackdrop').classList.toggle('open');
