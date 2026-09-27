@@ -46,8 +46,8 @@ serve(async (req: Request) => {
       })
     }
     const { data: roleRow } = await admin.from('user_roles')
-      .select('role').eq('email', caller.user.email.toLowerCase()).maybeSingle()
-    if (!roleRow || roleRow.role !== 'admin') {
+      .select('roles').eq('email', caller.user.email.toLowerCase()).maybeSingle()
+    if (!roleRow || !roleRow.roles?.includes('admin')) {
       return new Response(JSON.stringify({ error: 'Admins only' }), {
         status: 403, headers: { ...CORS, 'Content-Type': 'application/json' },
       })

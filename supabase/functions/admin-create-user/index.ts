@@ -38,14 +38,14 @@ serve(async (req: Request) => {
       })
     }
     const { data: roleRow } = await admin.from('user_roles')
-      .select('role').eq('email', caller.user.email.toLowerCase()).maybeSingle()
+      .select('roles').eq('email', caller.user.email.toLowerCase()).maybeSingle()
 
     if (action === 'delete') {
       // Deletion is admin-only (matches the People/Members tab's own
       // ROLE_TABS gating — small group leaders never see a delete-account
       // control in the UI, unlike create/reset below, which leaders trigger
       // legitimately via "Add to Group").
-      if (!roleRow || roleRow.role !== 'admin') {
+      if (!roleRow || !roleRow.roles?.includes('admin')) {
         return new Response(JSON.stringify({ error: 'Admins only' }), {
           status: 403, headers: { ...CORS, 'Content-Type': 'application/json' },
         })
