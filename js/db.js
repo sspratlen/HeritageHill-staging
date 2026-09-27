@@ -1563,7 +1563,7 @@ window.SupaDB = {
       const { data, error } = await db().from('user_roles').select('*').eq('email', email.toLowerCase()).single();
       if (error) return null;
       return data ? {
-        email: data.email, displayName: data.display_name || '', role: data.role,
+        email: data.email, displayName: data.display_name || '', roles: data.roles || [],
         createdAt: data.created_at, forcePasswordChange: !!data.force_password_change,
         userId: data.user_id || null,
       } : null;
@@ -1583,16 +1583,17 @@ window.SupaDB = {
     try {
       const { data, error } = await db().from('user_roles').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []).map(r => ({ email: r.email, displayName: r.display_name || '', role: r.role, createdAt: r.created_at, forcePasswordChange: !!r.force_password_change, userId: r.user_id || null }));
+      return (data || []).map(r => ({ email: r.email, displayName: r.display_name || '', roles: r.roles || [], createdAt: r.created_at, forcePasswordChange: !!r.force_password_change, userId: r.user_id || null }));
     } catch(e) { console.error('[SupaDB] adminGetAllUserRoles:', e.message); return []; }
   },
-  async adminUpsertUserRole({ userId, email, displayName, role, forcePasswordChange }) {
+  async adminUpsertUserRole({ userId, email, displayName, roles, forcePasswordChange }) {
     if (!db()) return { error: 'No DB' };
     if (!userId) return { error: 'A member must be selected' };
+    if (!roles || !roles.length) return { error: 'At least one role must be selected' };
     try {
       const personId = await this.upsertPerson({ name: displayName, email });
       const { error } = await db().from('user_roles')
-        .upsert({ user_id: userId, email: email.toLowerCase(), display_name: displayName || '', role, force_password_change: !!forcePasswordChange, person_id: personId }, { onConflict: 'email' });
+        .upsert({ user_id: userId, email: email.toLowerCase(), display_name: displayName || '', roles, force_password_change: !!forcePasswordChange, person_id: personId }, { onConflict: 'email' });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminUpsertUserRole:', e.message); return { error: e.message }; }
