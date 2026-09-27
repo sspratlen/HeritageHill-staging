@@ -76,6 +76,41 @@
     .btn-danger:hover { background: #dc2626; }
     .btn-ghost { background: transparent; color: var(--text-muted); border-color: var(--border); }
     .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    /* Ported from css/portal.css for the new My Journey/My Info tabs --
+       intentionally NOT loading portal.css itself, since its .btn-primary/
+       .btn-ghost are full standalone button styles that collide with this
+       file's own .btn-primary/.btn-ghost (modifier classes meant to pair
+       with .btn). Only the non-colliding rules below were ported; the new
+       panels' buttons use this file's existing class="btn btn-primary"
+       convention instead of portal.css's bare class="btn-primary". */
+    .portal-card { background: #fff; border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 28px; margin-bottom: 20px; }
+    .portal-card h2 { font-size: 1.2rem; margin-bottom: 4px; }
+    .portal-card .sub { color: var(--text-muted); font-size: .9rem; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: .65rem 1rem; border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: .9375rem; outline: none; background: #fff; transition: border-color .2s;
+    }
+    .form-group textarea { resize: vertical; min-height: 44px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(188,122,30,.15);
+    }
+    .msg-error {
+      background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3); color: #dc2626;
+      border-radius: 8px; padding: 10px 14px; font-size: .875rem; margin-top: 12px; display: none;
+    }
+    .msg-error.show { display: block; }
+    .msg-success {
+      background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3); color: #16a34a;
+      border-radius: 8px; padding: 10px 14px; font-size: .875rem; margin-top: 12px; display: none;
+    }
+    .msg-success.show { display: block; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .banner-pending {
+      background: rgba(188,122,30,.1); border: 1px solid rgba(188,122,30,.35); color: #92400e;
+      border-radius: 10px; padding: 12px 16px; font-size: .9rem; margin-bottom: 20px;
+    }
     .btn-sm { padding: .35rem .85rem; font-size: .8rem; }
     .btn:disabled { opacity: .55; cursor: not-allowed; }
     .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow-x: auto; }
