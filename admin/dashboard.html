@@ -2429,11 +2429,16 @@ const ROLE_TABS = {
 };
 const ROLE_LABELS = { admin:'Admin', event_manager:'Event Manager' };
 
+function isAdmin() { return (window._userRoles || []).includes('admin'); }
+
 function applyRoleVisibility() {
-  const allowed = ROLE_TABS[window._userRole] || ROLE_TABS.admin;
+  const allowed = isAdmin()
+    ? ROLE_TABS.admin
+    : Array.from(new Set((window._userRoles || []).flatMap(r => ROLE_TABS[r] || [])));
+  const effectiveAllowed = allowed.length ? allowed : ROLE_TABS.admin;
   // Show/hide sidebar items
   document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(el => {
-    el.style.display = allowed.includes(el.dataset.tab) ? '' : 'none';
+    el.style.display = effectiveAllowed.includes(el.dataset.tab) ? '' : 'none';
   });
   // Hide section headers if all items beneath them are hidden
   ['navSectionFound','navSectionFilled','navSectionFreed','navSectionForged','navSectionOperations'].forEach(secId => {
@@ -2447,12 +2452,13 @@ function applyRoleVisibility() {
     sec.style.display = anyVisible ? '' : 'none';
   });
   // Hide stats row for non-admins (stats cover data they can't see)
-  if (window._userRole !== 'admin') {
+  if (!isAdmin()) {
     const statsRow = document.querySelector('.stats-row');
     if (statsRow) statsRow.style.display = 'none';
   }
   // Update role badge label
-  document.getElementById('roleBadge').textContent = ROLE_LABELS[window._userRole] || 'Admin';
+  document.getElementById('roleBadge').textContent =
+    (window._userRoles || []).map(r => ROLE_LABELS[r] || r).join(' + ') || 'Admin';
 }
 
 // Auth guard — redirect to login if not signed in; load role before rendering
@@ -2462,10 +2468,15 @@ function applyRoleVisibility() {
   window._currentUser = user;
   const roleData = await SupaDB.getUserRoleByEmail(user.email);
   // Small group leaders manage their group from my-profile.html now, not
-  // this dashboard -- treat that role the same as having no staff role at
-  // all here, rather than falling through to ROLE_TABS.admin below.
-  if (!roleData || roleData.role === 'small_group_leader') { window.location.href = 'my-profile.html'; return; }
-  window._userRole = roleData.role;
+  // this dashboard -- treat that as having no staff role at all here,
+  // rather than falling through to ROLE_TABS.admin below. Only redirects
+  // when small_group_leader is their ONLY role -- someone who is both a
+  // small group leader and, say, an admin still belongs on this dashboard.
+  const roleList = (roleData && roleData.roles) || [];
+  if (!roleData || (roleList.length === 1 && roleList[0] === 'small_group_leader')) {
+    window.location.href = 'my-profile.html'; return;
+  }
+  window._userRoles = roleList;
   window._currentUserName = (roleData && roleData.displayName) ? roleData.displayName : '';
   // Force password change before loading dashboard
   if (roleData && roleData.forcePasswordChange) {
@@ -2484,12 +2495,15 @@ function applyRoleVisibility() {
       avatarUrl: profile ? profile.avatarUrl : null,
     }, 34);
   }).catch(() => {});
-  const allowed = ROLE_TABS[window._userRole] || ROLE_TABS.admin;
+  const allowed = isAdmin()
+    ? ROLE_TABS.admin
+    : Array.from(new Set(window._userRoles.flatMap(r => ROLE_TABS[r] || [])));
+  const effectiveAllowed = allowed.length ? allowed : ROLE_TABS.admin;
   const urlTab = new URLSearchParams(window.location.search).get('tab');
-  const startTab = (urlTab && allowed.includes(urlTab)) ? urlTab : allowed[0];
+  const startTab = (urlTab && effectiveAllowed.includes(urlTab)) ? urlTab : effectiveAllowed[0];
   switchTab(startTab);
-  if (window._userRole === 'admin') updateStats();
-  if (window._userRole === 'admin') {
+  if (isAdmin()) updateStats();
+  if (isAdmin()) {
     SupaDB.adminGetAllMemberProfiles().then(ps => {
       const n = ps.filter(p => p.status === 'pending').length;
       const b = document.getElementById('peopleBadge');
