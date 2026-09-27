@@ -2670,7 +2670,7 @@ function switchTab(tab) {
   const c = tab[0].toUpperCase()+tab.slice(1);
   const p = document.getElementById('panel'+c), s = document.getElementById('side'+c);
   if(p) p.classList.add('active'); if(s) s.classList.add('active');
-  const titles = {events:'Events',connect:'Connect Submissions',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Membership',baptism:'Baptism',analytics:'Analytics',growthtrack:'Growth Track',impactteams:'Impact Teams'};
+  const titles = {events:'Events',connect:'Connect Submissions',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Membership',baptism:'Baptism',analytics:'Analytics',growthtrack:'Growth Track',impactteams:'Impact Teams',journey:'My Journey',account:'My Info'};
   document.getElementById('topbarTitle').textContent = titles[tab]||tab;
   if(tab==='events') renderEventsTable();
   else if(tab==='connect') renderConnectPanel();
@@ -2690,6 +2690,7 @@ function switchTab(tab) {
   else if(tab==='analytics') renderAnalyticsTab();
   else if(tab==='growthtrack') renderGrowthTrackTab();
   else if(tab==='impactteams') renderImpactTeamsTable();
+  else if(tab==='journey') renderJourneyPanel();
 }
 
 async function updateStats() {
@@ -6265,6 +6266,55 @@ async function removeAvatar() {
   _pendingAvatarUrl = null;
   ok.classList.add('show');
   setTimeout(() => ok.classList.remove('show'), 2500);
+}
+
+// Fills the Account form and loads everything My Journey needs -- runs
+// once at page load for every logged-in person (staff or not), same data
+// shape as admin/my-profile.html's identically-named block. This is
+// separate from the admin-only bulk data loads elsewhere in this file
+// (those stay gated behind isAdmin()); this one always runs, since every
+// visitor has their own personal journey regardless of role.
+async function loadMyJourneyData() {
+  document.getElementById('pfName').value  = _profile.name;
+  document.getElementById('pfEmail').value = _profile.email;
+  document.getElementById('pfPhone').value = _profile.phone;
+  document.getElementById('pfYears').value = _profile.yearsAttending || '';
+  document.getElementById('pfShare').checked = _profile.shareWithLeader;
+  renderAvatarPreview(_profile.avatarUrl);
+  if (_profile.avatarUrl) document.getElementById('avatarRemoveBtn').style.display = '';
+  const groups = await SupaDB.getPublishedGroups();
+  const sel = document.getElementById('pfGroup');
+  sel.innerHTML = '<option value="">— Not in a group —</option>' +
+    groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  sel.value = _profile.groupId || '';
+
+  const [attempts, content, gtRegs, memberships, semesters, teamMemberships, teams, milestones, events] = await Promise.all([
+    SupaDB.getMyAttempts(), SupaDB.getAssessmentContent(),
+    SupaDB.getGrowthTrackRegistrationsForUser(window._currentUser.id), SupaDB.getGroupMembershipsForUser(window._currentUser.id),
+    SupaDB.getSemesters(),
+    SupaDB.getImpactTeamMembershipsForUser(window._currentUser.id), SupaDB.getPublishedImpactTeams(),
+    SupaDB.getMyMilestones(_profile.personId),
+    SupaDB.adminGetAllEvents(),
+  ]);
+  _journeyData = {
+    content: Assessments.splitContent(content), gtRegs, memberships, groups, semesters, teamMemberships, teams, events,
+    discAttempts: attempts.filter(a => a.assessmentType === 'disc'),
+    giftsAttempts: attempts.filter(a => a.assessmentType === 'gifts'),
+    baptism: milestones.find(m => m.milestone === 'baptized'),
+  };
+}
+
+function renderJourneyPanel() {
+  MemberDashboard.renderJourneyPipeline(document.getElementById('journeyPipelineBox'), {
+    memberSince: _profile.memberSince, baptizedAt: _journeyData.baptism ? _journeyData.baptism.achievedAt : null,
+    groupMemberships: _journeyData.memberships, groups: _journeyData.groups, email: _profile.email,
+    gtRegistrations: _journeyData.gtRegs,
+    discAttempt: _journeyData.discAttempts[0], giftsAttempt: _journeyData.giftsAttempts[0],
+    discAttemptCount: _journeyData.discAttempts.length, giftsAttemptCount: _journeyData.giftsAttempts.length,
+    discBlends: _journeyData.content.discBlends, giftsContent: _journeyData.content.gifts,
+    assessmentCtaHrefs: { disc: 'test-personality.html', gifts: 'test-gifts.html' },
+    teamMemberships: _journeyData.teamMemberships, teams: _journeyData.teams,
+  });
 }
 
 let _pplProfiles = [];
