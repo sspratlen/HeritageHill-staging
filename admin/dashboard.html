@@ -6171,6 +6171,102 @@ function escapeHtml(s) {
   }[c]));
 }
 
+async function saveProfile() {
+  const r = await SupaDB.updateMyProfile({
+    name: document.getElementById('pfName').value.trim(),
+    phone: document.getElementById('pfPhone').value.trim(),
+    groupId: document.getElementById('pfGroup').value || null,
+    yearsAttending: document.getElementById('pfYears').value,
+    shareWithLeader: document.getElementById('pfShare').checked,
+  });
+  const ok = document.getElementById('pfSaved'), err = document.getElementById('pfError');
+  ok.classList.toggle('show', !r.error);
+  err.classList.toggle('show', !!r.error);
+  if (r.error) err.textContent = r.error;
+  setTimeout(() => ok.classList.remove('show'), 2500);
+}
+
+async function changePassword() {
+  const pw = document.getElementById('pwNew').value;
+  const err = document.getElementById('pwError'), ok = document.getElementById('pwSaved');
+  err.classList.remove('show'); ok.classList.remove('show');
+  if (pw.length < 8) { err.textContent = 'At least 8 characters.'; err.classList.add('show'); return; }
+  if (pw !== document.getElementById('pwConfirm').value) {
+    err.textContent = 'Passwords do not match.'; err.classList.add('show'); return;
+  }
+  try {
+    await SupaDB.updatePassword(pw);
+    ok.classList.add('show');
+    document.getElementById('pwNew').value = ''; document.getElementById('pwConfirm').value = '';
+  } catch (e) {
+    err.textContent = (e && e.message) || 'Could not update password.';
+    err.classList.add('show');
+  }
+}
+
+let _pendingAvatarUrl = null;
+
+function isSafeAvatarUrl(url) {
+  return typeof url === 'string' && /^(data:image\/|https:\/\/)/i.test(url);
+}
+
+function renderAvatarPreview(avatarUrl) {
+  const box = document.getElementById('avatarPreview');
+  if (avatarUrl && isSafeAvatarUrl(avatarUrl)) {
+    box.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Profile" style="width:100%;height:100%;object-fit:cover;" />`;
+  } else {
+    box.innerHTML = `<svg width="36" height="36" fill="none" stroke="#6B6B6B" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
+  }
+}
+
+function handleAvatarFile(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const SIZE = 160;
+      const side = Math.min(img.width, img.height);
+      const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = SIZE; canvas.height = SIZE;
+      canvas.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+      _pendingAvatarUrl = canvas.toDataURL('image/jpeg', 0.8);
+      renderAvatarPreview(_pendingAvatarUrl);
+      document.getElementById('avatarSaveBtn').style.display = '';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveAvatar() {
+  if (!_pendingAvatarUrl) return;
+  const err = document.getElementById('avatarError'), ok = document.getElementById('avatarSaved');
+  err.classList.remove('show'); ok.classList.remove('show');
+  const r = await SupaDB.updateMyAvatar(_pendingAvatarUrl);
+  if (r.error) { err.textContent = r.error; err.classList.add('show'); return; }
+  ok.classList.add('show');
+  document.getElementById('avatarSaveBtn').style.display = 'none';
+  document.getElementById('avatarRemoveBtn').style.display = '';
+  _pendingAvatarUrl = null;
+  setTimeout(() => ok.classList.remove('show'), 2500);
+}
+
+async function removeAvatar() {
+  const err = document.getElementById('avatarError'), ok = document.getElementById('avatarSaved');
+  err.classList.remove('show'); ok.classList.remove('show');
+  const r = await SupaDB.updateMyAvatar(null);
+  if (r.error) { err.textContent = r.error; err.classList.add('show'); return; }
+  renderAvatarPreview(null);
+  document.getElementById('avatarRemoveBtn').style.display = 'none';
+  document.getElementById('avatarSaveBtn').style.display = 'none';
+  _pendingAvatarUrl = null;
+  ok.classList.add('show');
+  setTimeout(() => ok.classList.remove('show'), 2500);
+}
+
 let _pplProfiles = [];
 
 function latestByUser(attempts) {
