@@ -2641,6 +2641,7 @@ function applyRoleVisibility() {
   // it's awaited first in that case. Either way, switchTab('journey') is
   // guarded (see below) against firing before this promise settles.
   window._journeyDataReady = loadMyJourneyData();
+  window._journeyDataReady.catch(err => console.error('[MyJourney] load failed:', err));
   if (startTab === 'journey' || startTab === 'account') await window._journeyDataReady;
   switchTab(startTab);
   if (isAdmin()) updateStats();
