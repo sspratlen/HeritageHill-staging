@@ -2634,8 +2634,8 @@ function applyRoleVisibility() {
   const effectiveAllowed = getAllowedTabs();
   const urlTab = new URLSearchParams(window.location.search).get('tab');
   const startTab = (urlTab && effectiveAllowed.includes(urlTab)) ? urlTab : effectiveAllowed[0];
-  switchTab(startTab);
   await loadMyJourneyData();
+  switchTab(startTab);
   if (isAdmin()) updateStats();
   if (isAdmin()) {
     SupaDB.adminGetAllMemberProfiles().then(ps => {
