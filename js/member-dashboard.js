@@ -59,7 +59,9 @@ const MemberDashboard = {
     const rows = memberships.concat(led);
 
     if (!rows.length) {
-      containerEl.innerHTML = '<p style="color:var(--text-muted);font-size:.9rem;">No group history yet.</p>';
+      containerEl.innerHTML = `
+        <p class="jp-empty">Not in a small group yet — that's where a lot of life change happens, through real relationships with people who'll walk with you.</p>
+        <a href="small-groups.html" class="jp-cta">See what groups are available →</a>`;
       return;
     }
     const groupName = id => {
