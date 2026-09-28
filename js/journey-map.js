@@ -179,6 +179,33 @@ const JourneyMap = {
     return `<div class="jm-map jm-${mobile ? 'mobile' : 'desktop'}">`
       + `<svg viewBox="0 0 ${L.w} ${L.h}" role="group" aria-label="${title}">${out.join('')}</svg></div>`;
   },
+
+  // Draws the map into containerEl and wires each stop to
+  // opts.onStopClick(stop). Re-renders on resize only when the container
+  // crosses BREAKPOINT; calling render() again on the same container
+  // replaces the previous resize listener instead of stacking another.
+  render(containerEl, data, opts = {}) {
+    const layoutFor = () => ((containerEl.clientWidth || window.innerWidth) > this.BREAKPOINT ? 'desktop' : 'mobile');
+    const status = this.computeStatus(data);
+    const draw = () => {
+      containerEl._jmLayout = layoutFor();
+      containerEl.innerHTML = this.buildSvg(status, containerEl._jmLayout, data.firstName);
+      containerEl.querySelectorAll('.jm-stop').forEach(el => {
+        const stop = this.STOPS.find(s => s.key === el.dataset.key);
+        const go = () => { if (opts.onStopClick) opts.onStopClick(stop); };
+        el.addEventListener('click', go);
+        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      });
+    };
+    draw();
+    if (containerEl._jmResize) window.removeEventListener('resize', containerEl._jmResize);
+    let timer;
+    containerEl._jmResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { if (layoutFor() !== containerEl._jmLayout) draw(); }, 150);
+    };
+    window.addEventListener('resize', containerEl._jmResize);
+  },
 };
 
 if (typeof module !== 'undefined') module.exports = JourneyMap;

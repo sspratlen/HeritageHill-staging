@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journey map preview</title>
+  <link rel="stylesheet" href="../css/journey-map.css" />
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 16px; background: #fafaf8; }
+    #box { max-width: 1000px; margin: 0 auto; }
+    #log { max-width: 1000px; margin: 12px auto; font-size: 14px; color: #555; }
+  </style>
+</head>
+<body>
+  <!-- Dev-only: renders JourneyMap with stub data. Serve the repo root
+       (python3 -m http.server 8765) and open /tests/journey-map-preview.html.
+       Resize the window across ~672px to see the layout switch. -->
+  <div id="box"></div>
+  <div id="log">Click a stop…</div>
+  <script src="../js/journey-map.js"></script>
+  <script>
+    JourneyMap.render(document.getElementById('box'), {
+      firstName: 'Scott', baptizedAt: '2025-05-01', memberSince: '2025-06-01', email: 'scott@example.com',
+      groups: [{ id: 1, name: 'Tuesday Night', leaderEmail: 'someone@example.com' }],
+      groupMemberships: [{ groupId: 1, leftAt: null }],
+      gtRegistrations: [{ part: 'about_us', attended: true }, { part: 'get_involved', attended: true }],
+      discAttemptCount: 1, giftsAttemptCount: 0,
+      teamMemberships: [], teams: [],
+    }, { onStopClick: s => { document.getElementById('log').textContent = 'Clicked ' + s.key + ' → tab ' + s.tab; } });
+  </script>
+</body>
+</html>
