@@ -2646,7 +2646,9 @@ function applyRoleVisibility() {
   // guarded (see below) against firing before this promise settles.
   window._journeyDataReady = loadMyJourneyData();
   window._journeyDataReady.catch(err => console.error('[MyJourney] load failed:', err));
-  if (startTab === 'journey') await window._journeyDataReady;
+  // A failed load still lets the map render (every stop not done) rather
+  // than aborting startup before switchTab runs.
+  if (startTab === 'journey') await window._journeyDataReady.catch(() => {});
   switchTab(startTab);
   if (isAdmin()) {
     SupaDB.adminGetAllMemberProfiles().then(ps => {
@@ -2701,7 +2703,7 @@ function switchTab(tab) {
   else if(tab==='analytics') renderAnalyticsTab();
   else if(tab==='growthtrack') renderGrowthTrackTab();
   else if(tab==='impactteams') renderImpactTeamsTable();
-  else if(tab==='journey') { if (_journeyData) renderJourneyPanel(); else window._journeyDataReady.then(renderJourneyPanel); }
+  else if(tab==='journey') { if (_journeyData) renderJourneyPanel(); else window._journeyDataReady.then(renderJourneyPanel, renderJourneyPanel); }
 }
 
 async function updateStats() {
@@ -6321,13 +6323,14 @@ async function loadMyJourneyData() {
 // there's no personal panel (Membership). As tabs get added to
 // ROLE_TABS.member, their stops switch over with no change needed here.
 function renderJourneyPanel() {
+  const j = _journeyData || {}; // null if loadMyJourneyData failed
   JourneyMap.render(document.getElementById('journeyMapBox'), {
     firstName: (_profile.name || '').trim().split(/\s+/)[0],
-    memberSince: _profile.memberSince, baptizedAt: _journeyData.baptism ? _journeyData.baptism.achievedAt : null,
-    groupMemberships: _journeyData.memberships, groups: _journeyData.groups, email: _profile.email,
-    gtRegistrations: _journeyData.gtRegs,
-    discAttemptCount: _journeyData.discAttempts.length, giftsAttemptCount: _journeyData.giftsAttempts.length,
-    teamMemberships: _journeyData.teamMemberships, teams: _journeyData.teams,
+    memberSince: _profile.memberSince, baptizedAt: j.baptism ? j.baptism.achievedAt : null,
+    groupMemberships: j.memberships, groups: j.groups, email: _profile.email,
+    gtRegistrations: j.gtRegs,
+    discAttemptCount: (j.discAttempts || []).length, giftsAttemptCount: (j.giftsAttempts || []).length,
+    teamMemberships: j.teamMemberships, teams: j.teams,
   }, {
     onStopClick: stop => {
       if (getAllowedTabs().includes(stop.tab)) switchTab(stop.tab);

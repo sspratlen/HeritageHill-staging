@@ -10,4 +10,5 @@
 .jm-stop:hover circle:not([pointer-events]),
 .jm-stop:hover path { filter: brightness(1.15); }
 .jm-stop:hover text { text-decoration: underline; }
+.jm-stop:hover circle[pointer-events] { fill: rgba(92, 61, 30, .08); }
 .jm-stop:focus-visible circle[pointer-events] { stroke: #BA7517; stroke-width: 2; stroke-dasharray: 3 3; }
