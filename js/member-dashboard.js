@@ -55,7 +55,11 @@ const MemberDashboard = {
   // (reason + Confirm/Cancel), self-contained here. admin/my-profile.html
   // doesn't pass this and keeps its own separate modal-based withdraw flow,
   // completely unaffected.
-  renderGroupHistory(containerEl, memberships, groups, email, semesters, onGroupClick, onWithdrawClick) {
+  // opts.onManageClick(groupId, action) -- optional, action is one of
+  // 'info'|'members'|'attendance'|'email'. Shown only on rows the viewer
+  // leads (m.isLeader). admin/my-profile.html doesn't pass this and keeps
+  // its own separate leader-toolkit modal, completely unaffected.
+  renderGroupHistory(containerEl, memberships, groups, email, semesters, onGroupClick, onWithdrawClick, onManageClick) {
     const led = (email
       ? groups.filter(g => g.leaderEmail && g.leaderEmail.toLowerCase() === email.toLowerCase())
       : []
@@ -81,15 +85,24 @@ const MemberDashboard = {
     const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     const clickable = typeof onGroupClick === 'function';
     const canWithdraw = typeof onWithdrawClick === 'function';
-    containerEl.innerHTML = `<table><thead><tr><th>Group</th><th>Joined</th><th>Status</th>${canWithdraw ? '<th></th>' : ''}</tr></thead><tbody>` +
+    const canManage = typeof onManageClick === 'function';
+    containerEl.innerHTML = `<table><thead><tr><th>Group</th><th>Joined</th><th>Status</th>${canWithdraw ? '<th></th>' : ''}${canManage ? '<th></th>' : ''}</tr></thead><tbody>` +
       rows.map(m => {
         const eligible = canWithdraw && !m.leftAt && !m.isLeader;
+        const gid = this.escapeHtml(String(m.groupId));
         return `
-        <tr${clickable ? ` class="jp-row-clickable" data-group-id="${this.escapeHtml(String(m.groupId))}"` : ''}>
+        <tr${clickable ? ` class="jp-row-clickable" data-group-id="${gid}"` : ''}>
           <td>${this.escapeHtml(groupName(m.groupId))}</td>
           <td>${m.isLeader ? this.escapeHtml(semesterName(m.semesterId)) : fmt(m.joinedAt)}</td>
           <td>${m.isLeader ? '<span class="badge badge-blue">Leader</span>' : (m.leftAt ? 'Left ' + fmt(m.leftAt) : '<span class="badge badge-green">Current</span>')}</td>
           ${canWithdraw ? `<td>${eligible ? `<span class="jp-withdraw-cell" data-membership-id="${this.escapeHtml(String(m.id))}"><button type="button" class="btn btn-ghost btn-sm">Withdraw</button></span>` : ''}</td>` : ''}
+          ${canManage ? `<td>${m.isLeader ? `
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="info" data-group-id="${gid}">Edit Info</button>
+              <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="members" data-group-id="${gid}">Members</button>
+              <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="attendance" data-group-id="${gid}">Attendance</button>
+              <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="email" data-group-id="${gid}">Email</button>
+            </div>` : ''}</td>` : ''}
         </tr>`;
       }).join('') + '</tbody></table>';
     if (clickable) {
@@ -131,6 +144,11 @@ const MemberDashboard = {
           });
         };
         showButton();
+      });
+    }
+    if (canManage) {
+      containerEl.querySelectorAll('.jp-manage-btn').forEach(btn => {
+        btn.addEventListener('click', () => onManageClick(btn.dataset.groupId, btn.dataset.manageAction));
       });
     }
   },
