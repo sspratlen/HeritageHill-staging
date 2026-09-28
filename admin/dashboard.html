@@ -7124,8 +7124,23 @@ let _gtPartsAdmin = [], _gtCancellationsAdmin = [];
 const GT_LABELS = { about_us: 'Plant', about_you: 'Discover', get_involved: 'Grow' };
 const SUNDAY_LABELS = { 1: '1st Sunday', 2: '2nd Sunday', 3: '3rd Sunday' };
 
+// For non-admins there's nothing to switch to -- myGrowthTrackBox just stays
+// visible and growthtrackAdminSection stays hidden, unconditionally. The
+// sub-tab buttons themselves are hidden for non-admins (see renderGrowthTrackTab).
+function switchGrowthtrackSubTab(which) {
+  const isMine = which === 'mine';
+  document.getElementById('myGrowthTrackBox').style.display = isMine ? '' : 'none';
+  document.getElementById('growthtrackAdminSection').style.display = isMine ? 'none' : '';
+  const mineBtn = document.getElementById('growthtrackSubTabMine'), manageBtn = document.getElementById('growthtrackSubTabManage');
+  mineBtn.classList.toggle('btn-primary', isMine); mineBtn.classList.toggle('btn-ghost', !isMine);
+  manageBtn.classList.toggle('btn-primary', !isMine); manageBtn.classList.toggle('btn-ghost', isMine);
+}
+
 async function renderGrowthTrackTab() {
   renderMyGrowthTrackCard();
+  document.getElementById('growthtrackSubTabs').style.display = isAdmin() ? 'flex' : 'none';
+  switchGrowthtrackSubTab('mine');
+  if (!isAdmin()) return;
   [_gtPartsAdmin, _gtCancellationsAdmin] = await Promise.all([
     SupaDB.adminGetAllGrowthTrackParts(),
     SupaDB.getGrowthTrackCancellations(),
