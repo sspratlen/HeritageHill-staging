@@ -1393,24 +1393,26 @@
     <!-- BAPTISM -->
     <div class="tab-panel" id="panelBaptism">
       <div id="myBaptismBox"></div>
-      <div class="action-bar">
-        <h2>Baptism</h2>
-        <button class="btn btn-primary" onclick="openBaptismModal()">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Record Baptism
-        </button>
-      </div>
-      <div class="table-wrap" style="margin-bottom:24px;">
-        <table><thead><tr><th>Name</th><th>Email</th><th>Date</th><th>Notes</th><th>Actions</th></tr></thead>
-        <tbody id="baptismTable"></tbody></table>
-        <div class="empty" id="baptismEmpty" style="display:none;">
-          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 0 12 0"/><path d="M8 12V6a4 4 0 0 1 8 0v6"/><line x1="3" y1="20" x2="21" y2="20"/><circle cx="12" cy="4" r="1.5"/></svg>
-          <h3>No baptisms recorded yet</h3><p>Record your first baptism using the button above.</p>
+      <div id="baptismAdminSection">
+        <div class="action-bar">
+          <h2>Baptism</h2>
+          <button class="btn btn-primary" onclick="openBaptismModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Record Baptism
+          </button>
         </div>
-      </div>
-      <div class="table-wrap" style="padding:20px;">
-        <h3 style="font-size:.95rem;margin-bottom:4px;">Not Yet Baptized</h3>
-        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:4px;">Approved members with no baptism on record.</p>
-        <div id="baptismNotYetBox"></div>
+        <div class="table-wrap" style="margin-bottom:24px;">
+          <table><thead><tr><th>Name</th><th>Email</th><th>Date</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody id="baptismTable"></tbody></table>
+          <div class="empty" id="baptismEmpty" style="display:none;">
+            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 0 12 0"/><path d="M8 12V6a4 4 0 0 1 8 0v6"/><line x1="3" y1="20" x2="21" y2="20"/><circle cx="12" cy="4" r="1.5"/></svg>
+            <h3>No baptisms recorded yet</h3><p>Record your first baptism using the button above.</p>
+          </div>
+        </div>
+        <div class="table-wrap" style="padding:20px;">
+          <h3 style="font-size:.95rem;margin-bottom:4px;">Not Yet Baptized</h3>
+          <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:4px;">Approved members with no baptism on record.</p>
+          <div id="baptismNotYetBox"></div>
+        </div>
       </div>
     </div>
 
