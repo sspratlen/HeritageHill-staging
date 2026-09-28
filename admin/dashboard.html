@@ -2477,6 +2477,58 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="groupInfoModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="giTitle">Edit Group Info</h3><button class="modal-close" onclick="closeGroupInfoModal()">✕</button></div>
+    <div class="modal-body">
+      <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:8px;">Group Photo</label>
+      <div class="img-picker">
+        <div class="img-picker-tabs">
+          <button class="img-tab active" onclick="switchGiImgTab('url',this)">🔗 Paste URL</button>
+          <button class="img-tab" onclick="switchGiImgTab('upload',this)">⬆️ Upload Photo</button>
+          <button class="img-tab" onclick="switchGiImgTab('ai',this)">✨ AI Generate</button>
+        </div>
+        <div class="img-panel active" id="giImgPanelUrl">
+          <div class="field" style="margin:0;"><input type="url" id="giImageUrl" placeholder="https://…" oninput="giPreviewFromUrl(this.value)" /></div>
+          <div class="img-preview"><p class="img-preview-label">Preview</p><img id="giPreviewUrl" alt="Preview" /></div>
+        </div>
+        <div class="img-panel" id="giImgPanelUpload">
+          <div class="upload-drop" id="giUploadDrop" onclick="document.getElementById('giImageFile').click()" ondragover="handleDragOver(event,'giUploadDrop')" ondragleave="handleDragLeave(event,'giUploadDrop')" ondrop="handleGiDrop(event)">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p><strong>Click to upload</strong> or drag & drop</p><p style="font-size:.75rem;margin-top:4px;">JPG, PNG, WEBP · Auto-optimized</p>
+            <input type="file" id="giImageFile" accept="image/*" onchange="handleGiImageUpload(this)" />
+          </div>
+          <div class="img-preview"><p class="img-preview-label">Preview (optimized)</p><img id="giPreviewUpload" alt="Upload preview" /></div>
+        </div>
+        <div class="img-panel" id="giImgPanelAi">
+          <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:10px;">Describe the image or use the group description.</p>
+          <div class="ai-row">
+            <div class="field"><textarea id="giAiPrompt" rows="2" placeholder="e.g. Friends gathered around a table…" style="min-height:60px;"></textarea></div>
+            <button class="btn btn-secondary btn-sm" onclick="generateGiAIImage()" id="giAiGenBtn" style="white-space:nowrap;height:fit-content;align-self:center;">Generate</button>
+          </div>
+          <div class="ai-status" id="giAiStatus"></div>
+          <div class="img-preview"><p class="img-preview-label">Generated image</p><img id="giPreviewAi" alt="AI preview" /></div>
+        </div>
+      </div>
+      <input type="hidden" id="giImageFinal" />
+      <div class="form-row">
+        <div class="field"><label>Day</label>
+          <select id="giDay"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
+        <div class="field"><label>Time</label><input id="giTime" placeholder="6:30 PM" /></div>
+      </div>
+      <div class="field"><label>Location</label><input id="giLocation" /></div>
+      <div class="field"><label>Description</label><textarea id="giDescription" rows="4"></textarea></div>
+      <div class="publish-toggle-row">
+        <div><div class="ptlabel">Open to new members</div><div class="ptsub">Shown on the public Small Groups page</div></div>
+        <label class="toggle-switch"><input type="checkbox" id="giOpen" /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="msg-error" id="giError"></div>
+      <div class="msg-success" id="giSaved">Saved.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeGroupInfoModal()">Cancel</button><button class="btn btn-primary" onclick="saveGroupInfoFor()">Save Changes</button></div>
+  </div>
+</div>
+
 
 <!-- Growth Track cancellation notice modal -->
 <div class="modal-overlay" id="gtCancelEmailModal" onclick="if(event.target===this)closeGtCancelEmailModal()">
@@ -6927,6 +6979,116 @@ async function withdrawFromGroup(membership, reason) {
   }
   showToast('You have withdrawn from the group.');
   return { ok: true };
+}
+
+let _giGroupId = null;
+
+function openGroupInfoModal(groupId) {
+  const g = _cachedGroups.find(x => x.id === groupId);
+  if (!g) { showToast('Could not find this group.', true); return; }
+  _giGroupId = groupId;
+  document.getElementById('giTitle').textContent = `Edit — ${g.name}`;
+  document.getElementById('giImageUrl').value = g.image && !g.image.startsWith('data:') ? g.image : '';
+  document.getElementById('giImageFinal').value = g.image || '';
+  giPreviewFromUrl(g.image && !g.image.startsWith('data:') ? g.image : '');
+  document.getElementById('giDay').value = g.day || 'Sunday';
+  document.getElementById('giTime').value = g.time || '';
+  document.getElementById('giLocation').value = g.location || '';
+  document.getElementById('giDescription').value = g.description || '';
+  document.getElementById('giOpen').checked = !!g.open;
+  document.getElementById('giError').style.display = 'none';
+  document.getElementById('giSaved').classList.remove('show');
+  document.getElementById('groupInfoModal').classList.add('open');
+}
+function closeGroupInfoModal() { document.getElementById('groupInfoModal').classList.remove('open'); }
+
+async function saveGroupInfoFor() {
+  const g = _cachedGroups.find(x => x.id === _giGroupId);
+  const errEl = document.getElementById('giError');
+  errEl.style.display = 'none';
+  if (!g) { errEl.textContent = 'Could not find this group.'; errEl.style.display = ''; return; }
+  const image = document.getElementById('giImageFinal').value.trim() || g.image;
+  const updated = Object.assign({}, g, {
+    image,
+    day: document.getElementById('giDay').value,
+    time: document.getElementById('giTime').value.trim(),
+    location: document.getElementById('giLocation').value.trim(),
+    description: document.getElementById('giDescription').value.trim(),
+    open: document.getElementById('giOpen').checked,
+  });
+  const result = await SupaDB.saveGroup(updated);
+  if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
+  Object.assign(g, updated);
+  const okEl = document.getElementById('giSaved');
+  okEl.classList.add('show');
+  setTimeout(() => okEl.classList.remove('show'), 2500);
+}
+
+function switchGiImgTab(tab, btnEl) {
+  document.querySelectorAll('#groupInfoModal .img-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#groupInfoModal .img-panel').forEach(p => p.classList.remove('active'));
+  const panels = { url: 'giImgPanelUrl', upload: 'giImgPanelUpload', ai: 'giImgPanelAi' };
+  const tabs = document.querySelectorAll('#groupInfoModal .img-tab');
+  const tabIdx = { url: 0, upload: 1, ai: 2 };
+  if (tabs[tabIdx[tab]]) tabs[tabIdx[tab]].classList.add('active');
+  document.getElementById(panels[tab]).classList.add('active');
+}
+function giPreviewFromUrl(url) {
+  const img = document.getElementById('giPreviewUrl');
+  if (url) { img.src = url; img.classList.add('visible'); document.getElementById('giImageFinal').value = url; }
+  else { img.classList.remove('visible'); document.getElementById('giImageFinal').value = ''; }
+}
+function handleGiDrop(e) {
+  e.preventDefault();
+  document.getElementById('giUploadDrop').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) processGiImageFile(f);
+}
+function handleGiImageUpload(input) { if (input.files && input.files[0]) processGiImageFile(input.files[0]); }
+function processGiImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 900; let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+      document.getElementById('giPreviewUpload').src = dataUrl;
+      document.getElementById('giPreviewUpload').classList.add('visible');
+      document.getElementById('giImageFinal').value = dataUrl;
+      document.getElementById('giUploadDrop').querySelector('p').innerHTML = `<strong>✓ Image optimized</strong> — ${w}×${h}px · ~${sizeKB}KB`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function generateGiAIImage() {
+  const prompt = document.getElementById('giAiPrompt').value.trim() || document.getElementById('giDescription').value.trim();
+  if (!prompt) { showToast('Enter a description or prompt first.', true); return; }
+  const btn = document.getElementById('giAiGenBtn'), status = document.getElementById('giAiStatus'), preview = document.getElementById('giPreviewAi');
+  btn.disabled = true; btn.textContent = 'Generating…'; status.className = 'ai-status loading';
+  status.textContent = 'Creating your image — this takes 10–20 seconds…'; preview.classList.remove('visible');
+  const seed = Math.floor(Math.random() * 99999);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', church community, photorealistic, warm natural lighting')}?width=800&height=500&nologo=true&seed=${seed}`;
+  const testImg = new Image(); testImg.crossOrigin = 'anonymous';
+  testImg.onload = function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = testImg.naturalWidth || 800; canvas.height = testImg.naturalHeight || 500;
+    canvas.getContext('2d').drawImage(testImg, 0, 0);
+    let dataUrl; try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (e) { dataUrl = url; }
+    preview.src = dataUrl || url; preview.classList.add('visible');
+    document.getElementById('giImageFinal').value = dataUrl || url;
+    status.className = 'ai-status'; status.textContent = '✓ Image generated!'; btn.disabled = false; btn.textContent = 'Regenerate';
+  };
+  testImg.onerror = function() {
+    preview.src = url; preview.classList.add('visible');
+    document.getElementById('giImageFinal').value = url;
+    status.className = 'ai-status'; status.textContent = '✓ Image generated!'; btn.disabled = false; btn.textContent = 'Regenerate';
+  };
+  testImg.src = url;
 }
 
 // Dispatches a Manage click from the shared group history renderer to the
