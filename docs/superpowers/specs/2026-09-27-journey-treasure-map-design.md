@@ -25,7 +25,7 @@ Out of scope:
 |---|---|---|---|---|
 | 0 | Base camp (tent icon) | — | n/a, always neutral | `myinfo` |
 | 1 | Baptism | Found | `_journeyData.baptism` has `achievedAt` | `baptism` |
-| 2 | Membership | Found | `_profile.memberSince` set | `people` |
+| 2 | Membership | Found | `_profile.memberSince` set | `people` (members without access fall back to `myinfo`, since `my-profile.html` has no membership panel) |
 | 3 | Small group | Filled | any active (no `leftAt`) group membership, or leads any group (`leaderEmail` matches) | `groups` |
 | 4 | Plant | Freed | Growth Track `about_us` registration with `attended` | `growthtrack` |
 | 5 | Discover | Freed | `about_you` attended | `growthtrack` |
@@ -48,8 +48,8 @@ Out of scope:
 
 ### Layouts
 
-- **Desktop (container wider than 760px):** a winding left-to-right trail (mockup A). It's a fixed-coordinate SVG with `viewBox="0 0 680 320"` that scales to the container width.
-- **Mobile (760px or narrower):** a vertical scroll (mockup B). The trail snakes down, labels sit on alternating sides, and the scroll ends are drawn at top and bottom. Its height depends on the number of stops.
+- **Desktop (container wider than 640px):** a winding left-to-right trail (mockup A). It's a fixed-coordinate SVG with `viewBox="0 0 680 320"` that scales to the container width.
+- **Mobile (640px or narrower):** a vertical scroll (mockup B). The trail snakes down, labels sit on alternating sides, and the scroll ends are drawn at top and bottom. Its height depends on the number of stops.
 - The renderer checks the container width on render and re-renders on `resize`, debounced 150ms, only when the layout actually changes.
 
 ### Components
@@ -63,8 +63,8 @@ Out of scope:
 
 **`admin/dashboard.html`** changes:
 - `panelJourney` contains only `<div id="journeyMapBox"></div>`.
-- A new `panelMyinfo` holds the three My Info cards, moved without changes. Their IDs and handlers stay the same.
-- A new `myinfo` entry is added to every tier of `ROLE_TABS`, to `ALL_TABS`, to the `switchTab` titles (`'My Info'`), and to the `switchTab` render branch (it fills the form from `_profile`, the same as today). A new sidebar link `#sideMyinfo` goes directly under My Journey.
+- A new `panelMyinfo` holds the three My Info cards, moved without changes. Their IDs and handlers stay the same. `loadMyJourneyData()` already fills the form at page load, so `myinfo` needs no render branch in `switchTab`.
+- A new `myinfo` entry is added to every tier of `ROLE_TABS`, to `ALL_TABS`, to the `switchTab` titles (`'My Info'`). A new sidebar link `#sideMyinfo` goes directly under My Journey.
 - `renderJourneyPanel()` calls `JourneyMap.render(...)` with `onStopClick`:
   ```js
   stop => canAccessTab(stop.tab)
