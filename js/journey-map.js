@@ -63,8 +63,12 @@ const JourneyMap = {
   },
   DESKTOP_STAGES: [['Found', 96, 302], ['Filled', 170, 116], ['Freed', 372, 294], ['Forged', 596, 240]],
 
-  // Parchment palette -- fixed, it's part of the map art (not themed).
-  C: { paper: '#F2E3C0', ink: '#5C3D1E', faded: '#9C7A4E', rule: '#B89A66', frame: '#8B6B3E', seal: '#A32D2D', tan: '#C9AE7C', ribbon: '#E6D2A8' },
+  // Site palette -- mirrors admin/dashboard.html's :root custom properties
+  // (--bg-card, --text, --text-muted, --border, --primary-dark, --primary,
+  // --bg). Kept as literal hex rather than var(--x) since this module has
+  // no dependency on which page embeds it (e.g. the standalone preview
+  // page, which doesn't load the dashboard's stylesheet).
+  C: { paper: '#FFFFFF', ink: '#1C1C1E', faded: '#6B6B6B', rule: '#E4E4E4', frame: '#9A6118', seal: '#BC7A1E', tan: '#F4F4F2', ribbon: '#F3E2C8' },
 
   _esc(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -131,7 +135,7 @@ const JourneyMap = {
       out.push(`<rect x="0" y="4" width="${L.w}" height="16" rx="8" fill="${C.tan}" stroke="${C.frame}"/>`);
       out.push(`<rect x="0" y="${L.h - 20}" width="${L.w}" height="16" rx="8" fill="${C.tan}" stroke="${C.frame}"/>`);
       out.push(this._compass(262, 56));
-      out.push(`<text x="${L.w / 2}" y="54" text-anchor="middle" font-size="17" font-style="italic" fill="${C.ink}" aria-hidden="true">${title}</text>`);
+      out.push(`<text x="${L.w / 2}" y="54" text-anchor="middle" font-size="17" font-weight="700" fill="${C.ink}" aria-hidden="true">${title}</text>`);
     } else {
       out.push(`<rect x="4" y="4" width="672" height="312" rx="6" fill="${C.paper}" stroke="${C.frame}" stroke-width="2"/>`);
       out.push(`<rect x="12" y="12" width="656" height="296" rx="4" fill="none" stroke="${C.rule}" stroke-width="0.75"/>`);
@@ -139,7 +143,7 @@ const JourneyMap = {
         + `<path d="M250,64 l12,-14 l12,14 M270,64 l9,-10 l9,10"/><path d="M40,150 q6,-4 12,0 t12,0 M52,162 q6,-4 12,0 t12,0"/>`
         + `<path d="M150,64 q6,-4 12,0 t12,0 t12,0"/></g>`);
       out.push(this._compass(58, 62));
-      out.push(`<text x="340" y="42" text-anchor="middle" font-size="20" font-style="italic" fill="${C.ink}" aria-hidden="true">${title}</text>`);
+      out.push(`<text x="340" y="42" text-anchor="middle" font-size="20" font-weight="700" fill="${C.ink}" aria-hidden="true">${title}</text>`);
     }
 
     // Trail: each segment is red once the stop it leads INTO is done.
@@ -158,12 +162,12 @@ const JourneyMap = {
         if (s.stage && s.stage !== prev) {
           const [x, y] = L.pts[s.key], rx = x < L.w / 2 ? 8 : 238;
           out.push(`<g class="jm-ribbon"><rect x="${rx}" y="${y - 9}" width="54" height="18" fill="${C.ribbon}" stroke="${C.frame}" stroke-width="0.75"/>`
-            + `<text x="${rx + 27}" y="${y + 4}" text-anchor="middle" font-size="11" font-style="italic" fill="${C.ink}">${s.stage}</text></g>`);
+            + `<text x="${rx + 27}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="${C.ink}">${s.stage}</text></g>`);
         }
         prev = s.stage;
       });
     } else {
-      out.push(`<g font-size="15" font-style="italic" fill="${C.frame}">`
+      out.push(`<g font-size="15" font-weight="700" fill="${C.frame}">`
         + this.DESKTOP_STAGES.map(([n, x, y]) => `<text x="${x}" y="${y}">${n}</text>`).join('') + `</g>`);
     }
 

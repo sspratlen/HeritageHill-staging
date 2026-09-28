@@ -39,12 +39,12 @@ Out of scope:
 
 ### Visual language
 
-- Parchment background with a double-rule border. Also a compass rose, a few hill and wave doodles, and the title "<First name>'s journey" in italic serif.
-- Stage names (Found, Filled, Freed, Forged) are written in italic serif near their stops. On mobile they're small ribbon banners.
-- **Completed stop:** a solid red "wax seal" dot. **Not yet done:** a hollow, dashed-outline dot. The X gets the same treatment, red when done and faded ink when not.
-- **Trail:** each segment is solid red dashes if the stop it leads *into* is done, otherwise faded dotted ink. There's no "you are here" marker, because steps can be done in any order.
+- White map background with a double-rule border. Also a compass rose, a few hill and wave doodles, and the title "<First name>'s journey" in bold sans-serif.
+- Stage names (Found, Filled, Freed, Forged) are written in bold sans-serif near their stops. On mobile they're small ribbon banners.
+- **Completed stop:** a solid amber "seal" dot (the site's `--primary`). **Not yet done:** a hollow, dashed-outline dot. The X gets the same treatment, amber when done and faded ink when not.
+- **Trail:** each segment is solid amber dashes if the stop it leads *into* is done, otherwise faded dotted ink. There's no "you are here" marker, because steps can be done in any order.
 - Each dot has a text label under or beside it. The whole dot and label is the click and tap target, at least 32px.
-- Colors are fixed parchment tones (they're part of the map art). The page around the map still follows the dashboard's existing theme.
+- As of 2026-09-27, colors and font were re-themed to match the rest of the site (`admin/dashboard.html`'s `--primary`/`--text`/`--text-muted`/`--border`/`--bg`/`--bg-card` tokens and its `DM Sans` body font) instead of the original fixed parchment/serif treasure-map look — see `JourneyMap.C` in `js/journey-map.js` for the exact values. They're kept as literal hex rather than `var(--x)`, since this module has no dependency on which page embeds it (the standalone preview page doesn't load the dashboard's stylesheet).
 
 ### Layouts
 

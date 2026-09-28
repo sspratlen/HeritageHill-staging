@@ -1,14 +1,15 @@
 /* Heritage Hill — "My Journey" treasure map (js/journey-map.js).
-   Map colors live in the SVG itself (fixed parchment art); this file only
-   handles sizing, the serif face, and interactive states. */
+   Map colors live in the SVG itself (mirrors the site's own palette --
+   see the comment on JourneyMap.C); this file only handles sizing, the
+   site's own sans-serif face, and interactive states. */
 
 .jm-map svg { display: block; width: 100%; height: auto; }
 .jm-map.jm-mobile svg { max-width: 420px; margin: 0 auto; }
-.jm-map text { font-family: Georgia, 'Times New Roman', serif; }
+.jm-map text { font-family: 'DM Sans', sans-serif; }
 
 .jm-stop { cursor: pointer; outline: none; }
 .jm-stop:hover circle:not([pointer-events]),
 .jm-stop:hover path { filter: brightness(1.15); }
 .jm-stop:hover text { text-decoration: underline; }
-.jm-stop:hover circle[pointer-events] { fill: rgba(92, 61, 30, .08); }
-.jm-stop:focus-visible circle[pointer-events] { stroke: #BA7517; stroke-width: 2; stroke-dasharray: 3 3; }
+.jm-stop:hover circle[pointer-events] { fill: rgba(188, 122, 30, .08); }
+.jm-stop:focus-visible circle[pointer-events] { stroke: #BC7A1E; stroke-width: 2; stroke-dasharray: 3 3; }

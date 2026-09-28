@@ -76,7 +76,7 @@ test('buildSvg desktop: 11 clickable stops, seals only on done stops', () => {
   assert.match(svg, /viewBox="0 0 680 320"/);
   assert.equal(count(svg, 'class="jm-stop'), 11);
   assert.equal(count(svg, 'class="jm-stop jm-done"'), 2);
-  assert.equal(count(svg, 'r="9" fill="#A32D2D"'), 2); // the drawn wax seals
+  assert.equal(count(svg, `r="9" fill="${JourneyMap.C.seal}"`), 2); // the drawn seals
   assert.match(svg, /data-key="baptism"/);
   assert.match(svg, /Scott's journey/);
   ['Found', 'Filled', 'Freed', 'Forged'].forEach(n => assert.match(svg, new RegExp('>' + n + '<')));
@@ -90,7 +90,7 @@ test('buildSvg mobile: vertical viewBox and stage ribbons', () => {
   assert.equal(count(svg, 'class="jm-ribbon"'), 4);
 });
 
-test('buildSvg: done segments are red, others faded', () => {
+test('buildSvg: done segments are seal-colored, others faded', () => {
   const st = JourneyMap.computeStatus({ baptizedAt: '2025-05-01' });
   const svg = JourneyMap.buildSvg(st, 'desktop', 'Scott');
   assert.equal(count(svg, 'class="jm-trail jm-trail-done"'), 1);
