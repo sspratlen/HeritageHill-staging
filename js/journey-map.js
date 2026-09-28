@@ -24,10 +24,14 @@ const JourneyMap = {
     { key: 'serving',    label: 'Serving',         stage: 'Forged', tab: 'impactteams', profilePanel: 'impactteams' },
   ],
 
-  // Same "done" rules MemberDashboard.renderJourneyPipeline uses, so the map
-  // and the admin per-member view never disagree: active = no leftAt,
-  // Growth Track counts only when attended, leading a group is service.
+  // Mostly the same "done" rules as MemberDashboard.renderJourneyPipeline:
+  // active = no leftAt, Growth Track counts only when attended, leading a
+  // group counts as service (Serving). One deliberate difference, per Scott:
+  // leading a small group also marks the Small group stop done here, while
+  // the pipeline's Filled card only lists groups the person attends.
+  // Null/undefined data (journey load failed) -> every stop not done.
   computeStatus(d) {
+    d = d || {};
     const active = arr => (arr || []).filter(m => !m.leftAt);
     const email = (d.email || '').toLowerCase();
     const leadsGroup = !!email && (d.groups || []).some(g => g.leaderEmail && g.leaderEmail.toLowerCase() === email);
@@ -110,7 +114,7 @@ const JourneyMap = {
 
   _compass(x, y) {
     const C = this.C;
-    return `<g transform="translate(${x},${y})"><circle r="18" fill="none" stroke="${C.frame}"/>`
+    return `<g transform="translate(${x},${y})" aria-hidden="true"><circle r="18" fill="none" stroke="${C.frame}"/>`
       + `<polygon points="0,-16 4,0 0,16 -4,0" fill="${C.ink}"/><polygon points="-16,0 0,-4 16,0 0,4" fill="${C.faded}"/>`
       + `<text y="-22" text-anchor="middle" font-size="11" fill="${C.ink}">N</text></g>`;
   },
@@ -127,7 +131,7 @@ const JourneyMap = {
       out.push(`<rect x="0" y="4" width="${L.w}" height="16" rx="8" fill="${C.tan}" stroke="${C.frame}"/>`);
       out.push(`<rect x="0" y="${L.h - 20}" width="${L.w}" height="16" rx="8" fill="${C.tan}" stroke="${C.frame}"/>`);
       out.push(this._compass(262, 56));
-      out.push(`<text x="${L.w / 2}" y="54" text-anchor="middle" font-size="17" font-style="italic" fill="${C.ink}">${title}</text>`);
+      out.push(`<text x="${L.w / 2}" y="54" text-anchor="middle" font-size="17" font-style="italic" fill="${C.ink}" aria-hidden="true">${title}</text>`);
     } else {
       out.push(`<rect x="4" y="4" width="672" height="312" rx="6" fill="${C.paper}" stroke="${C.frame}" stroke-width="2"/>`);
       out.push(`<rect x="12" y="12" width="656" height="296" rx="4" fill="none" stroke="${C.rule}" stroke-width="0.75"/>`);
@@ -135,7 +139,7 @@ const JourneyMap = {
         + `<path d="M250,64 l12,-14 l12,14 M270,64 l9,-10 l9,10"/><path d="M40,150 q6,-4 12,0 t12,0 M52,162 q6,-4 12,0 t12,0"/>`
         + `<path d="M150,64 q6,-4 12,0 t12,0 t12,0"/></g>`);
       out.push(this._compass(58, 62));
-      out.push(`<text x="340" y="42" text-anchor="middle" font-size="20" font-style="italic" fill="${C.ink}">${title}</text>`);
+      out.push(`<text x="340" y="42" text-anchor="middle" font-size="20" font-style="italic" fill="${C.ink}" aria-hidden="true">${title}</text>`);
     }
 
     // Trail: each segment is red once the stop it leads INTO is done.

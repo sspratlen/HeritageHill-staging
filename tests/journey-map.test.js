@@ -11,6 +11,11 @@ test('STOPS are in trail order with a tab for each', () => {
   assert.equal(JourneyMap.STOPS[0].tab, 'myinfo');
 });
 
+test('computeStatus: null data (load failed) -> nothing done, no throw', () => {
+  const st = JourneyMap.computeStatus(null);
+  KEYS.forEach(k => assert.equal(st[k], false, k));
+});
+
 test('computeStatus: empty data -> nothing done', () => {
   const st = JourneyMap.computeStatus({});
   KEYS.forEach(k => assert.equal(st[k], false, k));
@@ -71,6 +76,7 @@ test('buildSvg desktop: 11 clickable stops, seals only on done stops', () => {
   assert.match(svg, /viewBox="0 0 680 320"/);
   assert.equal(count(svg, 'class="jm-stop'), 11);
   assert.equal(count(svg, 'class="jm-stop jm-done"'), 2);
+  assert.equal(count(svg, 'r="9" fill="#A32D2D"'), 2); // the drawn wax seals
   assert.match(svg, /data-key="baptism"/);
   assert.match(svg, /Scott's journey/);
   ['Found', 'Filled', 'Freed', 'Forged'].forEach(n => assert.match(svg, new RegExp('>' + n + '<')));
