@@ -2529,6 +2529,50 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="eventInfoModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="eiTitle">Edit Event Info</h3><button class="modal-close" onclick="closeEventInfoModal()">✕</button></div>
+    <div class="modal-body">
+      <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:8px;">Event Photo</label>
+      <div class="img-picker">
+        <div class="img-picker-tabs">
+          <button class="img-tab active" onclick="switchEiImgTab('url',this)">🔗 Paste URL</button>
+          <button class="img-tab" onclick="switchEiImgTab('upload',this)">⬆️ Upload Photo</button>
+          <button class="img-tab" onclick="switchEiImgTab('ai',this)">✨ AI Generate</button>
+        </div>
+        <div class="img-panel active" id="eiImgPanelUrl">
+          <div class="field" style="margin:0;"><input type="url" id="eiImageUrl" placeholder="https://…" oninput="eiPreviewFromUrl(this.value)" /></div>
+          <div class="img-preview"><p class="img-preview-label">Preview</p><img id="eiPreviewUrl" alt="Preview" /></div>
+        </div>
+        <div class="img-panel" id="eiImgPanelUpload">
+          <div class="upload-drop" id="eiUploadDrop" onclick="document.getElementById('eiImageFile').click()" ondragover="handleDragOver(event,'eiUploadDrop')" ondragleave="handleDragLeave(event,'eiUploadDrop')" ondrop="handleEiDrop(event)">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p><strong>Click to upload</strong> or drag & drop</p><p style="font-size:.75rem;margin-top:4px;">JPG, PNG, WEBP · Auto-optimized</p>
+            <input type="file" id="eiImageFile" accept="image/*" onchange="handleEiImageUpload(this)" />
+          </div>
+          <div class="img-preview"><p class="img-preview-label">Preview (optimized)</p><img id="eiPreviewUpload" alt="Upload preview" /></div>
+        </div>
+        <div class="img-panel" id="eiImgPanelAi">
+          <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:10px;">Describe the image or use the event description.</p>
+          <div class="ai-row">
+            <div class="field"><textarea id="eiAiPrompt" rows="2" placeholder="e.g. Church picnic on a sunny day…" style="min-height:60px;"></textarea></div>
+            <button class="btn btn-secondary btn-sm" onclick="generateEiAIImage()" id="eiAiGenBtn" style="white-space:nowrap;height:fit-content;align-self:center;">Generate</button>
+          </div>
+          <div class="ai-status" id="eiAiStatus"></div>
+          <div class="img-preview"><p class="img-preview-label">Generated image</p><img id="eiPreviewAi" alt="AI preview" /></div>
+        </div>
+      </div>
+      <input type="hidden" id="eiImageFinal" />
+      <div class="field"><label>Time</label><input id="eiTime" placeholder="6:30 PM" /></div>
+      <div class="field"><label>Location</label><input id="eiLocation" /></div>
+      <div class="field"><label>Description</label><textarea id="eiDescription" rows="4"></textarea></div>
+      <div class="msg-error" id="eiError"></div>
+      <div class="msg-success" id="eiSaved">Saved.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeEventInfoModal()">Cancel</button><button class="btn btn-primary" onclick="saveEventInfoModal()">Save Changes</button></div>
+  </div>
+</div>
+
 
 <!-- Growth Track cancellation notice modal -->
 <div class="modal-overlay" id="gtCancelEmailModal" onclick="if(event.target===this)closeGtCancelEmailModal()">
