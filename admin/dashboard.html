@@ -6929,12 +6929,32 @@ async function withdrawFromGroup(membership, reason) {
   return { ok: true };
 }
 
+// Dispatches a Manage click from the shared group history renderer to the
+// right existing admin surface. Members/Attendance/Email reuse the admin
+// modals completely unmodified -- confirmed neither has an isAdmin() gate,
+// they're pure groupId-parameterized calls. Only Edit Info is new, since
+// the admin's own group editor exposes fields (name/leader/type/audience/
+// semester/published) a leader shouldn't be able to touch.
+function manageMyGroup(groupId, action) {
+  const gid = Number(groupId);
+  if (action === 'members') openGroupRoster(gid);
+  else if (action === 'attendance') openGroupAttendanceModal(gid);
+  else if (action === 'email') openGroupEmailModal(gid);
+  else openGroupInfoModal(gid);
+}
+
 async function renderMyGroupsCard() {
   const box = document.getElementById('myGroupsBox');
   const data = await getMyJourneyData();
   if (!data) { box.innerHTML = ''; return; }
+  // Scoped fetch, safe to always populate -- unlike a full adminGetAllGroups()
+  // call, this can't expose other leaders' groups. This is what lets
+  // openGroupRoster/openGroupAttendanceModal/openGroupEmailModal's own
+  // _cachedGroups lookups (used for cosmetic titles/CSV filenames) resolve
+  // correctly when opened from here instead of from Manage Groups.
+  if (_profile.email) _cachedGroups = await SupaDB.getGroupsForLeader(_profile.email);
   box.innerHTML = `<div class="table-wrap" style="padding:20px;margin-bottom:24px;"><h3 style="font-size:.95rem;margin-bottom:10px;">My Small Groups</h3><div id="myGroupsHistory"></div></div>`;
-  MemberDashboard.renderGroupHistory(document.getElementById('myGroupsHistory'), data.memberships, data.groups, data.profile.email, data.semesters, undefined, withdrawFromGroup);
+  MemberDashboard.renderGroupHistory(document.getElementById('myGroupsHistory'), data.memberships, data.groups, data.profile.email, data.semesters, undefined, withdrawFromGroup, manageMyGroup);
 }
 
 async function renderMyGrowthTrackCard() {
