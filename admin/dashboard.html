@@ -319,6 +319,11 @@
     <span>Admin Dashboard</span>
   </div>
   <nav class="sidebar-nav">
+    <a onclick="switchTab('journey')" id="sideJourney" data-tab="journey">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      My Journey
+    </a>
+
     <div class="nav-section nav-stage" id="navSectionFound">
       <span class="nav-stage-circle">01</span>
       <span class="nav-stage-text"><span class="nav-stage-name">Found</span><span class="nav-section-verse">by God</span></span>
@@ -414,14 +419,6 @@
     </a>
 
     <div class="nav-section" id="navSectionProfile">My Profile</div>
-    <a onclick="switchTab('journey')" id="sideJourney" data-tab="journey">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
-      My Journey
-    </a>
-    <a onclick="switchTab('account')" id="sideAccount" data-tab="account">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      My Info
-    </a>
     <a href="my-profile.html">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
       Full Profile
@@ -1317,9 +1314,7 @@
 
     <div class="tab-panel" id="panelJourney">
       <div id="journeyPipelineBox"></div>
-    </div>
 
-    <div class="tab-panel" id="panelAccount">
       <div class="portal-card" id="profileCard">
         <h2>My Information</h2>
         <p class="sub">Keep your contact info and group up to date.</p>
@@ -2546,9 +2541,9 @@
 <script>
 // Role-based access map
 const ROLE_TABS = {
-  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey','account'],
-  event_manager:       ['events','sermons','email','journey','account'],
-  member:              ['journey','account'],
+  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey'],
+  event_manager:       ['events','sermons','email','journey'],
+  member:              ['journey'],
 };
 const ROLE_LABELS = { admin:'Admin', event_manager:'Event Manager' };
 
@@ -2642,7 +2637,7 @@ function applyRoleVisibility() {
   // guarded (see below) against firing before this promise settles.
   window._journeyDataReady = loadMyJourneyData();
   window._journeyDataReady.catch(err => console.error('[MyJourney] load failed:', err));
-  if (startTab === 'journey' || startTab === 'account') await window._journeyDataReady;
+  if (startTab === 'journey') await window._journeyDataReady;
   switchTab(startTab);
   if (isAdmin()) updateStats();
   if (isAdmin()) {
@@ -2654,7 +2649,7 @@ function applyRoleVisibility() {
   }
 })();
 
-const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey','account'];
+const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey'];
 let _profile = null, _journeyData = null;
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
@@ -2678,7 +2673,7 @@ function switchTab(tab) {
   const c = tab[0].toUpperCase()+tab.slice(1);
   const p = document.getElementById('panel'+c), s = document.getElementById('side'+c);
   if(p) p.classList.add('active'); if(s) s.classList.add('active');
-  const titles = {events:'Events',connect:'Connect Submissions',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Membership',baptism:'Baptism',analytics:'Analytics',growthtrack:'Growth Track',impactteams:'Impact Teams',journey:'My Journey',account:'My Info'};
+  const titles = {events:'Events',connect:'Connect Submissions',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Membership',baptism:'Baptism',analytics:'Analytics',growthtrack:'Growth Track',impactteams:'Impact Teams',journey:'My Journey'};
   document.getElementById('topbarTitle').textContent = titles[tab]||tab;
   if(tab==='events') renderEventsTable();
   else if(tab==='connect') renderConnectPanel();
