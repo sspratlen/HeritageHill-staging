@@ -2926,8 +2926,23 @@ function openGCalForEvent(id){const ev=_cachedEvents.find(e=>e.id===id);if(ev)wi
 /* GROUPS */
 let _cachedGroups = [];
 let _semestersForGroupModal = [];
+// For non-admins there's nothing to switch to -- myGroupsBox just stays
+// visible and groupsAdminSection stays hidden, unconditionally. The
+// sub-tab buttons themselves are hidden for non-admins (see renderGroupsTable).
+function switchGroupsSubTab(which) {
+  const isMine = which === 'mine';
+  document.getElementById('myGroupsBox').style.display = isMine ? '' : 'none';
+  document.getElementById('groupsAdminSection').style.display = isMine ? 'none' : '';
+  const mineBtn = document.getElementById('groupsSubTabMine'), manageBtn = document.getElementById('groupsSubTabManage');
+  mineBtn.classList.toggle('btn-primary', isMine); mineBtn.classList.toggle('btn-ghost', !isMine);
+  manageBtn.classList.toggle('btn-primary', !isMine); manageBtn.classList.toggle('btn-ghost', isMine);
+}
+
 async function renderGroupsTable(){
   renderMyGroupsCard();
+  document.getElementById('groupsSubTabs').style.display = isAdmin() ? 'flex' : 'none';
+  switchGroupsSubTab('mine');
+  if (!isAdmin()) return;
   _cachedGroups = await SupaDB.adminGetAllGroups();
   _semestersForGroupModal = await SupaDB.getSemesters();
   let groups = _cachedGroups;
