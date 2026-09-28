@@ -3067,7 +3067,14 @@ function switchGroupsSubTab(which) {
 }
 
 async function renderGroupsTable(){
-  renderMyGroupsCard();
+  // Awaited (unlike the sibling renderMyEventsCard() call elsewhere in this
+  // file) because renderMyGroupsCard() now also writes the shared
+  // _cachedGroups cache via the new scoped leader fetch below -- without
+  // this await, that write could race the admin fetch a few lines down and
+  // land AFTER it, leaving _cachedGroups holding only this admin's own led
+  // groups (or nothing) instead of the full set every Manage Groups action
+  // depends on.
+  await renderMyGroupsCard();
   document.getElementById('groupsSubTabs').style.display = isAdmin() ? 'flex' : 'none';
   switchGroupsSubTab('mine');
   if (!isAdmin()) return;
@@ -7072,7 +7079,7 @@ function generateGiAIImage() {
   btn.disabled = true; btn.textContent = 'Generating…'; status.className = 'ai-status loading';
   status.textContent = 'Creating your image — this takes 10–20 seconds…'; preview.classList.remove('visible');
   const seed = Math.floor(Math.random() * 99999);
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', church community, photorealistic, warm natural lighting')}?width=800&height=500&nologo=true&seed=${seed}`;
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', warm church community, photorealistic, natural lighting')}?width=800&height=500&nologo=true&seed=${seed}`;
   const testImg = new Image(); testImg.crossOrigin = 'anonymous';
   testImg.onload = function() {
     const canvas = document.createElement('canvas');
