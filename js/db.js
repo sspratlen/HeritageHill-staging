@@ -463,6 +463,7 @@ window.SupaDB = {
         body: JSON.stringify({
           name: signup.name || '', email: signup.email || '',
           groupName: signup.groupName || '', leaderName: signup.leaderName || '',
+          groupId: signup.groupId || null, // lets the function email that group's leader
         }),
       }).catch(e => console.warn('[SupaDB] Group signup confirmation email failed (non-critical):', e.message));
       return { ok: true };
@@ -960,6 +961,25 @@ window.SupaDB = {
       if (insertErr) return { error: insertErr.message };
       return { created: true, userId };
     } catch(e) { console.error('[SupaDB] adminProvisionMember:', e.message); return { error: e.message }; }
+  },
+  // Pending website join requests for one group -- only returns rows when
+  // the caller is an admin or that group's leader (supabase/leader-group-requests-schema.sql).
+  async getGroupJoinRequests(groupId) {
+    if (!db()) return [];
+    try {
+      const { data, error } = await db().rpc('group_join_requests', { p_group_id: groupId });
+      if (error) throw error;
+      return (data || []).map(r => ({ id: r.id, name: r.name || '', email: r.email || '', phone: r.phone || '', message: r.message || '', createdAt: r.created_at }));
+    } catch(e) { console.error('[SupaDB] getGroupJoinRequests:', e.message); return []; }
+  },
+  // Marks a join request handled (the `contacted` flag the admin Sign-ups tab shows).
+  async resolveGroupJoinRequest(signupId) {
+    if (!db()) return { error: 'Not configured' };
+    try {
+      const { data, error } = await db().rpc('resolve_group_join_request', { p_signup_id: signupId });
+      if (error) throw error;
+      return data ? { ok: true } : { error: "You don't have permission to update this request." };
+    } catch(e) { console.error('[SupaDB] resolveGroupJoinRequest:', e.message); return { error: e.message }; }
   },
   async adminAddGroupMember(m) {
     if (!db()) return { error: 'Not configured' };

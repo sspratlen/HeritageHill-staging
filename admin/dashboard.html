@@ -1824,6 +1824,9 @@
     </div>
     <div class="modal-body">
 
+      <!-- Pending join requests from the public Small Groups page (empty when none) -->
+      <div id="rosterRequests"></div>
+
       <!-- Add / Edit Member Form -->
       <div id="addMemberForm" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;">
         <h4 id="rmFormTitle" style="font-size:.95rem;font-weight:700;margin-bottom:16px;">Add a Member</h4>
@@ -3251,7 +3254,62 @@ async function openGroupRoster(groupId) {
   document.getElementById('rosterModalTitle').textContent = group ? `Members — ${group.name}` : 'Group Members';
   cancelEditGroupMember();
   document.getElementById('groupRosterModal').classList.add('open');
-  await renderGroupRoster();
+  document.getElementById('rosterRequests').innerHTML = '';
+  await Promise.all([renderGroupRoster(), renderRosterRequests()]);
+}
+
+// Join requests submitted on small-groups.html that nobody has handled yet.
+// Leaders see their own group's; admins see any (supabase/leader-group-requests-schema.sql).
+let _rosterRequests = [];
+
+async function renderRosterRequests() {
+  const box = document.getElementById('rosterRequests');
+  const groupId = _rosterGroupId;
+  const reqs = await SupaDB.getGroupJoinRequests(groupId);
+  if (groupId !== _rosterGroupId) return; // modal switched groups while loading
+  _rosterRequests = reqs;
+  if (!reqs.length) { box.innerHTML = ''; return; }
+  const fmt = d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  box.innerHTML = `
+    <div style="border:1.5px solid var(--primary);background:rgba(188,122,30,.06);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;">
+      <h4 style="font-size:.95rem;font-weight:700;margin-bottom:4px;">Pending requests (${reqs.length})</h4>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:14px;">People who asked to join on the website. Add them to the group, or dismiss the request once you've followed up.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${reqs.map(r => `
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="flex:1;min-width:220px;">
+              <div><strong>${escapeHtml(r.name)}</strong> <span style="font-size:.8rem;color:var(--text-muted);">· requested ${fmt(r.createdAt)}</span></div>
+              <div style="font-size:.85rem;margin-top:2px;"><a href="mailto:${escapeHtml(r.email)}" style="color:var(--primary);">${escapeHtml(r.email)}</a>${r.phone ? ` · ${escapeHtml(r.phone)}` : ''}</div>
+              ${r.message ? `<div style="font-size:.85rem;color:var(--text);margin-top:8px;white-space:pre-line;">&ldquo;${escapeHtml(r.message)}&rdquo;</div>` : ''}
+            </div>
+            <div style="display:flex;gap:8px;white-space:nowrap;">
+              <button class="btn btn-primary btn-sm" onclick="acceptJoinRequest(${r.id})">Add to group</button>
+              <button class="btn btn-ghost btn-sm" onclick="dismissJoinRequest(${r.id})">Dismiss</button>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+async function acceptJoinRequest(signupId) {
+  const r = _rosterRequests.find(x => x.id === signupId);
+  const group = _cachedGroups.find(g => g.id === _rosterGroupId);
+  if (!r || !group) return;
+  const added = await SupaDB.adminAddGroupMember({ groupId: group.id, name: r.name, email: r.email, phone: r.phone || '', notes: '' });
+  if (added?.error) { showToast(added.error, true); return; }
+  const resolved = await SupaDB.resolveGroupJoinRequest(signupId);
+  if (resolved?.error) showToast(`${r.name} was added, but the request couldn't be marked handled`, true);
+  else showToast(`✓ ${r.name} added to ${group.name}`);
+  await Promise.all([renderGroupRoster(), renderRosterRequests()]);
+}
+
+async function dismissJoinRequest(signupId) {
+  const r = _rosterRequests.find(x => x.id === signupId);
+  if (!r || !confirm(`Dismiss ${r.name}'s request? They won't be added to the group.`)) return;
+  const resolved = await SupaDB.resolveGroupJoinRequest(signupId);
+  if (resolved?.error) { showToast(resolved.error, true); return; }
+  showToast('Request dismissed');
+  await renderRosterRequests();
 }
 
 function closeGroupRoster() {
