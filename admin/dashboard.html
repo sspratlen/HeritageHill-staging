@@ -482,37 +482,43 @@
 
     <!-- GROUPS -->
     <div class="tab-panel" id="panelGroups">
-      <div id="myGroupsBox"></div>
-      <div class="action-bar">
-        <h2>Manage Small Groups</h2>
-        <select id="groupSemesterFilter" onchange="renderGroupsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
-          <option value="">All Semesters</option>
-          <option value="__current__">Current Semester</option>
-        </select>
-        <select id="groupPublishedFilter" onchange="renderGroupsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
-          <option value="">All Statuses</option>
-          <option value="published">Published Only</option>
-          <option value="draft">Draft Only</option>
-        </select>
-        <input type="text" id="groupLeaderFilter" placeholder="Search by leader…" oninput="renderGroupsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;" />
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" id="emailAllLeadersBtn" onclick="openAllLeadersEmailModal()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Email All Leaders
-          </button>
-          <button class="btn btn-secondary" id="emailHistoryBtn" onclick="openEmailHistoryModal()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Email History
-          </button>
-          <button class="btn btn-primary" id="addGroupBtn" onclick="openGroupModal()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Group
-          </button>
-        </div>
+      <div id="groupsSubTabs" style="display:none; gap:8px; margin-bottom:20px;">
+        <button class="btn btn-sm" id="groupsSubTabMine" onclick="switchGroupsSubTab('mine')">My Groups</button>
+        <button class="btn btn-sm" id="groupsSubTabManage" onclick="switchGroupsSubTab('manage')">Manage Groups</button>
       </div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Group Name</th><th>Leader</th><th>Day & Time</th><th>Type</th><th>Audience</th><th>Semester</th><th>Published</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="groupsTable"></tbody></table>
-        <div class="empty" id="groupsEmpty" style="display:none;">
-          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          <h3>No groups yet</h3><p>Add your first small group using the button above.</p>
+      <div id="myGroupsBox"></div>
+      <div id="groupsAdminSection">
+        <div class="action-bar">
+          <h2>Manage Small Groups</h2>
+          <select id="groupSemesterFilter" onchange="renderGroupsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
+            <option value="">All Semesters</option>
+            <option value="__current__">Current Semester</option>
+          </select>
+          <select id="groupPublishedFilter" onchange="renderGroupsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
+            <option value="">All Statuses</option>
+            <option value="published">Published Only</option>
+            <option value="draft">Draft Only</option>
+          </select>
+          <input type="text" id="groupLeaderFilter" placeholder="Search by leader…" oninput="renderGroupsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;" />
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary" id="emailAllLeadersBtn" onclick="openAllLeadersEmailModal()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Email All Leaders
+            </button>
+            <button class="btn btn-secondary" id="emailHistoryBtn" onclick="openEmailHistoryModal()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Email History
+            </button>
+            <button class="btn btn-primary" id="addGroupBtn" onclick="openGroupModal()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Group
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Group Name</th><th>Leader</th><th>Day & Time</th><th>Type</th><th>Audience</th><th>Semester</th><th>Published</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="groupsTable"></tbody></table>
+          <div class="empty" id="groupsEmpty" style="display:none;">
+            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <h3>No groups yet</h3><p>Add your first small group using the button above.</p>
+          </div>
         </div>
       </div>
     </div>
