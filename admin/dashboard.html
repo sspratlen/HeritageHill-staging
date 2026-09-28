@@ -3196,8 +3196,23 @@ function exportGroupRosterCsv() {
 
 /* ── IMPACT TEAMS ─────────────────────────────────────────── */
 let _cachedImpactTeams = [];
+// For non-admins there's nothing to switch to -- myImpactTeamsBox just stays
+// visible and impactteamsAdminSection stays hidden, unconditionally. The
+// sub-tab buttons themselves are hidden for non-admins (see renderImpactTeamsTable).
+function switchImpactteamsSubTab(which) {
+  const isMine = which === 'mine';
+  document.getElementById('myImpactTeamsBox').style.display = isMine ? '' : 'none';
+  document.getElementById('impactteamsAdminSection').style.display = isMine ? 'none' : '';
+  const mineBtn = document.getElementById('impactteamsSubTabMine'), manageBtn = document.getElementById('impactteamsSubTabManage');
+  mineBtn.classList.toggle('btn-primary', isMine); mineBtn.classList.toggle('btn-ghost', !isMine);
+  manageBtn.classList.toggle('btn-primary', !isMine); manageBtn.classList.toggle('btn-ghost', isMine);
+}
+
 async function renderImpactTeamsTable(){
   renderMyImpactTeamsCard();
+  document.getElementById('impactteamsSubTabs').style.display = isAdmin() ? 'flex' : 'none';
+  switchImpactteamsSubTab('mine');
+  if (!isAdmin()) return;
   _cachedImpactTeams = await SupaDB.adminGetAllImpactTeams();
   const allMembers = await SupaDB.adminGetAllCurrentImpactTeamMembers();
   let teams = _cachedImpactTeams;
