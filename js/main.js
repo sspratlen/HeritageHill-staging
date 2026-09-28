@@ -137,7 +137,7 @@ async function renderNavAvatar() {
     const user = await SupaDB.getUser();
     if (!user) return;
     const profile = await SupaDB.getMyProfile();
-    const dest = siteRootPrefix() + 'admin/dashboard.html';
+    const dest = siteRootPrefix() + 'admin/dashboard.html?tab=journey';
     const name = profile ? profile.name : '';
     const avatarUrl = profile ? profile.avatarUrl : null;
     const html = buildAvatarHtml({ name, email: user.email, avatarUrl }, 34);

@@ -269,12 +269,22 @@
     }
   })();
 
-  async function routeAfterLogin() {
+  // Everyone -- staff included -- stays on the public site after signing
+  // in: back to the page they came from, or the home page. The site nav's
+  // avatar then takes them to My Journey (dashboard.html?tab=journey). An
+  // explicit ?next= (e.g. dashboard.html's own auth gate) still wins.
+  function routeAfterLogin() {
     const explicit = new URLSearchParams(window.location.search).get('next');
     if (explicit) { window.location.href = explicit; return; }
-    const user = await SupaDB.getUser();
-    const roleData = user ? await SupaDB.getUserRoleByEmail(user.email) : null;
-    window.location.href = roleData ? 'dashboard.html' : '../';
+    let back = null;
+    try {
+      const ref = document.referrer ? new URL(document.referrer) : null;
+      // Same site only, and never back into /admin/ (login, register, the
+      // dashboard) -- relative '../' is the site root on both staging's
+      // /HeritageHill-staging/ subpath and production.
+      if (ref && ref.origin === location.origin && !ref.pathname.includes('/admin/')) back = ref.href;
+    } catch (e) { /* malformed referrer -- fall through to home */ }
+    window.location.href = back || '../';
   }
 
   // ── Normal sign-in ──
@@ -385,8 +395,9 @@
       btn.textContent = 'Set Password & Sign In';
       btn.disabled = false;
     } else {
-      // Password set — Supabase session is now active, go straight to dashboard
-      window.location.href = 'dashboard.html';
+      // Password set — Supabase session is now active; land on the public
+      // site like any other sign-in.
+      routeAfterLogin();
     }
   }
 </script>
