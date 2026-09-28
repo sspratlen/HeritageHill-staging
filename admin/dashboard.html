@@ -7157,6 +7157,112 @@ function generateGiAIImage() {
 // they're pure groupId-parameterized calls. Only Edit Info is new, since
 // the admin's own group editor exposes fields (name/leader/type/audience/
 // semester/published) a leader shouldn't be able to touch.
+let _eiEventId = null;
+
+function openEventInfoModal(eventId) {
+  const ev = _cachedEvents.find(x => x.id === eventId);
+  if (!ev) { showToast('Could not find this event.', true); return; }
+  _eiEventId = eventId;
+  document.getElementById('eiTitle').textContent = `Edit — ${ev.title}`;
+  document.getElementById('eiImageUrl').value = ev.image && !ev.image.startsWith('data:') ? ev.image : '';
+  document.getElementById('eiImageFinal').value = ev.image || '';
+  eiPreviewFromUrl(ev.image && !ev.image.startsWith('data:') ? ev.image : '');
+  document.getElementById('eiTime').value = ev.time || '';
+  document.getElementById('eiLocation').value = ev.location || '';
+  document.getElementById('eiDescription').value = ev.description || '';
+  document.getElementById('eiError').style.display = 'none';
+  document.getElementById('eiSaved').classList.remove('show');
+  document.getElementById('eventInfoModal').classList.add('open');
+}
+function closeEventInfoModal() { document.getElementById('eventInfoModal').classList.remove('open'); }
+
+async function saveEventInfoModal() {
+  const ev = _cachedEvents.find(x => x.id === _eiEventId);
+  const errEl = document.getElementById('eiError');
+  errEl.style.display = 'none';
+  if (!ev) { errEl.textContent = 'Could not find this event.'; errEl.style.display = ''; return; }
+  const image = document.getElementById('eiImageFinal').value.trim() || ev.image;
+  const updated = Object.assign({}, ev, {
+    image,
+    time: document.getElementById('eiTime').value.trim(),
+    location: document.getElementById('eiLocation').value.trim(),
+    description: document.getElementById('eiDescription').value.trim(),
+  });
+  const result = await SupaDB.saveEvent(updated);
+  if (result?.error) { errEl.textContent = result.error; errEl.style.display = ''; return; }
+  Object.assign(ev, updated);
+  const okEl = document.getElementById('eiSaved');
+  okEl.classList.add('show');
+  setTimeout(() => okEl.classList.remove('show'), 2500);
+}
+
+function switchEiImgTab(tab, btnEl) {
+  document.querySelectorAll('#eventInfoModal .img-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#eventInfoModal .img-panel').forEach(p => p.classList.remove('active'));
+  const panels = { url: 'eiImgPanelUrl', upload: 'eiImgPanelUpload', ai: 'eiImgPanelAi' };
+  const tabs = document.querySelectorAll('#eventInfoModal .img-tab');
+  const tabIdx = { url: 0, upload: 1, ai: 2 };
+  if (tabs[tabIdx[tab]]) tabs[tabIdx[tab]].classList.add('active');
+  document.getElementById(panels[tab]).classList.add('active');
+}
+function eiPreviewFromUrl(url) {
+  const img = document.getElementById('eiPreviewUrl');
+  if (url) { img.src = url; img.classList.add('visible'); document.getElementById('eiImageFinal').value = url; }
+  else { img.classList.remove('visible'); document.getElementById('eiImageFinal').value = ''; }
+}
+function handleEiDrop(e) {
+  e.preventDefault();
+  document.getElementById('eiUploadDrop').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) processEiImageFile(f);
+}
+function handleEiImageUpload(input) { if (input.files && input.files[0]) processEiImageFile(input.files[0]); }
+function processEiImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 900; let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+      document.getElementById('eiPreviewUpload').src = dataUrl;
+      document.getElementById('eiPreviewUpload').classList.add('visible');
+      document.getElementById('eiImageFinal').value = dataUrl;
+      document.getElementById('eiUploadDrop').querySelector('p').innerHTML = `<strong>✓ Image optimized</strong> — ${w}×${h}px · ~${sizeKB}KB`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function generateEiAIImage() {
+  const prompt = document.getElementById('eiAiPrompt').value.trim() || document.getElementById('eiDescription').value.trim();
+  if (!prompt) { showToast('Enter a description or prompt first.', true); return; }
+  const btn = document.getElementById('eiAiGenBtn'), status = document.getElementById('eiAiStatus'), preview = document.getElementById('eiPreviewAi');
+  btn.disabled = true; btn.textContent = 'Generating…'; status.className = 'ai-status loading';
+  status.textContent = 'Creating your image — this takes 10–20 seconds…'; preview.classList.remove('visible');
+  const seed = Math.floor(Math.random() * 99999);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', church community, photorealistic, warm natural lighting')}?width=800&height=500&nologo=true&seed=${seed}`;
+  const testImg = new Image(); testImg.crossOrigin = 'anonymous';
+  testImg.onload = function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = testImg.naturalWidth || 800; canvas.height = testImg.naturalHeight || 500;
+    canvas.getContext('2d').drawImage(testImg, 0, 0);
+    let dataUrl; try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (e) { dataUrl = url; }
+    preview.src = dataUrl || url; preview.classList.add('visible');
+    document.getElementById('eiImageFinal').value = dataUrl || url;
+    status.className = 'ai-status'; status.textContent = '✓ Image generated!'; btn.disabled = false; btn.textContent = 'Regenerate';
+  };
+  testImg.onerror = function() {
+    preview.src = url; preview.classList.add('visible');
+    document.getElementById('eiImageFinal').value = url;
+    status.className = 'ai-status'; status.textContent = '✓ Image generated!'; btn.disabled = false; btn.textContent = 'Regenerate';
+  };
+  testImg.src = url;
+}
+
 function manageMyGroup(groupId, action) {
   const gid = Number(groupId);
   if (action === 'members') openGroupRoster(gid);
