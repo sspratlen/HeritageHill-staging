@@ -1392,6 +1392,10 @@
 
     <!-- BAPTISM -->
     <div class="tab-panel" id="panelBaptism">
+      <div id="baptismSubTabs" style="display:none; gap:8px; margin-bottom:20px;">
+        <button class="btn btn-sm" id="baptismSubTabMine" onclick="switchBaptismSubTab('mine')">My Baptism</button>
+        <button class="btn btn-sm" id="baptismSubTabManage" onclick="switchBaptismSubTab('manage')">Manage Baptisms</button>
+      </div>
       <div id="myBaptismBox"></div>
       <div id="baptismAdminSection">
         <div class="action-bar">
@@ -6985,10 +6989,22 @@ async function saveBaptismRecord() {
 
 /* ── BAPTISM ── */
 let _baptisms = [], _notYetBaptized = [];
+// For non-admins there's nothing to switch to -- myBaptismBox just stays
+// visible and baptismAdminSection stays hidden, unconditionally. The
+// sub-tab buttons themselves are hidden for non-admins (see renderBaptismTab).
+function switchBaptismSubTab(which) {
+  const isMine = which === 'mine';
+  document.getElementById('myBaptismBox').style.display = isMine ? '' : 'none';
+  document.getElementById('baptismAdminSection').style.display = isMine ? 'none' : '';
+  const mineBtn = document.getElementById('baptismSubTabMine'), manageBtn = document.getElementById('baptismSubTabManage');
+  mineBtn.classList.toggle('btn-primary', isMine); mineBtn.classList.toggle('btn-ghost', !isMine);
+  manageBtn.classList.toggle('btn-primary', !isMine); manageBtn.classList.toggle('btn-ghost', isMine);
+}
+
 async function renderBaptismTab() {
   renderMyBaptismCard();
-  const adminSection = document.getElementById('baptismAdminSection');
-  adminSection.style.display = isAdmin() ? '' : 'none';
+  document.getElementById('baptismSubTabs').style.display = isAdmin() ? 'flex' : 'none';
+  switchBaptismSubTab('mine');
   if (!isAdmin()) return;
   const [baptisms, profiles] = await Promise.all([
     SupaDB.adminGetAllBaptisms(), SupaDB.adminGetAllMemberProfiles(),
