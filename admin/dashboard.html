@@ -457,16 +457,6 @@
   </div>
 
   <div class="content">
-    <div class="stats-row">
-      <div class="stat-card"><div class="num" id="statEvents">–</div><div class="lbl">Published Events</div></div>
-      <div class="stat-card"><div class="num" id="statGroups">–</div><div class="lbl">Small Groups</div></div>
-      <div class="stat-card"><div class="num" id="statPublished">–</div><div class="lbl">Published Groups</div></div>
-      <div class="stat-card"><div class="num" id="statOpen">–</div><div class="lbl">Open Groups</div></div>
-      <div class="stat-card"><div class="num" id="statSignups">–</div><div class="lbl">Sign-Up Requests</div></div>
-      <div class="stat-card"><div class="num" id="statApplications">–</div><div class="lbl">Pending Applications</div></div>
-      <div class="stat-card"><div class="num" id="statSubscribers">–</div><div class="lbl">Newsletter Subscribers</div></div>
-    </div>
-
     <!-- EVENTS -->
     <div id="pendingBanner" class="banner-pending" style="display:none;">
       Your profile is awaiting approval from church staff. You can take your
@@ -1228,6 +1218,16 @@
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           View Analytics
         </a>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="statEvents">–</div><div class="lbl">Published Events</div></div>
+        <div class="stat-card"><div class="num" id="statGroups">–</div><div class="lbl">Small Groups</div></div>
+        <div class="stat-card"><div class="num" id="statPublished">–</div><div class="lbl">Published Groups</div></div>
+        <div class="stat-card"><div class="num" id="statOpen">–</div><div class="lbl">Open Groups</div></div>
+        <div class="stat-card"><div class="num" id="statSignups">–</div><div class="lbl">Sign-Up Requests</div></div>
+        <div class="stat-card"><div class="num" id="statApplications">–</div><div class="lbl">Pending Applications</div></div>
+        <div class="stat-card"><div class="num" id="statSubscribers">–</div><div class="lbl">Newsletter Subscribers</div></div>
       </div>
 
       <!-- Quick-entry card -->
@@ -2586,11 +2586,6 @@ function applyRoleVisibility() {
     }
     sec.style.display = anyVisible ? '' : 'none';
   });
-  // Hide stats row for non-admins (stats cover data they can't see)
-  if (!isAdmin()) {
-    const statsRow = document.querySelector('.stats-row');
-    if (statsRow) statsRow.style.display = 'none';
-  }
   // Update role badge label
   document.getElementById('roleBadge').textContent =
     (window._userRoles || []).map(r => ROLE_LABELS[r] || r).join(' + ') || 'Member';
@@ -2645,7 +2640,6 @@ function applyRoleVisibility() {
   window._journeyDataReady.catch(err => console.error('[MyJourney] load failed:', err));
   if (startTab === 'journey') await window._journeyDataReady;
   switchTab(startTab);
-  if (isAdmin()) updateStats();
   if (isAdmin()) {
     SupaDB.adminGetAllMemberProfiles().then(ps => {
       const n = ps.filter(p => p.status === 'pending').length;
@@ -2689,7 +2683,7 @@ function switchTab(tab) {
   else if(tab==='subscribers') renderSubscribersTable();
   else if(tab==='prayer')  renderPrayerTable();
   else if(tab==='retreat') renderRetreatTable();
-  else if(tab==='attendance') renderAttendanceTable();
+  else if(tab==='attendance') { renderAttendanceTable(); updateStats(); }
   else if(tab==='sermons') renderSermonsTable();
   else if(tab==='email')    { loadCampaignHistory(); loadMailchimpTags(); }
   else if(tab==='settings') { loadBannerSettings(); loadSaveDatesSettings(); loadSemesters(); }
