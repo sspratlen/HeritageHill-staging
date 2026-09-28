@@ -505,7 +505,12 @@ window.SupaDB = {
   async getEventsForLeader(email) {
     if (!db() || !email) return [];
     try {
-      const { data, error } = await db().from('events').select('*').ilike('leader_email', email).order('date_sort');
+      // Escape % and _ -- both are ILIKE wildcards, and _ is also a valid
+      // email character, so an un-escaped address like john_doe@x.com
+      // would otherwise match any single-character substitution in that
+      // position (e.g. johnxdoe@x.com) instead of an exact address.
+      const escaped = email.replace(/[%_]/g, '\\$&');
+      const { data, error } = await db().from('events').select('*').ilike('leader_email', escaped).order('date_sort');
       if (error) throw error;
       return (data || []).map(eventFromDb);
     } catch(e) { console.error('[SupaDB] getEventsForLeader:', e.message); return []; }
