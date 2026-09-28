@@ -234,6 +234,8 @@
         <h4 style="margin-bottom:8px; color:var(--text);">Request Submitted!</h4>
         <p style="color:var(--text-muted); font-size:.9rem;">Thank you! A group leader will be in touch soon.</p>
       </div>
+      <!-- One-tap confirm for logged-in visitors (js/quick-signup.js) -->
+      <div id="joinQuick" style="display:none;"></div>
       <!-- Form -->
       <form id="joinForm" onsubmit="handleJoinSubmit(event)">
         <input type="hidden" id="joinGroupId" />
@@ -272,6 +274,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/db.js"></script>
 <script src="js/main.js"></script>
+<script src="js/quick-signup.js"></script>
 <script src="js/calendar.js"></script>
 <script>
   document.getElementById('footerYear').textContent = new Date().getFullYear();
@@ -316,11 +319,21 @@
           <span style="font-size:.8rem; color:var(--text-muted);">Led by ${g.leader}</span>
           <div style="display:flex;gap:6px;align-items:center;">
             ${calendarButtonHtml('group', g.id)}
-            <button class="btn btn-primary btn-sm" onclick="openJoinModal(${g.id})">Join Group</button>
+            ${joinButtonHtml(g)}
           </div>
         </div>
       </div>
     </article>`;
+  }
+
+  // Logged-in visitor + what they've already asked to join (null = logged out).
+  let _qs = null;
+
+  function joinButtonHtml(g) {
+    const state = QuickSignup.groupState(_qs, g.id);
+    if (state === 'member')    return `<button class="btn btn-sm qs-done" disabled>You're in ✓</button>`;
+    if (state === 'requested') return `<button class="btn btn-sm qs-done" disabled>Requested ✓</button>`;
+    return `<button class="btn btn-primary btn-sm" onclick="openJoinModal(${g.id})">Join Group</button>`;
   }
 
   function filterGroups() {
@@ -374,6 +387,7 @@
     }
 
     filterGroups();
+    QuickSignup.load().then(ctx => { _qs = ctx; if (ctx) filterGroups(); });
   });
 
   // Stamp load time so we can reject instant (bot) submissions
@@ -417,10 +431,33 @@
     document.getElementById('joinGroupNameHidden').value = g.name;
     document.getElementById('joinGroupLeader').value = g.leader || '';
     document.getElementById('joinForm').reset();
-    document.getElementById('joinForm').style.display = '';
     document.getElementById('joinSuccess').style.display = 'none';
+    const quick = document.getElementById('joinQuick');
+    if (QuickSignup.groupState(_qs, groupId) === 'ready') {
+      document.getElementById('joinForm').style.display = 'none';
+      quick.style.display = '';
+      QuickSignup.render(quick, {
+        who: _qs.who, lead: 'Joining as', action: 'Send request', withMessage: true,
+        onConfirm: message => sendJoinRequest({ ..._qs.who, message }),
+        onEdit: () => showJoinForm(_qs.who),
+      });
+    } else {
+      quick.style.display = 'none';
+      document.getElementById('joinForm').style.display = '';
+    }
     const modal = document.getElementById('joinModal');
     modal.style.display = 'flex';
+  }
+
+  // Full form, optionally pre-filled (the "Not you? Edit details" path).
+  function showJoinForm(who) {
+    document.getElementById('joinQuick').style.display = 'none';
+    document.getElementById('joinForm').style.display = '';
+    if (who) {
+      document.getElementById('joinName').value = who.name;
+      document.getElementById('joinEmail').value = who.email;
+      document.getElementById('joinPhone').value = who.phone || '';
+    }
   }
 
   function closeJoinModal() {
@@ -429,26 +466,34 @@
 
   async function handleJoinSubmit(e) {
     e.preventDefault();
-    const groupId = parseInt(document.getElementById('joinGroupId').value);
-    const g = _allGroups.find(g => g.id === groupId);
-    const signup = {
-      groupId,
-      groupName: document.getElementById('joinGroupNameHidden').value,
-      leaderName: g ? g.leader : '',
-      leaderEmail: g ? (g.leaderEmail || '') : '',
+    const result = await sendJoinRequest({
       name: document.getElementById('joinName').value.trim(),
       email: document.getElementById('joinEmail').value.trim(),
       phone: document.getElementById('joinPhone').value.trim(),
       message: document.getElementById('joinMessage').value.trim(),
-    };
-    const result = await SupaDB.submitSignup(signup);
-    if (result.error) {
-      alert('Sorry, there was an error submitting your request. Please try again or email us directly.');
-      return;
-    }
+    });
+    if (result.error) alert('Sorry, there was an error submitting your request. Please try again or email us directly.');
+  }
+
+  // Shared by the full form and the one-tap confirm. Returns { error } on failure.
+  async function sendJoinRequest({ name, email, phone, message }) {
+    const groupId = parseInt(document.getElementById('joinGroupId').value);
+    const g = _allGroups.find(g => g.id === groupId);
+    const result = await SupaDB.submitSignup({
+      groupId,
+      groupName: document.getElementById('joinGroupNameHidden').value,
+      leaderName: g ? g.leader : '',
+      leaderEmail: g ? (g.leaderEmail || '') : '',
+      name, email, phone: phone || '', message: message || '',
+    });
+    if (result.error) return result;
+    QuickSignup.markGroup(_qs, groupId);
+    filterGroups();
     document.getElementById('joinForm').style.display = 'none';
+    document.getElementById('joinQuick').style.display = 'none';
     document.getElementById('joinSuccess').style.display = '';
     setTimeout(closeJoinModal, 2800);
+    return result;
   }
 
   // Close join modal on overlay click

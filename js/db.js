@@ -1337,6 +1337,18 @@ window.SupaDB = {
     } catch(e) { console.error('[SupaDB] submitEventRsvp:', e.message); return { error: e.message }; }
   },
 
+  // Group/event ids the signed-in person has already requested or RSVP'd
+  // for (supabase/my-signup-status-schema.sql). Null when logged out or if
+  // the RPC isn't available -- callers treat that as "nothing yet".
+  async getMySignupStatus() {
+    if (!db()) return null;
+    try {
+      const { data, error } = await db().rpc('my_signup_status');
+      if (error) throw error;
+      return data || null;
+    } catch(e) { console.error('[SupaDB] getMySignupStatus:', e.message); return null; }
+  },
+
   /* ── ADMIN: Event RSVPs ─────────────────────────────────── */
   async adminGetAllRsvps() {
     if (!db()) return [];

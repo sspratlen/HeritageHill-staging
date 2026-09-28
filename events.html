@@ -255,6 +255,7 @@ async function submitSubscribe() {
 <script src="js/supabase-client.js"></script>
 <script src="js/db.js"></script>
 <script src="js/main.js"></script>
+<script src="js/quick-signup.js"></script>
 <script src="js/calendar.js"></script>
 <script>
   document.getElementById('footerYear').textContent = new Date().getFullYear();
@@ -306,11 +307,20 @@ async function submitSubscribe() {
         <p>${(ev.description||'').length > 120 ? ev.description.slice(0,120)+'…' : ev.description}</p>
         <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <button class="btn btn-ghost btn-sm" onclick="openEventDetail(${ev.id})">More Info</button>
-          ${ev.rsvpEnabled ? `<button class="btn btn-primary btn-sm" onclick="openEventDetail(${ev.id}, true)">RSVP</button>` : ''}
+          ${ev.rsvpEnabled ? rsvpButtonHtml(ev) : ''}
           ${calendarButtonHtml('event', ev.id)}
         </div>
       </div>
     </article>`;
+  }
+
+  // Logged-in visitor + what they've already RSVP'd for (null = logged out).
+  let _qs = null;
+
+  function rsvpButtonHtml(ev) {
+    return QuickSignup.eventState(_qs, ev.id) === 'going'
+      ? `<button class="btn btn-sm qs-done" onclick="openEventDetail(${ev.id}, true)">You're going ✓</button>`
+      : `<button class="btn btn-primary btn-sm" onclick="openEventDetail(${ev.id}, true)">RSVP</button>`;
   }
 
   function filterEvents() {
@@ -351,6 +361,14 @@ async function submitSubscribe() {
     }
 
     filterEvents();
+    QuickSignup.load().then(ctx => {
+      _qs = ctx;
+      if (!ctx) return;
+      filterEvents();
+      // A deep-linked event may have opened before we knew who's logged in.
+      const open = _allEvents.find(e => e.id === _currentRsvpEventId);
+      if (open && document.getElementById('evDetailModal').classList.contains('open')) renderRsvpSection(open);
+    });
 
     // Check for a direct link to a specific event (e.g. from the announcement banner)
     const eventParam = urlParams.get('event');
@@ -412,23 +430,45 @@ async function submitSubscribe() {
     // Description
     document.getElementById('evDetailDesc').textContent = ev.description;
 
-    // RSVP
-    const rsvpSection = document.getElementById('evRsvpSection');
-    if (ev.rsvpEnabled) {
-      rsvpSection.style.display = '';
-      document.getElementById('evRsvpForm').style.display = '';
-      document.getElementById('evRsvpSuccess').style.display = 'none';
-      document.getElementById('rsvpName').value = '';
-      document.getElementById('rsvpEmail').value = '';
-      document.getElementById('rsvpPhone').value = '';
-      document.getElementById('rsvpError').style.display = 'none';
-    } else {
-      rsvpSection.style.display = 'none';
-    }
+    renderRsvpSection(ev);
 
     document.getElementById('evDetailModal').classList.add('open');
     if (scrollToRsvp && ev.rsvpEnabled) {
       setTimeout(() => { document.getElementById('evRsvpSection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+    }
+  }
+
+  // Logged out: the RSVP form. Logged in: a one-tap confirm, or "You're
+  // going" if they've already RSVP'd (js/quick-signup.js).
+  function renderRsvpSection(ev) {
+    const rsvpSection = document.getElementById('evRsvpSection');
+    if (!ev.rsvpEnabled) { rsvpSection.style.display = 'none'; return; }
+    rsvpSection.style.display = '';
+    const state = QuickSignup.eventState(_qs, ev.id);
+    const quick = document.getElementById('evRsvpQuick');
+    document.getElementById('evRsvpSuccess').style.display = 'none';
+    document.getElementById('evRsvpGoing').style.display = state === 'going' ? '' : 'none';
+    document.getElementById('rsvpName').value = '';
+    document.getElementById('rsvpEmail').value = '';
+    document.getElementById('rsvpPhone').value = '';
+    document.getElementById('rsvpError').style.display = 'none';
+    if (state === 'ready') {
+      document.getElementById('evRsvpForm').style.display = 'none';
+      quick.style.display = '';
+      QuickSignup.render(document.getElementById('evRsvpQuickBody'), {
+        who: _qs.who, lead: 'RSVP as', action: "I'm going",
+        onConfirm: () => sendRsvp(_qs.who),
+        onEdit: () => {
+          quick.style.display = 'none';
+          document.getElementById('evRsvpForm').style.display = '';
+          document.getElementById('rsvpName').value = _qs.who.name;
+          document.getElementById('rsvpEmail').value = _qs.who.email;
+          document.getElementById('rsvpPhone').value = _qs.who.phone || '';
+        },
+      });
+    } else {
+      quick.style.display = 'none';
+      document.getElementById('evRsvpForm').style.display = state === 'going' ? 'none' : '';
     }
   }
 
@@ -451,17 +491,26 @@ async function submitSubscribe() {
     const btn = document.getElementById('rsvpSubmitBtn');
     btn.disabled = true; btn.textContent = 'Submitting…';
 
-    const result = await SupaDB.submitEventRsvp({
-      eventId: _currentRsvpEventId,
-      eventTitle: _currentRsvpEventTitle,
-      fullName: name, email, phone
-    });
+    const result = await sendRsvp({ name, email, phone });
 
     btn.disabled = false; btn.textContent = 'Submit RSVP';
     if (result.error) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.style.display=''; return; }
+  }
 
+  // Shared by the form and the one-tap confirm. Returns { error } on failure.
+  async function sendRsvp({ name, email, phone }) {
+    const result = await SupaDB.submitEventRsvp({
+      eventId: _currentRsvpEventId,
+      eventTitle: _currentRsvpEventTitle,
+      fullName: name, email, phone: phone || ''
+    });
+    if (result.error) return result;
+    QuickSignup.markEvent(_qs, _currentRsvpEventId);
+    filterEvents();
     document.getElementById('evRsvpForm').style.display = 'none';
+    document.getElementById('evRsvpQuick').style.display = 'none';
     document.getElementById('evRsvpSuccess').style.display = '';
+    return result;
   }
 
 </script>
@@ -482,6 +531,11 @@ async function submitSubscribe() {
 
       <!-- RSVP Section (shown only when rsvpEnabled) -->
       <div class="ev-rsvp-section" id="evRsvpSection" style="display:none;">
+        <div id="evRsvpGoing" class="ev-rsvp-success" style="display:none;">
+          <strong style="font-size:1.05rem;">You're going ✓</strong>
+          <p style="color:#555;font-size:.9rem;margin-top:6px;">You've already RSVP'd for this event. See you there!</p>
+        </div>
+        <div id="evRsvpQuick" style="display:none;"><h3>RSVP for this Event</h3><div id="evRsvpQuickBody"></div></div>
         <div id="evRsvpForm">
           <h3>RSVP for this Event</h3>
           <div class="ev-rsvp-field"><label>Full Name *</label><input type="text" id="rsvpName" placeholder="Your full name" /></div>
