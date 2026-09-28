@@ -1466,24 +1466,30 @@
 
     <!-- IMPACT TEAMS -->
     <div class="tab-panel" id="panelImpactteams">
-      <div id="myImpactTeamsBox"></div>
-      <div class="action-bar">
-        <h2>Manage Impact Teams</h2>
-        <select id="teamPublishedFilter" onchange="renderImpactTeamsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
-          <option value="">All Statuses</option>
-          <option value="published">Published Only</option>
-          <option value="draft">Draft Only</option>
-        </select>
-        <button class="btn btn-primary" id="addImpactTeamBtn" onclick="openImpactTeamModal()">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Team
-        </button>
+      <div id="impactteamsSubTabs" style="display:none; gap:8px; margin-bottom:20px;">
+        <button class="btn btn-sm" id="impactteamsSubTabMine" onclick="switchImpactteamsSubTab('mine')">My Impact Teams</button>
+        <button class="btn btn-sm" id="impactteamsSubTabManage" onclick="switchImpactteamsSubTab('manage')">Manage Impact Teams</button>
       </div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Team Name</th><th>Department</th><th>Members</th><th>Leaders</th><th>Published</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="impactTeamsTable"></tbody></table>
-        <div class="empty" id="impactTeamsEmpty" style="display:none;">
-          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-          <h3>No impact teams yet</h3><p>Add your first serving team using the button above.</p>
+      <div id="myImpactTeamsBox"></div>
+      <div id="impactteamsAdminSection">
+        <div class="action-bar">
+          <h2>Manage Impact Teams</h2>
+          <select id="teamPublishedFilter" onchange="renderImpactTeamsTable()" style="padding:.45rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.875rem;outline:none;">
+            <option value="">All Statuses</option>
+            <option value="published">Published Only</option>
+            <option value="draft">Draft Only</option>
+          </select>
+          <button class="btn btn-primary" id="addImpactTeamBtn" onclick="openImpactTeamModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Team
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Team Name</th><th>Department</th><th>Members</th><th>Leaders</th><th>Published</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="impactTeamsTable"></tbody></table>
+          <div class="empty" id="impactTeamsEmpty" style="display:none;">
+            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <h3>No impact teams yet</h3><p>Add your first serving team using the button above.</p>
+          </div>
         </div>
       </div>
     </div>
