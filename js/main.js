@@ -139,7 +139,7 @@ async function renderNavAvatar() {
     const [roleData, profile] = await Promise.all([
       SupaDB.getUserRoleByEmail(user.email), SupaDB.getMyProfile(),
     ]);
-    const dest = siteRootPrefix() + (roleData ? 'admin/dashboard.html' : 'admin/my-profile.html');
+    const dest = siteRootPrefix() + 'admin/dashboard.html';
     const name = profile ? profile.name : '';
     const avatarUrl = profile ? profile.avatarUrl : null;
     const html = buildAvatarHtml({ name, email: user.email, avatarUrl }, 34);

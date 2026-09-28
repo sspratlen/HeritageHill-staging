@@ -423,11 +423,6 @@
       User Permissions
     </a>
 
-    <div class="nav-section" id="navSectionProfile">My Profile</div>
-    <a href="my-profile.html">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-      Full Profile
-    </a>
   </nav>
   <div class="sidebar-footer">
     <a href="../index.html" target="_blank">
@@ -457,7 +452,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="admin-badge" id="roleBadge">Admin</span>
-      <a href="my-profile.html" id="topbarAvatarLink" title="My Profile & Assessments" style="display:flex;align-items:center;text-decoration:none;"></a>
+      <a href="#" onclick="switchTab('myinfo');return false;" id="topbarAvatarLink" title="My Profile & Assessments" style="display:flex;align-items:center;text-decoration:none;"></a>
     </div>
   </div>
 
@@ -1310,8 +1305,7 @@
         <strong style="color:var(--text);">How it works:</strong> Use <strong>Add Permissions</strong> to assign a dashboard role to an existing member — search for them by name or email. To invite someone new, use <strong>Create User</strong> on the Membership tab first; once they're a member, come back here to give them a role.
         <br><br>
         <strong style="color:var(--text);">Admin</strong> — Full access to all sections.<br>
-        <strong style="color:var(--text);">Event Manager</strong> — Events (including sign-ups), Sermons, Email.<br>
-        Small group leaders no longer use this dashboard — they manage their group from their own <a href="my-profile.html" style="color:var(--primary);">My Profile</a> page instead.
+        <strong style="color:var(--text);">Event Manager</strong> — Events (including sign-ups), Sermons, Email.
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
         <input id="usrSearch" placeholder="Search email, name, or role…" oninput="applyUsersFilter()"
@@ -2734,8 +2728,8 @@ function applyRoleVisibility() {
   window._currentUserName = (roleData && roleData.displayName) ? roleData.displayName : '';
 
   // Every authenticated visitor gets a profile row -- self-registered
-  // members are lazily provisioned here, the same way my-profile.html
-  // already does it. This page no longer redirects anyone away.
+  // members are lazily provisioned here. This page no longer redirects
+  // anyone away.
   _profile = await SupaDB.getMyProfile();
   if (!_profile) {
     const r = await SupaDB.createMyProfile();
@@ -2862,10 +2856,9 @@ function switchEventsSubTab(which) {
 }
 
 // Lists events this person leads (matched by leaderEmail, independent of
-// any dashboard role -- same matching admin/my-profile.html's own My
-// Events panel already uses). "View Sign-Ups" reuses the existing,
-// unmodified admin sign-ups modal -- it has no admin-only check beyond
-// which button reaches it, so it works identically here.
+// any dashboard role). "View Sign-Ups" reuses the existing, unmodified
+// admin sign-ups modal -- it has no admin-only check beyond which button
+// reaches it, so it works identically here.
 async function renderMyEventsCard() {
   const box = document.getElementById('myEventsBox');
   const events = _profile.email ? await SupaDB.getEventsForLeader(_profile.email) : [];
@@ -6496,8 +6489,7 @@ async function removeAvatar() {
 }
 
 // Fills the Account form and loads everything My Journey needs -- runs
-// once at page load for every logged-in person (staff or not), same data
-// shape as admin/my-profile.html's identically-named block. This is
+// once at page load for every logged-in person (staff or not). This is
 // separate from the admin-only bulk data loads elsewhere in this file
 // (those stay gated behind isAdmin()); this one always runs, since every
 // visitor has their own personal journey regardless of role.
@@ -6532,10 +6524,10 @@ async function loadMyJourneyData() {
 }
 
 // Treasure-map view of the viewer's own journey (js/journey-map.js). Each
-// stop opens its dashboard tab when this role can reach it; otherwise it
-// falls back to the matching my-profile.html panel, or to My Info when
-// there's no personal panel (Membership). As tabs get added to
-// ROLE_TABS.member, their stops switch over with no change needed here.
+// stop opens its dashboard tab when this role can reach it, or falls back
+// to My Info when there's no tab for it (e.g. Membership). As tabs get
+// added to ROLE_TABS.member, their stops switch over with no change needed
+// here.
 function renderJourneyPanel() {
   const j = _journeyData || {}; // null if loadMyJourneyData failed
   JourneyMap.render(document.getElementById('journeyMapBox'), {
@@ -6548,7 +6540,6 @@ function renderJourneyPanel() {
   }, {
     onStopClick: stop => {
       if (getAllowedTabs().includes(stop.tab)) switchTab(stop.tab);
-      else if (stop.profilePanel) location.href = 'my-profile.html#' + stop.profilePanel;
       else switchTab('myinfo');
     },
   });
@@ -6974,8 +6965,8 @@ async function bulkRegisterLeadersAttendees() {
 let _myJourneyCache = null;
 async function getMyJourneyData(fresh) {
   if (_myJourneyCache && !fresh) return _myJourneyCache;
-  // Lazy-create the profile/person row, same as my-profile.html -- staff
-  // logging in here for the first time won't already have one.
+  // Lazy-create the profile/person row -- staff logging in here for the
+  // first time won't already have one.
   let profile = await SupaDB.getMyProfile();
   if (!profile) {
     await SupaDB.createMyProfile();
@@ -7012,9 +7003,8 @@ async function renderMyBaptismCard() {
     </div>`;
 }
 
-// Mirrors admin/my-profile.html's confirmWithdraw -- same soft-delete call,
-// same best-effort leader-notification email that never blocks or rolls
-// back the withdrawal on failure.
+// Soft-deletes the group membership, with a best-effort leader-notification
+// email that never blocks or rolls back the withdrawal on failure.
 async function withdrawFromGroup(membership, reason) {
   const result = await SupaDB.adminRemoveGroupMember(membership.id);
   if (result?.error) return result;

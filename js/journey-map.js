@@ -7,9 +7,10 @@
 // Pure pieces (STOPS, computeStatus, buildSvg) have no DOM dependency and
 // are unit-tested under Node (tests/journey-map.test.js).
 const JourneyMap = {
-  // Trail order. `tab` is the admin/dashboard.html tab the stop opens;
-  // `profilePanel` is the admin/my-profile.html panel used as a fallback
-  // when the viewer's role can't reach `tab` yet (null = open 'myinfo').
+  // Trail order. `tab` is the admin/dashboard.html tab the stop opens.
+  // `profilePanel` is currently unused (retained for future per-panel
+  // deep-linking); when the viewer's role can't reach `tab` yet, the
+  // dashboard falls back to opening the 'myinfo' tab.
   STOPS: [
     { key: 'basecamp',   label: 'Base camp',       stage: null,     tab: 'myinfo',      profilePanel: null },
     { key: 'baptism',    label: 'Baptism',         stage: 'Found',  tab: 'baptism',     profilePanel: 'baptism' },

@@ -233,7 +233,7 @@ function escapeHtml(s) {
     if (!_user) { window.location.href = 'login.html?next=tap-control.html'; return; }
     const roleData = await SupaDB.getUserRoleByEmail(_user.email);
     const rlRoles = (roleData && roleData.roles) || [];
-    if (!roleData || (rlRoles.length === 1 && rlRoles[0] === 'small_group_leader')) { window.location.href = 'my-profile.html'; return; }
+    if (!roleData || (rlRoles.length === 1 && rlRoles[0] === 'small_group_leader')) { window.location.href = 'dashboard.html'; return; }
     if (!rlRoles.includes('admin')) { window.location.href = 'dashboard.html'; return; }
     await init();
   } catch (err) {

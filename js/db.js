@@ -927,7 +927,7 @@ window.SupaDB = {
       let userId;
       if (createIfMissing) {
         // action: 'createIfNew' — if this email already has an auth account
-        // (e.g. self-registered but hasn't visited my-profile.html yet to get
+        // (e.g. self-registered but hasn't visited the dashboard yet to get
         // a member_profiles row), never touch its password. Just report the
         // existing userId so we can still create the missing profile row.
         // Creates a brand-new account (default temp password) if none exists.
@@ -1640,7 +1640,7 @@ window.SupaDB = {
 /* ── Member Profiles & Assessments ──────────────────────── */
   async signUpMember(email, password, meta) {
     // meta: { name, phone, groupId, yearsAttending } stored in auth user_metadata;
-    // my-profile.html lazily creates the member_profiles row from it.
+    // admin/dashboard.html lazily creates the member_profiles row from it.
     if (!db()) return { error: 'Not configured' };
     const { data, error } = await db().auth.signUp({
       email, password,

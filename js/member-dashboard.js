@@ -1,6 +1,6 @@
 /* ================================================================
    Heritage Hill — shared Growth Track progress + group history
-   rendering, used by admin/member-dashboard.html and my-profile.html
+   rendering, used by admin/member-dashboard.html and admin/dashboard.html
    ================================================================ */
 const MemberDashboard = {
   escapeHtml(s) {
@@ -52,13 +52,10 @@ const MemberDashboard = {
   // opts.onWithdrawClick(membership, reason) -- optional. When provided,
   // each real, currently-active membership row (never the synthetic "led
   // groups" rows) gets an inline Withdraw button with a two-step reveal
-  // (reason + Confirm/Cancel), self-contained here. admin/my-profile.html
-  // doesn't pass this and keeps its own separate modal-based withdraw flow,
-  // completely unaffected.
+  // (reason + Confirm/Cancel), self-contained here.
   // opts.onManageClick(groupId, action) -- optional, action is one of
   // 'info'|'members'|'attendance'|'email'. Shown only on rows the viewer
-  // leads (m.isLeader). admin/my-profile.html doesn't pass this and keeps
-  // its own separate leader-toolkit modal, completely unaffected.
+  // leads (m.isLeader).
   renderGroupHistory(containerEl, memberships, groups, email, semesters, onGroupClick, onWithdrawClick, onManageClick) {
     const led = (email
       ? groups.filter(g => g.leaderEmail && g.leaderEmail.toLowerCase() === email.toLowerCase())
@@ -180,8 +177,8 @@ const MemberDashboard = {
   // attempt: latest disc attempt ({ result, scores, completedAt }) or falsy.
   // discBlends: _content.discBlends (all 16 disc_blend rows).
   // attemptCount: optional — when > 1, appends "· N attempts" to the footer
-  // (my-profile.html has this; admin/member-dashboard.html doesn't track it
-  // today and simply omits the argument, preserving its existing behavior).
+  // (admin/member-dashboard.html doesn't track it today and simply omits
+  // the argument, preserving its existing behavior).
   renderDiscResult(containerEl, attempt, discBlends, attemptCount) {
     if (!attempt) return;
     const order = ['D', 'I', 'S', 'C'];
