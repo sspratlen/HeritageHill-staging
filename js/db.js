@@ -497,6 +497,19 @@ window.SupaDB = {
       return (data || []).map(eventFromDb);
     } catch(e) { console.error('[SupaDB] adminGetAllEvents:', e.message); return []; }
   },
+  // Server-side scoped to this one leader's own events -- unlike
+  // adminGetAllEvents(), safe to call unconditionally for any viewer,
+  // since it never sends other leaders' events (published or not) to
+  // the client. Case-insensitive match, matching how leaderEmail was
+  // previously compared client-side elsewhere in this app.
+  async getEventsForLeader(email) {
+    if (!db() || !email) return [];
+    try {
+      const { data, error } = await db().from('events').select('*').ilike('leader_email', email).order('date_sort');
+      if (error) throw error;
+      return (data || []).map(eventFromDb);
+    } catch(e) { console.error('[SupaDB] getEventsForLeader:', e.message); return []; }
+  },
   async saveEvent(ev) {
     if (!db()) return { error: 'Not configured' };
     try {
