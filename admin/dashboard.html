@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
   <link rel="stylesheet" href="../css/journey-pipeline.css" />
+  <link rel="stylesheet" href="../css/journey-map.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -322,6 +323,10 @@
     <a onclick="switchTab('journey')" id="sideJourney" data-tab="journey">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
       My Journey
+    </a>
+    <a onclick="switchTab('myinfo')" id="sideMyinfo" data-tab="myinfo">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 20l9-16 9 16z"/><path d="M12 4v16"/></svg>
+      My Info
     </a>
 
     <div class="nav-section nav-stage" id="navSectionFound">
@@ -1313,8 +1318,10 @@
     </div>
 
     <div class="tab-panel" id="panelJourney">
-      <div id="journeyPipelineBox"></div>
+      <div id="journeyMapBox"></div>
+    </div>
 
+    <div class="tab-panel" id="panelMyinfo">
       <div class="portal-card" id="profileCard">
         <h2>My Information</h2>
         <p class="sub">Keep your contact info and group up to date.</p>
@@ -2543,13 +2550,14 @@
 <script src="../js/db.js"></script>
 <script src="../js/assessments.js"></script>
 <script src="../js/member-dashboard.js"></script>
+<script src="../js/journey-map.js"></script>
 <script src="../js/main.js"></script>
 <script>
 // Role-based access map
 const ROLE_TABS = {
-  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey'],
-  event_manager:       ['events','sermons','email','journey','baptism'],
-  member:              ['journey','baptism'],
+  admin:               ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey','myinfo'],
+  event_manager:       ['events','sermons','email','journey','baptism','myinfo'],
+  member:              ['journey','baptism','myinfo'],
 };
 const ROLE_LABELS = { admin:'Admin', event_manager:'Event Manager' };
 
@@ -2649,7 +2657,7 @@ function applyRoleVisibility() {
   }
 })();
 
-const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey'];
+const ALL_TABS = ['people','baptism','groups','attendance','growthtrack','analytics','impactteams','events','connect','signups','applications','subscribers','prayer','retreat','sermons','email','settings','users','journey','myinfo'];
 let _profile = null, _journeyData = null;
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
@@ -2673,7 +2681,7 @@ function switchTab(tab) {
   const c = tab[0].toUpperCase()+tab.slice(1);
   const p = document.getElementById('panel'+c), s = document.getElementById('side'+c);
   if(p) p.classList.add('active'); if(s) s.classList.add('active');
-  const titles = {events:'Events',connect:'Connect Submissions',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Membership',baptism:'Baptism',analytics:'Analytics',growthtrack:'Growth Track',impactteams:'Impact Teams',journey:'My Journey'};
+  const titles = {events:'Events',connect:'Connect Submissions',groups:'Small Groups',signups:'Sign-Up Requests',applications:'Leader Applications',subscribers:'Newsletter Subscribers',prayer:'Prayer Requests',retreat:'Retreat 2026',attendance:'Attendance',sermons:'Sermons',email:'Email',settings:'Settings',users:'User Permissions',people:'Membership',baptism:'Baptism',analytics:'Analytics',growthtrack:'Growth Track',impactteams:'Impact Teams',journey:'My Journey',myinfo:'My Info'};
   document.getElementById('topbarTitle').textContent = titles[tab]||tab;
   if(tab==='events') renderEventsTable();
   else if(tab==='connect') renderConnectPanel();
@@ -6307,17 +6315,25 @@ async function loadMyJourneyData() {
   };
 }
 
+// Treasure-map view of the viewer's own journey (js/journey-map.js). Each
+// stop opens its dashboard tab when this role can reach it; otherwise it
+// falls back to the matching my-profile.html panel, or to My Info when
+// there's no personal panel (Membership). As tabs get added to
+// ROLE_TABS.member, their stops switch over with no change needed here.
 function renderJourneyPanel() {
-  MemberDashboard.renderJourneyPipeline(document.getElementById('journeyPipelineBox'), {
+  JourneyMap.render(document.getElementById('journeyMapBox'), {
+    firstName: (_profile.name || '').trim().split(/\s+/)[0],
     memberSince: _profile.memberSince, baptizedAt: _journeyData.baptism ? _journeyData.baptism.achievedAt : null,
     groupMemberships: _journeyData.memberships, groups: _journeyData.groups, email: _profile.email,
     gtRegistrations: _journeyData.gtRegs,
-    discAttempt: _journeyData.discAttempts[0], giftsAttempt: _journeyData.giftsAttempts[0],
     discAttemptCount: _journeyData.discAttempts.length, giftsAttemptCount: _journeyData.giftsAttempts.length,
-    discBlends: _journeyData.content.discBlends, giftsContent: _journeyData.content.gifts,
-    assessmentCtaHrefs: { disc: 'test-personality.html', gifts: 'test-gifts.html' },
     teamMemberships: _journeyData.teamMemberships, teams: _journeyData.teams,
-    onFoundClick: () => switchTab('baptism'),
+  }, {
+    onStopClick: stop => {
+      if (getAllowedTabs().includes(stop.tab)) switchTab(stop.tab);
+      else if (stop.profilePanel) location.href = 'my-profile.html#' + stop.profilePanel;
+      else switchTab('myinfo');
+    },
   });
 }
 
