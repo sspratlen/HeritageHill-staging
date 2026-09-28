@@ -2752,7 +2752,47 @@ async function updateStats() {
 
 /* EVENTS */
 let _cachedEvents = [];
+// For non-admin/event_manager viewers there's nothing to switch to --
+// myEventsBox just stays visible and eventsAdminSection stays hidden,
+// unconditionally. The sub-tab buttons themselves are hidden for them
+// (see renderEventsTable).
+function switchEventsSubTab(which) {
+  const isMine = which === 'mine';
+  document.getElementById('myEventsBox').style.display = isMine ? '' : 'none';
+  document.getElementById('eventsAdminSection').style.display = isMine ? 'none' : '';
+  const mineBtn = document.getElementById('eventsSubTabMine'), manageBtn = document.getElementById('eventsSubTabManage');
+  mineBtn.classList.toggle('btn-primary', isMine); mineBtn.classList.toggle('btn-ghost', !isMine);
+  manageBtn.classList.toggle('btn-primary', !isMine); manageBtn.classList.toggle('btn-ghost', isMine);
+}
+
+// Lists events this person leads (matched by leaderEmail, independent of
+// any dashboard role -- same matching admin/my-profile.html's own My
+// Events panel already uses). "View Sign-Ups" reuses the existing,
+// unmodified admin sign-ups modal -- it has no admin-only check beyond
+// which button reaches it, so it works identically here.
+async function renderMyEventsCard() {
+  const box = document.getElementById('myEventsBox');
+  const email = (_profile.email || '').toLowerCase();
+  const allEvents = await SupaDB.adminGetAllEvents();
+  const events = email ? allEvents.filter(e => e.leaderEmail && e.leaderEmail.toLowerCase() === email) : [];
+  if (!events.length) {
+    box.innerHTML = `<div class="table-wrap" style="padding:20px;margin-bottom:24px;"><h3 style="font-size:.95rem;margin-bottom:10px;">My Events</h3><p style="color:var(--text-muted);font-size:.9rem;">You are not leading any events yet.</p></div>`;
+    return;
+  }
+  box.innerHTML = `<div class="table-wrap" style="padding:20px;margin-bottom:24px;"><h3 style="font-size:.95rem;margin-bottom:10px;">My Events</h3>` +
+    events.map(ev => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);">
+        <span>${escapeHtml(ev.title)} <span style="color:var(--text-muted);font-size:.82rem;">${escapeHtml(ev.date)}</span></span>
+        <button class="btn btn-ghost btn-sm" onclick="openEventSignupsModal(${ev.id})">View Sign-Ups</button>
+      </div>`).join('') + `</div>`;
+}
+
 async function renderEventsTable() {
+  renderMyEventsCard();
+  const canManage = isAdmin() || isEventManager();
+  document.getElementById('eventsSubTabs').style.display = canManage ? 'flex' : 'none';
+  switchEventsSubTab('mine');
+  if (!canManage) return;
   _cachedEvents = await SupaDB.adminGetAllEvents();
   const events = [..._cachedEvents].sort((a,b)=>a.dateSort.localeCompare(b.dateSort));
   const tbody=document.getElementById('eventsTable'), empty=document.getElementById('eventsEmpty');
