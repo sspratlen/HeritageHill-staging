@@ -6846,12 +6846,41 @@ async function renderMyBaptismCard() {
     </div>`;
 }
 
+// Mirrors admin/my-profile.html's confirmWithdraw -- same soft-delete call,
+// same best-effort leader-notification email that never blocks or rolls
+// back the withdrawal on failure.
+async function withdrawFromGroup(membership, reason) {
+  const result = await SupaDB.adminRemoveGroupMember(membership.id);
+  if (result?.error) return result;
+  const group = ((_myJourneyCache && _myJourneyCache.groups) || []).find(g => String(g.id) === String(membership.groupId));
+  if (group && group.leaderEmail) {
+    const bodyParts = [`<p>${escapeHtml(_profile.name)} (${escapeHtml(_profile.email)}) has withdrawn from <strong>${escapeHtml(group.name)}</strong>.</p>`];
+    if (reason) bodyParts.push(`<p><strong>Reason given:</strong> ${escapeHtml(reason)}</p>`);
+    try {
+      await fetch(SUPABASE_URL + '/functions/v1/send-group-email', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: `${_profile.name} has left ${group.name}`,
+          htmlBody: bodyParts.join(''),
+          recipients: [group.leaderEmail],
+          fromName: 'Heritage Hill Church',
+          fromEmail: 'noreply@heritagehill.church',
+          replyTo: _profile.email,
+        }),
+      });
+    } catch (e) { /* non-blocking -- withdrawal already succeeded */ }
+  }
+  showToast('You have withdrawn from the group.');
+  return { ok: true };
+}
+
 async function renderMyGroupsCard() {
   const box = document.getElementById('myGroupsBox');
   const data = await getMyJourneyData();
   if (!data) { box.innerHTML = ''; return; }
   box.innerHTML = `<div class="table-wrap" style="padding:20px;margin-bottom:24px;"><h3 style="font-size:.95rem;margin-bottom:10px;">My Small Groups</h3><div id="myGroupsHistory"></div></div>`;
-  MemberDashboard.renderGroupHistory(document.getElementById('myGroupsHistory'), data.memberships, data.groups, data.profile.email, data.semesters);
+  MemberDashboard.renderGroupHistory(document.getElementById('myGroupsHistory'), data.memberships, data.groups, data.profile.email, data.semesters, undefined, withdrawFromGroup);
 }
 
 async function renderMyGrowthTrackCard() {
