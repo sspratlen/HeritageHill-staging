@@ -6986,6 +6986,9 @@ async function saveBaptismRecord() {
 let _baptisms = [], _notYetBaptized = [];
 async function renderBaptismTab() {
   renderMyBaptismCard();
+  const adminSection = document.getElementById('baptismAdminSection');
+  adminSection.style.display = isAdmin() ? '' : 'none';
+  if (!isAdmin()) return;
   const [baptisms, profiles] = await Promise.all([
     SupaDB.adminGetAllBaptisms(), SupaDB.adminGetAllMemberProfiles(),
   ]);
