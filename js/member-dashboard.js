@@ -55,7 +55,10 @@ const MemberDashboard = {
   // (reason + Confirm/Cancel), self-contained here.
   // opts.onManageClick(groupId, action) -- optional, action is one of
   // 'info'|'members'|'attendance'|'email'. Shown only on rows the viewer
-  // leads (m.isLeader).
+  // leads (m.isLeader). 'info' fires from clicking the group's own name
+  // (styled as a link) rather than a separate button, since it opens a
+  // read-only preview first -- Members/Attendance/Email stay as buttons
+  // since they open working tools, not a view-before-you-act preview.
   renderGroupHistory(containerEl, memberships, groups, email, semesters, onGroupClick, onWithdrawClick, onManageClick) {
     const led = (email
       ? groups.filter(g => g.leaderEmail && g.leaderEmail.toLowerCase() === email.toLowerCase())
@@ -89,13 +92,12 @@ const MemberDashboard = {
         const gid = this.escapeHtml(String(m.groupId));
         return `
         <tr${clickable ? ` class="jp-row-clickable" data-group-id="${gid}"` : ''}>
-          <td>${this.escapeHtml(groupName(m.groupId))}</td>
+          <td>${m.isLeader && canManage ? `<button type="button" class="jp-manage-btn" data-manage-action="info" data-group-id="${gid}" style="background:none;border:none;padding:0;font:inherit;color:var(--primary);text-decoration:underline;cursor:pointer;">${this.escapeHtml(groupName(m.groupId))}</button>` : this.escapeHtml(groupName(m.groupId))}</td>
           <td>${m.isLeader ? this.escapeHtml(semesterName(m.semesterId)) : fmt(m.joinedAt)}</td>
           <td>${m.isLeader ? '<span class="badge badge-blue">Leader</span>' : (m.leftAt ? 'Left ' + fmt(m.leftAt) : '<span class="badge badge-green">Current</span>')}</td>
           ${canWithdraw ? `<td>${eligible ? `<span class="jp-withdraw-cell" data-membership-id="${this.escapeHtml(String(m.id))}"><button type="button" class="btn btn-ghost btn-sm">Withdraw</button></span>` : ''}</td>` : ''}
           ${canManage ? `<td>${m.isLeader ? `
             <div style="display:flex;gap:4px;flex-wrap:wrap;">
-              <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="info" data-group-id="${gid}">Edit Info</button>
               <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="members" data-group-id="${gid}">Members</button>
               <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="attendance" data-group-id="${gid}">Attendance</button>
               <button type="button" class="btn btn-ghost btn-sm jp-manage-btn" data-manage-action="email" data-group-id="${gid}">Email</button>

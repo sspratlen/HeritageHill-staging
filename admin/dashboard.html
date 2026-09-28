@@ -2471,6 +2471,35 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="groupPreviewModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3>Group Preview</h3><button class="modal-close" onclick="closeGroupPreviewModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:12px;">This is what members see on the public Small Groups page.</p>
+      <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+        <img id="gpImage" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block;" onerror="this.src='https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80'" />
+        <div style="padding:16px;">
+          <div style="margin-bottom:.6rem;display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="badge" id="gpOpenBadge"></span>
+            <span class="badge badge-blue" id="gpType"></span>
+          </div>
+          <h3 id="gpName" style="margin:0 0 8px;"></h3>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--text-muted);margin-bottom:10px;">
+            <span id="gpDayTime"></span>
+            <span id="gpLocation"></span>
+          </div>
+          <p id="gpDescription" style="font-size:.875rem;margin:0 0 10px;"></p>
+          <p style="font-size:.8rem;color:var(--text-muted);margin:0;">Led by <span id="gpLeader"></span></p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeGroupPreviewModal()">Close</button>
+      <button class="btn btn-primary" onclick="editFromGroupPreview()">Edit</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="groupInfoModal">
   <div class="modal modal-lg">
     <div class="modal-header"><h3 id="giTitle">Edit Group Info</h3><button class="modal-close" onclick="closeGroupInfoModal()">✕</button></div>
@@ -7035,6 +7064,27 @@ async function withdrawFromGroup(membership, reason) {
   return { ok: true };
 }
 
+let _gpGroupId = null;
+
+function openGroupPreviewModal(groupId) {
+  const g = _cachedGroups.find(x => x.id === groupId);
+  if (!g) { showToast('Could not find this group.', true); return; }
+  _gpGroupId = groupId;
+  document.getElementById('gpImage').src = g.image || '';
+  document.getElementById('gpName').textContent = g.name;
+  const openBadge = document.getElementById('gpOpenBadge');
+  openBadge.textContent = g.open ? 'Open' : 'Full';
+  openBadge.className = g.open ? 'badge badge-amber' : 'badge badge-red';
+  document.getElementById('gpType').textContent = g.type || '';
+  document.getElementById('gpDayTime').textContent = g.day && g.time ? `${g.day}s at ${g.time}` : (g.day || g.time || '');
+  document.getElementById('gpLocation').textContent = g.location || '';
+  document.getElementById('gpDescription').textContent = g.description || '';
+  document.getElementById('gpLeader').textContent = g.leader || '';
+  document.getElementById('groupPreviewModal').classList.add('open');
+}
+function closeGroupPreviewModal() { document.getElementById('groupPreviewModal').classList.remove('open'); }
+function editFromGroupPreview() { closeGroupPreviewModal(); openGroupInfoModal(_gpGroupId); }
+
 let _giGroupId = null;
 
 function openGroupInfoModal(groupId) {
@@ -7262,7 +7312,7 @@ function manageMyGroup(groupId, action) {
   if (action === 'members') openGroupRoster(gid);
   else if (action === 'attendance') openGroupAttendanceModal(gid);
   else if (action === 'email') openGroupEmailModal(gid);
-  else openGroupInfoModal(gid);
+  else openGroupPreviewModal(gid);
 }
 
 async function renderMyGroupsCard() {
