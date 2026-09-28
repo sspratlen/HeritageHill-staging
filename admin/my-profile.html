@@ -234,6 +234,12 @@ const PANEL_TITLES = { journey: 'My Journey', baptism: 'Baptism', events: 'Event
   }
   if (!_profile) { alert('Could not load your profile. Please try again.'); return; }
 
+  // Deep link from dashboard.html's journey map (e.g. my-profile.html#groups)
+  // for tabs the viewer's role can't reach on the dashboard yet. Panels are
+  // static markup, so switch now rather than after the data loads below.
+  const hashPanel = location.hash.slice(1);
+  if (PANELS.includes(hashPanel)) switchPanel(hashPanel);
+
   if (_profile.status === 'pending' && !roleData)
     document.getElementById('pendingBanner').style.display = '';
 

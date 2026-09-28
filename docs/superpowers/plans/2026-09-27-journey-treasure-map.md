@@ -57,7 +57,7 @@ Every path in later tasks is relative to this worktree root.
 Create `tests/journey-map.test.js`:
 
 ```js
-// Run with: node --test tests/
+// Run with: node --test (from the repo root)
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const JourneyMap = require('../js/journey-map.js');
@@ -124,7 +124,7 @@ test('computeStatus: untrained team member is on a team but not serving; team le
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL with `Cannot find module '../js/journey-map.js'`.
 
 - [ ] **Step 3: Write the minimal implementation**
@@ -188,7 +188,7 @@ if (typeof module !== 'undefined') module.exports = JourneyMap;
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: 6 tests pass, 0 fail.
 
 - [ ] **Step 5: Commit**
@@ -257,7 +257,7 @@ test('buildSvg: each stop has an accessible label with its status', () => {
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: the 5 new tests FAIL with `JourneyMap.buildSvg is not a function`. The 6 from Task 1 still pass.
 
 - [ ] **Step 3: Write the implementation**
@@ -396,7 +396,7 @@ In `js/journey-map.js`, insert the following into the `JourneyMap` object direct
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: 11 tests pass, 0 fail. If `'class="jm-trail"'` counts 9 in the done-segments test, the red segment is basecamp→baptism, which is correct: only baptism is done, and there are 10 segments in total.
 
 - [ ] **Step 5: Commit**
@@ -507,7 +507,7 @@ Insert directly after `buildSvg`'s closing `},`:
 
 - [ ] **Step 4: Verify tests still pass**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: 11 pass, 0 fail.
 
 - [ ] **Step 5: Visual check in the browser**
@@ -731,7 +731,7 @@ Run:
 ```bash
 grep -n "journeyPipelineBox\|onFoundClick" admin/dashboard.html
 grep -c "'myinfo'" admin/dashboard.html
-node --test tests/
+node --test
 ```
 Expected: the first grep prints nothing. The count is at least 5 (3 role tiers, `ALL_TABS`, and the `switchTab` and fallback calls). All tests pass.
 
@@ -774,7 +774,7 @@ Use `SendMessage` to `Heritage Hill Web Work`: "Journey treasure map is about to
 git fetch staging
 git merge main
 ```
-If `ROLE_TABS`/`ALL_TABS` conflict, keep every entry from both sides, with `'myinfo'` last in each array. If `renderJourneyPanel()` conflicts, take this branch's version. Then run `node --test tests/` and repeat the Task 5 Step 8 greps.
+If `ROLE_TABS`/`ALL_TABS` conflict, keep every entry from both sides, with `'myinfo'` last in each array. If `renderJourneyPanel()` conflicts, take this branch's version. Then run `node --test` and repeat the Task 5 Step 8 greps.
 
 - [ ] **Step 3: Fast-forward `main`**
 
