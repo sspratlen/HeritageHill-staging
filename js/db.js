@@ -515,6 +515,18 @@ window.SupaDB = {
       return (data || []).map(eventFromDb);
     } catch(e) { console.error('[SupaDB] getEventsForLeader:', e.message); return []; }
   },
+  // Same shape as getEventsForLeader -- server-side scoped, so safe to call
+  // unconditionally for any viewer without exposing other leaders' groups
+  // (published or draft) the way adminGetAllGroups() would.
+  async getGroupsForLeader(email) {
+    if (!db() || !email) return [];
+    try {
+      const escaped = email.replace(/[%_]/g, '\\$&');
+      const { data, error } = await db().from('groups').select('*').ilike('leader_email', escaped).order('name');
+      if (error) throw error;
+      return (data || []).map(groupFromDb);
+    } catch(e) { console.error('[SupaDB] getGroupsForLeader:', e.message); return []; }
+  },
   async saveEvent(ev) {
     if (!db()) return { error: 'Not configured' };
     try {
