@@ -1451,11 +1451,17 @@
 
     <!-- GROWTH TRACK -->
     <div class="tab-panel" id="panelGrowthtrack">
-      <div id="myGrowthTrackBox"></div>
-      <div class="action-bar">
-        <h2>Growth Track</h2>
+      <div id="growthtrackSubTabs" style="display:none; gap:8px; margin-bottom:20px;">
+        <button class="btn btn-sm" id="growthtrackSubTabMine" onclick="switchGrowthtrackSubTab('mine')">My Growth Track</button>
+        <button class="btn btn-sm" id="growthtrackSubTabManage" onclick="switchGrowthtrackSubTab('manage')">Manage Growth Track</button>
       </div>
-      <div id="gtCards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;"></div>
+      <div id="myGrowthTrackBox"></div>
+      <div id="growthtrackAdminSection">
+        <div class="action-bar">
+          <h2>Growth Track</h2>
+        </div>
+        <div id="gtCards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;"></div>
+      </div>
     </div>
 
     <!-- IMPACT TEAMS -->
