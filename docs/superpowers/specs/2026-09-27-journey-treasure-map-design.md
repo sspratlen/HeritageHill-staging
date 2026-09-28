@@ -40,7 +40,7 @@ Out of scope:
 ### Visual language
 
 - White map background with a double-rule border. Also a compass rose, a few hill and wave doodles, and the title "<First name>'s journey" in bold sans-serif.
-- Stage names (Found, Filled, Freed, Forged) are written in bold sans-serif near their stops. On mobile they're small ribbon banners.
+- Stage headers (Found, Filled, Freed, Forged) match the sidebar's own stage header: a small numbered circle (01-04) plus a bold name and an italic verse caption underneath (e.g. "01 Found / by God"), on both desktop and mobile.
 - **Completed stop:** a solid amber "seal" dot (the site's `--primary`). **Not yet done:** a hollow, dashed-outline dot. The X gets the same treatment, amber when done and faded ink when not.
 - **Trail:** each segment is solid amber dashes if the stop it leads *into* is done, otherwise faded dotted ink. There's no "you are here" marker, because steps can be done in any order.
 - Each dot has a text label under or beside it. The whole dot and label is the click and tap target, at least 32px.

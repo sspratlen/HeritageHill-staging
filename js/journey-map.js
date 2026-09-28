@@ -63,12 +63,22 @@ const JourneyMap = {
   },
   DESKTOP_STAGES: [['Found', 96, 302], ['Filled', 170, 116], ['Freed', 372, 294], ['Forged', 596, 240]],
 
+  // Matches the sidebar's own stage header (admin/dashboard.html's
+  // .nav-stage-circle/.nav-stage-name/.nav-section-verse): a numbered
+  // circle, a bold name, and a small italic verse caption underneath.
+  STAGE_INFO: {
+    Found:  { num: '01', verse: 'by God' },
+    Filled: { num: '02', verse: 'by the Spirit' },
+    Freed:  { num: '03', verse: 'to live like Jesus' },
+    Forged: { num: '04', verse: 'for mission' },
+  },
+
   // Site palette -- mirrors admin/dashboard.html's :root custom properties
   // (--bg-card, --text, --text-muted, --border, --primary-dark, --primary,
   // --bg). Kept as literal hex rather than var(--x) since this module has
   // no dependency on which page embeds it (e.g. the standalone preview
   // page, which doesn't load the dashboard's stylesheet).
-  C: { paper: '#FFFFFF', ink: '#1C1C1E', faded: '#6B6B6B', rule: '#E4E4E4', frame: '#9A6118', seal: '#BC7A1E', tan: '#F4F4F2', ribbon: '#F3E2C8' },
+  C: { paper: '#FFFFFF', ink: '#1C1C1E', faded: '#6B6B6B', rule: '#E4E4E4', frame: '#9A6118', seal: '#BC7A1E', tan: '#F4F4F2' },
 
   _esc(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -116,6 +126,26 @@ const JourneyMap = {
       : `<circle cx="${x}" cy="${y}" r="8" fill="${C.paper}" stroke="${C.ink}" stroke-dasharray="3 2"/>`;
   },
 
+  // Matches the sidebar's stage header: a numbered circle, a bold name,
+  // and a small italic verse caption underneath. `align` is 'left' (circle
+  // then text growing rightward, desktop) or 'right' (text ending at x,
+  // circle to its right -- used for mobile's right-hand column so the
+  // label doesn't run off the edge).
+  _stageHeader(stage, x, y, align, big) {
+    const C = this.C, info = this.STAGE_INFO[stage];
+    const r = big ? 11 : 8, numSize = big ? 9 : 7.5, nameSize = big ? 14 : 10.5, verseSize = big ? 10 : 8;
+    const gap = r + (big ? 8 : 6);
+    const circleX = align === 'right' ? x + gap : x;
+    const textX = align === 'right' ? x : x + gap;
+    const anchor = align === 'right' ? ' text-anchor="end"' : '';
+    return `<g class="jm-stage-header">`
+      + `<circle cx="${circleX}" cy="${y}" r="${r}" fill="rgba(188,122,30,.12)" stroke="${C.seal}" stroke-width="1.5"/>`
+      + `<text x="${circleX}" y="${y + numSize * 0.35}" text-anchor="middle" font-size="${numSize}" font-weight="700" fill="${C.seal}">${info.num}</text>`
+      + `<text x="${textX}" y="${y - 2}"${anchor} font-size="${nameSize}" font-weight="700" fill="${C.ink}">${stage}</text>`
+      + `<text x="${textX}" y="${y - 2 + verseSize + 3}"${anchor} font-size="${verseSize}" font-style="italic" fill="${C.faded}">${info.verse}</text>`
+      + `</g>`;
+  },
+
   _compass(x, y) {
     const C = this.C;
     return `<g transform="translate(${x},${y})" aria-hidden="true"><circle r="18" fill="none" stroke="${C.frame}"/>`
@@ -155,20 +185,22 @@ const JourneyMap = {
         : `<path class="jm-trail" d="${this._seg(a, b, L.curve)}" fill="none" stroke="${C.faded}" stroke-width="2" stroke-dasharray="3 7"/>`);
     }
 
-    // Stage names: script labels on desktop, ribbons at each stage's first stop on mobile.
+    // Stage headers: sidebar-style numbered circle + name + verse, at each
+    // stage's first stop on mobile, at fixed positions on desktop.
     if (mobile) {
       let prev = null;
       this.STOPS.forEach(s => {
         if (s.stage && s.stage !== prev) {
-          const [x, y] = L.pts[s.key], rx = x < L.w / 2 ? 8 : 238;
-          out.push(`<g class="jm-ribbon"><rect x="${rx}" y="${y - 9}" width="54" height="18" fill="${C.ribbon}" stroke="${C.frame}" stroke-width="0.75"/>`
-            + `<text x="${rx + 27}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="${C.ink}">${s.stage}</text></g>`);
+          // Nudged up into the gap above this stop rather than sharing its
+          // row -- the margin isn't wide enough for a name+verse pair to
+          // clear the stop's own label at this stop's x position.
+          const [x, y] = L.pts[s.key], hy = y - 22;
+          out.push(x < L.w / 2 ? this._stageHeader(s.stage, 18, hy, 'left', false) : this._stageHeader(s.stage, 266, hy, 'right', false));
         }
         prev = s.stage;
       });
     } else {
-      out.push(`<g font-size="15" font-weight="700" fill="${C.frame}">`
-        + this.DESKTOP_STAGES.map(([n, x, y]) => `<text x="${x}" y="${y}">${n}</text>`).join('') + `</g>`);
+      out.push(this.DESKTOP_STAGES.map(([n, x, y]) => this._stageHeader(n, x, y, 'left', true)).join(''));
     }
 
     // Stops: a transparent 18px hit circle under each marker keeps tap targets large.

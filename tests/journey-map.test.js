@@ -82,12 +82,12 @@ test('buildSvg desktop: 11 clickable stops, seals only on done stops', () => {
   ['Found', 'Filled', 'Freed', 'Forged'].forEach(n => assert.match(svg, new RegExp('>' + n + '<')));
 });
 
-test('buildSvg mobile: vertical viewBox and stage ribbons', () => {
+test('buildSvg mobile: vertical viewBox and stage headers', () => {
   const svg = JourneyMap.buildSvg(JourneyMap.computeStatus({}), 'mobile', 'Scott');
   assert.match(svg, /^<div class="jm-map jm-mobile">/);
   assert.match(svg, /viewBox="0 0 300 630"/);
   assert.equal(count(svg, 'class="jm-stop'), 11);
-  assert.equal(count(svg, 'class="jm-ribbon"'), 4);
+  assert.equal(count(svg, 'class="jm-stage-header"'), 4);
 });
 
 test('buildSvg: done segments are seal-colored, others faded', () => {
