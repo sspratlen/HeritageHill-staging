@@ -2843,7 +2843,13 @@ async function renderMyEventsCard() {
 }
 
 async function renderEventsTable() {
-  renderMyEventsCard();
+  // Awaited for the same reason renderGroupsTable() awaits its own My X
+  // card: renderMyEventsCard() writes the shared _cachedEvents cache (via
+  // its scoped leader fetch), and un-awaited that write could race the
+  // admin full-set fetch below and land after it, leaving _cachedEvents
+  // holding only this admin's own led events instead of the full set
+  // Manage Events actions depend on.
+  await renderMyEventsCard();
   const canManage = isAdmin() || isEventManager();
   document.getElementById('eventsSubTabs').style.display = canManage ? 'flex' : 'none';
   switchEventsSubTab('mine');
