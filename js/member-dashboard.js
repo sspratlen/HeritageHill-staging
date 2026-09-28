@@ -49,7 +49,13 @@ const MemberDashboard = {
   // memberships, which keep their real joined date).
   // onGroupClick: optional (groupId) => void -- when given, each row
   // becomes clickable (e.g. to open that group's details).
-  renderGroupHistory(containerEl, memberships, groups, email, semesters, onGroupClick) {
+  // opts.onWithdrawClick(membership, reason) -- optional. When provided,
+  // each real, currently-active membership row (never the synthetic "led
+  // groups" rows) gets an inline Withdraw button with a two-step reveal
+  // (reason + Confirm/Cancel), self-contained here. admin/my-profile.html
+  // doesn't pass this and keeps its own separate modal-based withdraw flow,
+  // completely unaffected.
+  renderGroupHistory(containerEl, memberships, groups, email, semesters, onGroupClick, onWithdrawClick) {
     const led = (email
       ? groups.filter(g => g.leaderEmail && g.leaderEmail.toLowerCase() === email.toLowerCase())
       : []
@@ -74,16 +80,50 @@ const MemberDashboard = {
     };
     const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     const clickable = typeof onGroupClick === 'function';
-    containerEl.innerHTML = `<table><thead><tr><th>Group</th><th>Joined</th><th>Status</th></tr></thead><tbody>` +
-      rows.map(m => `
+    const canWithdraw = typeof onWithdrawClick === 'function';
+    containerEl.innerHTML = `<table><thead><tr><th>Group</th><th>Joined</th><th>Status</th>${canWithdraw ? '<th></th>' : ''}</tr></thead><tbody>` +
+      rows.map(m => {
+        const eligible = canWithdraw && !m.leftAt && !m.isLeader;
+        return `
         <tr${clickable ? ` class="jp-row-clickable" data-group-id="${this.escapeHtml(String(m.groupId))}"` : ''}>
           <td>${this.escapeHtml(groupName(m.groupId))}</td>
           <td>${m.isLeader ? this.escapeHtml(semesterName(m.semesterId)) : fmt(m.joinedAt)}</td>
           <td>${m.isLeader ? '<span class="badge badge-blue">Leader</span>' : (m.leftAt ? 'Left ' + fmt(m.leftAt) : '<span class="badge badge-green">Current</span>')}</td>
-        </tr>`).join('') + '</tbody></table>';
+          ${canWithdraw ? `<td>${eligible ? `<span class="jp-withdraw-cell" data-membership-id="${this.escapeHtml(String(m.id))}"><button type="button" class="btn btn-ghost btn-sm">Withdraw</button></span>` : ''}</td>` : ''}
+        </tr>`;
+      }).join('') + '</tbody></table>';
     if (clickable) {
       containerEl.querySelectorAll('tr[data-group-id]').forEach(row => {
         row.addEventListener('click', () => onGroupClick(row.dataset.groupId));
+      });
+    }
+    if (canWithdraw) {
+      containerEl.querySelectorAll('.jp-withdraw-cell').forEach(cell => {
+        const membership = memberships.find(m => String(m.id) === cell.dataset.membershipId);
+        if (!membership) return;
+        const showButton = () => {
+          cell.innerHTML = `<button type="button" class="btn btn-ghost btn-sm">Withdraw</button>`;
+          cell.querySelector('button').addEventListener('click', showForm);
+        };
+        const showForm = () => {
+          cell.innerHTML = `
+            <textarea class="jp-withdraw-reason" rows="2" placeholder="Reason (optional)" style="width:160px;"></textarea>
+            <div class="msg-error jp-withdraw-error"></div>
+            <button type="button" class="btn btn-primary btn-sm jp-withdraw-confirm" style="background:var(--danger);border-color:var(--danger);">Confirm</button>
+            <button type="button" class="btn btn-ghost btn-sm jp-withdraw-cancel">Cancel</button>`;
+          cell.querySelector('.jp-withdraw-cancel').addEventListener('click', showButton);
+          cell.querySelector('.jp-withdraw-confirm').addEventListener('click', async () => {
+            const reason = cell.querySelector('.jp-withdraw-reason').value.trim();
+            const errEl = cell.querySelector('.jp-withdraw-error');
+            errEl.classList.remove('show'); errEl.textContent = '';
+            const result = await onWithdrawClick(membership, reason);
+            if (result && result.error) { errEl.textContent = result.error; errEl.classList.add('show'); return; }
+            membership.leftAt = new Date().toISOString().slice(0, 10);
+            cell.closest('tr').cells[2].innerHTML = 'Left ' + fmt(membership.leftAt);
+            cell.innerHTML = '';
+          });
+        };
+        showButton();
       });
     }
   },
