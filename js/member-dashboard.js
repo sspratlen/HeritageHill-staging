@@ -367,7 +367,7 @@ const MemberDashboard = {
     const baptism = opts.baptism;
     containerEl.innerHTML = `
       <div class="jp-card">
-        <div class="jp-label">Attendance</div>
+        <div class="jp-label">Baptism</div>
         ${baptism
           ? `<div class="jp-field"><span>Baptism</span><span class="jp-yes">✓ · ${this.escapeHtml(this._jpFmt(baptism.achievedAt))}</span></div>
              ${baptism.notes ? `<div class="jp-field"><span>Notes</span><span class="jp-val">${this.escapeHtml(baptism.notes)}</span></div>` : ''}`
