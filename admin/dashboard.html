@@ -2774,6 +2774,10 @@ async function renderMyEventsCard() {
   const box = document.getElementById('myEventsBox');
   const email = (_profile.email || '').toLowerCase();
   const allEvents = await SupaDB.adminGetAllEvents();
+  // Keep this populated even for non-admins, so openEventSignupsModal()'s
+  // own _cachedEvents lookup (used only to show the event title in its
+  // header) still resolves when "View Sign-Ups" is opened from here.
+  _cachedEvents = allEvents;
   const events = email ? allEvents.filter(e => e.leaderEmail && e.leaderEmail.toLowerCase() === email) : [];
   if (!events.length) {
     box.innerHTML = `<div class="table-wrap" style="padding:20px;margin-bottom:24px;"><h3 style="font-size:.95rem;margin-bottom:10px;">My Events</h3><p style="color:var(--text-muted);font-size:.9rem;">You are not leading any events yet.</p></div>`;
