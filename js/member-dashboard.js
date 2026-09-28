@@ -113,11 +113,18 @@ const MemberDashboard = {
             <button type="button" class="btn btn-ghost btn-sm jp-withdraw-cancel">Cancel</button>`;
           cell.querySelector('.jp-withdraw-cancel').addEventListener('click', showButton);
           cell.querySelector('.jp-withdraw-confirm').addEventListener('click', async () => {
+            const confirmBtn = cell.querySelector('.jp-withdraw-confirm'), cancelBtn = cell.querySelector('.jp-withdraw-cancel');
+            if (confirmBtn.disabled) return; // guard against a rapid double-click re-firing before the first resolves
+            confirmBtn.disabled = true; cancelBtn.disabled = true;
             const reason = cell.querySelector('.jp-withdraw-reason').value.trim();
             const errEl = cell.querySelector('.jp-withdraw-error');
             errEl.classList.remove('show'); errEl.textContent = '';
             const result = await onWithdrawClick(membership, reason);
-            if (result && result.error) { errEl.textContent = result.error; errEl.classList.add('show'); return; }
+            if (result && result.error) {
+              errEl.textContent = result.error; errEl.classList.add('show');
+              confirmBtn.disabled = false; cancelBtn.disabled = false;
+              return;
+            }
             membership.leftAt = new Date().toISOString().slice(0, 10);
             cell.closest('tr').cells[2].innerHTML = 'Left ' + fmt(membership.leftAt);
             cell.innerHTML = '';
