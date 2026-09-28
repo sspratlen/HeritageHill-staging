@@ -2580,6 +2580,10 @@ const ROLE_TABS = {
 const ROLE_LABELS = { admin:'Admin', event_manager:'Event Manager' };
 
 function isAdmin() { return (window._userRoles || []).includes('admin'); }
+// The Events tab is the one tab where event_manager has always had the
+// same full access as admin (unlike Baptism/Groups/Growth Track/Impact
+// Teams, which gate their admin-only section behind a bare isAdmin()).
+function isEventManager() { return (window._userRoles || []).includes('event_manager'); }
 
 // Shared by applyRoleVisibility, switchTab, and the auth-guard IIFE below --
 // previously each computed this independently and all three fell back to
