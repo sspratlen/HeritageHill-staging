@@ -8227,6 +8227,7 @@ function toggleUsersSort() {
 
 let _aupProfiles = [];
 let _aupSelectedPerson = null;
+let _editingUserEmail = null;
 
 async function renderUsersTable() {
   const [users, profiles] = await Promise.all([
@@ -8303,6 +8304,7 @@ function applyUsersFilter() {
 
 function openUserModal(email) {
   document.getElementById('userModalTitle').textContent = email ? 'Edit User' : 'Add Permissions';
+  _editingUserEmail = email || null;
   document.getElementById('userRoleAdmin').checked = false;
   document.getElementById('userRoleEventManager').checked = false;
   document.getElementById('userRoleSmallGroupLeader').checked = false;
@@ -8321,7 +8323,7 @@ function openUserModal(email) {
   }
   document.getElementById('userModal').classList.add('open');
 }
-function closeUserModal() { document.getElementById('userModal').classList.remove('open'); aupClearPerson(); }
+function closeUserModal() { document.getElementById('userModal').classList.remove('open'); aupClearPerson(); _editingUserEmail = null; }
 function editUser(email) { openUserModal(email); }
 
 async function saveUser() {
@@ -8331,7 +8333,20 @@ async function saveUser() {
   if (document.getElementById('userRoleSmallGroupLeader').checked) roles.push('small_group_leader');
   const forcePasswordChange = document.getElementById('userForcePasswordChange').checked;
   if (!_aupSelectedPerson) { alert('Please select a member.'); return; }
-  if (!roles.length) { alert('Please select at least one role.'); return; }
+  if (!roles.length) {
+    // Editing an existing user down to zero roles removes their access
+    // entirely (same as the table's Remove button) rather than being
+    // blocked -- unchecking everything is how you demote someone back to a
+    // standard member. Adding a brand-new entry with no roles makes no
+    // sense, so that path still requires at least one.
+    if (!_editingUserEmail) { alert('Please select at least one role.'); return; }
+    const delRes = await SupaDB.adminDeleteUserRole(_editingUserEmail);
+    if (delRes.error) { alert('Error: ' + delRes.error); return; }
+    closeUserModal();
+    showToast('All permissions removed -- user is now a standard member.');
+    renderUsersTable();
+    return;
+  }
   const { userId, name: displayName, email } = _aupSelectedPerson;
   const res = await SupaDB.adminUpsertUserRole({ userId, email, displayName, roles, forcePasswordChange });
   if (res.error) { alert('Error: ' + res.error); return; }
