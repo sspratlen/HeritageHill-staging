@@ -1,5 +1,5 @@
 /* Heritage Hill — "My Journey" pipeline (Found / Filled / Freed / Forged).
-   Shared by admin/my-profile.html and admin/member-dashboard.html; relies
+   Shared by admin/dashboard.html and admin/member-dashboard.html; relies
    only on --primary/--border/--text-muted/--radius/--shadow/--success,
    which both host pages already define on :root. */
 
