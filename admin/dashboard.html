@@ -2838,7 +2838,10 @@ async function renderMyEventsCard() {
     events.map(ev => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);">
         <span>${escapeHtml(ev.title)} <span style="color:var(--text-muted);font-size:.82rem;">${escapeHtml(ev.date)}</span></span>
-        <button class="btn btn-ghost btn-sm" onclick="openEventSignupsModal(${ev.id})">View Sign-Ups</button>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="openEventInfoModal(${ev.id})">Edit Info</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEventSignupsModal(${ev.id})">View Sign-Ups</button>
+        </div>
       </div>`).join('') + `</div>`;
 }
 
