@@ -42,7 +42,7 @@ The layout is pure CSS and adapts to the container's width (`container-type: inl
 - The rail segment above a node is amber when that step is done, gray otherwise.
 - `aria-label` is "<Label>: done <date>" or "<Label>: not yet".
 
-Colors come from the site palette (`JourneyMap.C`, literal hex as before). Fonts are DM Sans for body text and Oswald for stage names and numbers; both are already loaded by `dashboard.html`, and the CSS falls back to sans-serif.
+Colors come from the site palette, written as literal hex in `css/journey-map.css` so the standalone preview page matches (the old `JourneyMap.C` object is gone). Fonts are DM Sans for body text and Oswald for stage names and numbers. `dashboard.html` only loaded DM Sans, so Oswald is added to its Google Fonts link; the CSS falls back to sans-serif.
 
 ## Step blurbs
 
@@ -85,9 +85,9 @@ Other new pieces:
 
 ## Files
 
-- `js/journey-map.js`: `STOPS` (without basecamp, with `blurb`), `STAGE_INFO`, `C`, `computeStatus`, `computeDates`, `nextStep`, `fmtMonth`, `buildHtml(status, dates, firstName)`, and `render`. The SVG code (layout, trail, compass) is removed.
+- `js/journey-map.js`: `STOPS` (without basecamp, with `blurb`), `STAGE_INFO`, `computeStatus`, `computeDates`, `nextStep`, `fmtMonth`, `buildHtml(status, dates, firstName)`, and `render`. The SVG code (layout, trail, compass) is removed.
 - `css/journey-map.css`: the timeline styles, prefixed `jt-`.
-- `admin/dashboard.html`: the `renderJourneyPanel` data fields change, and its header comment is updated. The click routing is unchanged.
+- `admin/dashboard.html`: Oswald added to the font link, the `renderJourneyPanel` data fields change, and its header comment is updated. The click routing is unchanged.
 - `tests/journey-map.test.js`: SVG tests are replaced with `computeDates`, `nextStep`, `fmtMonth`, and `buildHtml` tests, including escaping.
 - `tests/journey-map-preview.html`: stub data updated to include dates.
 

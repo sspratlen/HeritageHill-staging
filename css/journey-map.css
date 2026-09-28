@@ -1,15 +1,66 @@
-/* Heritage Hill — "My Journey" treasure map (js/journey-map.js).
-   Map colors live in the SVG itself (mirrors the site's own palette --
-   see the comment on JourneyMap.C); this file only handles sizing, the
-   site's own sans-serif face, and interactive states. */
+/* Heritage Hill — "My Journey" timeline (js/journey-map.js).
+   Colors mirror admin/dashboard.html's :root tokens (--primary #BC7A1E,
+   --primary-dark #9A6118, --dark #0D0F14, --text, --text-muted, --border),
+   kept as literal hex so the standalone preview page renders the same.
+   Layout follows the container's width, not the viewport's: two columns
+   at 880px and up, one stacked column below that. */
 
-.jm-map svg { display: block; width: 100%; height: auto; }
-.jm-map.jm-mobile svg { max-width: 420px; margin: 0 auto; }
-.jm-map text { font-family: 'DM Sans', sans-serif; }
+.jt-host { container-type: inline-size; font-family: 'DM Sans', sans-serif; color: #1C1C1E; }
+.jt { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
+@container (min-width: 880px) {
+  .jt { grid-template-columns: 340px minmax(0, 1fr); gap: 56px; align-items: start; }
+  .jt-summary { position: sticky; top: 24px; }
+}
 
-.jm-stop { cursor: pointer; outline: none; }
-.jm-stop:hover circle:not([pointer-events]),
-.jm-stop:hover path { filter: brightness(1.15); }
-.jm-stop:hover text { text-decoration: underline; }
-.jm-stop:hover circle[pointer-events] { fill: rgba(188, 122, 30, .08); }
-.jm-stop:focus-visible circle[pointer-events] { stroke: #BC7A1E; stroke-width: 2; stroke-dasharray: 3 3; }
+.jt-eyebrow { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #6B6B6B; }
+.jt-eyebrow-light { color: #D4903A; }
+
+/* ── Summary ─────────────────────────────── */
+.jt-summary { display: flex; flex-direction: column; gap: 16px; }
+.jt-title { margin: -8px 0 0; font-size: 2.25rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; color: #0D0F14; }
+.jt-count { font-size: .95rem; color: #6B6B6B; }
+.jt-bar { display: flex; gap: 10px; margin-bottom: 8px; }
+.jt-bar-group { flex-basis: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.jt-bar-segs { display: flex; gap: 3px; }
+.jt-seg { flex: 1; height: 8px; border-radius: 4px; background: #E2DED6; }
+.jt-seg-done { background: #BC7A1E; }
+.jt-bar-label { font-size: 12px; font-weight: 600; color: #6B6B6B; }
+
+.jt-card { background: #0D0F14; color: #fff; border-radius: 20px; padding: 26px; display: flex; flex-direction: column; gap: 10px; }
+.jt-card-title { font-family: 'Oswald', sans-serif; font-size: 2.6rem; font-weight: 600; line-height: 1.05; }
+.jt-card-stage { font-size: .9rem; color: #C9C6BF; }
+.jt-card-blurb { margin: 0; font-size: .95rem; line-height: 1.5; color: #E8E6E1; }
+.jt-go { margin-top: 10px; display: flex; gap: 8px; align-items: center; justify-content: center; min-height: 50px; border: 0; border-radius: 12px; background: #D4903A; color: #0D0F14; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
+.jt-go:hover { background: #E0A04C; }
+.jt-go:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* ── Timeline ────────────────────────────── */
+.jt-timeline { display: flex; flex-direction: column; gap: 28px; }
+.jt-stage { display: flex; flex-direction: column; }
+.jt-stage-head { display: flex; gap: 14px; align-items: center; padding-bottom: 6px; }
+.jt-stage-num { width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; background: #F6EAD7; color: #9A6118; font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.jt-stage-name { margin: 0; flex: 1; min-width: 0; font-family: 'Oswald', sans-serif; font-size: 1.6rem; font-weight: 600; color: #0D0F14; }
+.jt-stage-verse { font-family: 'DM Sans', sans-serif; font-size: .9rem; font-weight: 400; font-style: italic; color: #6B6B6B; margin-left: 4px; }
+.jt-stage-count { font-size: .85rem; font-weight: 600; color: #6B6B6B; white-space: nowrap; }
+.jt-stage-complete { color: #9A6118; }
+
+.jt-row { display: flex; gap: 0; align-items: stretch; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: #6B6B6B; cursor: pointer; }
+.jt-rail { position: relative; width: 42px; margin-right: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.jt-rail::before { content: ''; position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: #D9D6CF; }
+.jt-done .jt-rail::before { background: #BC7A1E; }
+.jt-node { position: relative; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; border: 3px solid #B9B4AA; background: #fff; display: flex; align-items: center; justify-content: center; color: #fff; }
+.jt-done .jt-node { width: 24px; height: 24px; border: 0; background: #BC7A1E; }
+.jt-next .jt-node { width: 24px; height: 24px; border: 7px solid #BC7A1E; }
+
+.jt-label, .jt-meta { display: flex; align-items: center; min-height: 54px; border-bottom: 1px solid #ECEAE5; }
+.jt-label { flex: 1; min-width: 0; padding-right: 12px; font-size: 1.05rem; font-weight: 500; }
+.jt-meta { padding-right: 4px; font-size: .88rem; white-space: nowrap; }
+.jt-done { color: #1C1C1E; }
+.jt-done .jt-label { font-weight: 600; }
+.jt-done .jt-meta { color: #9A6118; font-weight: 500; }
+.jt-next { color: #0D0F14; }
+.jt-next .jt-label { font-weight: 700; }
+.jt-tag { padding: 3px 9px; border-radius: 999px; background: #F6EAD7; color: #9A6118; font-size: 12px; font-weight: 700; }
+
+.jt-row:hover .jt-label { text-decoration: underline; text-underline-offset: 3px; }
+.jt-row:focus-visible { outline: 2px solid #BC7A1E; outline-offset: 2px; border-radius: 8px; }

@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="../assets/pwa/apple-touch-icon.png" />
   <meta name="theme-color" content="#BC7A1E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@500;600&display=swap" rel="stylesheet" />
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
   <link rel="stylesheet" href="../css/journey-pipeline.css" />
   <link rel="stylesheet" href="../css/journey-map.css" />
@@ -6556,11 +6556,11 @@ async function loadMyJourneyData() {
   };
 }
 
-// Treasure-map view of the viewer's own journey (js/journey-map.js). Each
-// stop opens its dashboard tab when this role can reach it, or falls back
-// to My Info when there's no tab for it (e.g. Membership). As tabs get
-// added to ROLE_TABS.member, their stops switch over with no change needed
-// here.
+// Timeline view of the viewer's own journey (js/journey-map.js). Each
+// step (and the suggested-next-step button) opens its dashboard tab when
+// this role can reach it, or falls back to My Info when there's no tab for
+// it (e.g. Membership). As tabs get added to ROLE_TABS.member, their steps
+// switch over with no change needed here.
 function renderJourneyPanel() {
   const j = _journeyData || {}; // null if loadMyJourneyData failed
   JourneyMap.render(document.getElementById('journeyMapBox'), {
@@ -6569,6 +6569,7 @@ function renderJourneyPanel() {
     groupMemberships: j.memberships, groups: j.groups, email: _profile.email,
     gtRegistrations: j.gtRegs,
     discAttemptCount: (j.discAttempts || []).length, giftsAttemptCount: (j.giftsAttempts || []).length,
+    discDates: (j.discAttempts || []).map(a => a.completedAt), giftsDates: (j.giftsAttempts || []).map(a => a.completedAt),
     teamMemberships: j.teamMemberships, teams: j.teams,
   }, {
     onStopClick: stop => {
