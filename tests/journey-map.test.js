@@ -73,7 +73,7 @@ test('buildSvg desktop: 11 clickable stops, seals only on done stops', () => {
   const st = JourneyMap.computeStatus({ baptizedAt: '2025-05-01', discAttemptCount: 1 });
   const svg = JourneyMap.buildSvg(st, 'desktop', 'Scott');
   assert.match(svg, /^<div class="jm-map jm-desktop">/);
-  assert.match(svg, /viewBox="0 0 680 320"/);
+  assert.match(svg, /viewBox="0 0 680 360"/);
   assert.equal(count(svg, 'class="jm-stop'), 11);
   assert.equal(count(svg, 'class="jm-stop jm-done"'), 2);
   assert.equal(count(svg, `r="9" fill="${JourneyMap.C.seal}"`), 2); // the drawn seals
@@ -85,7 +85,7 @@ test('buildSvg desktop: 11 clickable stops, seals only on done stops', () => {
 test('buildSvg mobile: vertical viewBox and stage headers', () => {
   const svg = JourneyMap.buildSvg(JourneyMap.computeStatus({}), 'mobile', 'Scott');
   assert.match(svg, /^<div class="jm-map jm-mobile">/);
-  assert.match(svg, /viewBox="0 0 300 630"/);
+  assert.match(svg, /viewBox="0 0 300 768"/);
   assert.equal(count(svg, 'class="jm-stop'), 11);
   assert.equal(count(svg, 'class="jm-stage-header"'), 4);
 });
@@ -107,4 +107,41 @@ test('buildSvg: each stop has an accessible label with its status', () => {
   assert.match(svg, /aria-label="Baptism: done"/);
   assert.match(svg, /aria-label="Membership: not yet"/);
   assert.match(svg, /aria-label="Base camp: my info"/);
+});
+
+test('sections: 3 dashed dividers -- vertical on desktop, horizontal on mobile', () => {
+  const st = JourneyMap.computeStatus({});
+  const lines = svg => [...svg.matchAll(/<line class="jm-divider" x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)"[^>]*stroke-dasharray/g)]
+    .map(m => m.slice(1).map(Number));
+  const desk = lines(JourneyMap.buildSvg(st, 'desktop', 'S'));
+  assert.equal(desk.length, 3);
+  desk.forEach(([x1, , x2]) => assert.equal(x1, x2, 'desktop divider is vertical'));
+  const mob = lines(JourneyMap.buildSvg(st, 'mobile', 'S'));
+  assert.equal(mob.length, 3);
+  mob.forEach(([, y1, , y2]) => assert.equal(y1, y2, 'mobile divider is horizontal'));
+});
+
+test('sections: every stop sits inside its own stage section (base camp in Found)', () => {
+  ['desktop', 'mobile'].forEach(layout => {
+    const L = JourneyMap._layout(layout);
+    assert.deepEqual(L.sections.map(sec => sec.stage), ['Found', 'Filled', 'Freed', 'Forged']);
+    JourneyMap.STOPS.forEach(stop => {
+      const sec = L.sections.find(x => x.stage === (stop.stage || 'Found'));
+      const [x, y] = L.pts[stop.key];
+      assert.ok(x > sec.x0 && x < sec.x1 && y > sec.y0 && y < sec.y1, `${layout} ${stop.key} (${x},${y}) inside ${sec.stage}`);
+    });
+  });
+});
+
+test('sections: stage header sits in the upper-left corner of its section', () => {
+  ['desktop', 'mobile'].forEach(layout => {
+    const L = JourneyMap._layout(layout);
+    const svg = JourneyMap.buildSvg(JourneyMap.computeStatus({}), layout, 'S');
+    const heads = [...svg.matchAll(/<g class="jm-stage-header"><circle cx="([\d.]+)" cy="([\d.]+)"/g)].map(m => [+m[1], +m[2]]);
+    assert.equal(heads.length, 4);
+    heads.forEach(([cx, cy], i) => {
+      const sec = L.sections[i];
+      assert.ok(cx - sec.x0 < 30 && cy - sec.y0 < 30 && cx > sec.x0 && cy > sec.y0, `${layout} ${sec.stage} header at (${cx},${cy})`);
+    });
+  });
 });

@@ -54,14 +54,22 @@ const JourneyMap = {
 
   BREAKPOINT: 640, // container px; at or below this, draw the vertical scroll
 
-  // Desktop trail (viewBox 680x320): [x, y, label position] per stop.
+  // Desktop trail (viewBox 680x360): [x, y, label position] per stop. The
+  // title band is y 12-64; below it the map is split into one column per
+  // stage (DESKTOP_SECTIONS, x ranges), divided by dashed vertical lines,
+  // with each stage's header in its column's upper-left corner. Stops stay
+  // below y~130 so they clear the headers, and every label stays inside
+  // its own column.
   DESKTOP_PTS: {
-    basecamp: [48, 262, 'below'],  baptism: [112, 246, 'below'], membership: [168, 206, 'right'],
-    smallgroup: [222, 158, 'above'], plant: [285, 196, 'below'],  discover: [345, 214, 'below'],
-    grow: [398, 160, 'right'],      disc: [446, 108, 'above'],    gifts: [512, 94, 'above'],
-    impactteam: [568, 162, 'below'], serving: [632, 108, 'below'],
+    basecamp: [40, 300, 'below'],   baptism: [95, 250, 'below'],   membership: [155, 170, 'above'],
+    smallgroup: [245, 215, 'below'],
+    // Freed zigzags peak/valley with labels on the outside (above peaks,
+    // below valleys) so none of them sit on the trail.
+    plant: [330, 170, 'above'],     discover: [375, 270, 'below'], grow: [425, 170, 'above'],
+    disc: [470, 270, 'below'],      gifts: [515, 170, 'above'],
+    impactteam: [600, 270, 'below'], serving: [645, 170, 'above'],
   },
-  DESKTOP_STAGES: [['Found', 150, 280], ['Filled', 155, 100], ['Freed', 372, 294], ['Forged', 596, 240]],
+  DESKTOP_SECTIONS: [['Found', 12, 190], ['Filled', 190, 300], ['Freed', 300, 565], ['Forged', 565, 668]],
 
   // Matches the sidebar's own stage header (admin/dashboard.html's
   // .nav-stage-circle/.nav-stage-name/.nav-section-verse): a numbered
@@ -78,22 +86,36 @@ const JourneyMap = {
   // --bg). Kept as literal hex rather than var(--x) since this module has
   // no dependency on which page embeds it (e.g. the standalone preview
   // page, which doesn't load the dashboard's stylesheet).
-  C: { paper: '#FFFFFF', ink: '#1C1C1E', faded: '#6B6B6B', rule: '#E4E4E4', frame: '#9A6118', seal: '#BC7A1E', tan: '#F4F4F2' },
+  C: { paper: '#FFFFFF', ink: '#1C1C1E', faded: '#6B6B6B', rule: '#E4E4E4', divider: '#A8A8A8', frame: '#9A6118', seal: '#BC7A1E', tan: '#F4F4F2' },
 
   _esc(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   },
 
+  // Returns { w, h, pts, sections, curve }. `sections` is one box per stage,
+  // in stage order ({ stage, x0, x1, y0, y1 }); Base camp belongs to Found.
   _layout(name) {
-    if (name === 'desktop') return { w: 680, h: 320, pts: this.DESKTOP_PTS, curve: 'h' };
-    // Mobile: stops alternate left/right columns down the scroll, labels
-    // on the inside of each column.
-    const pts = {};
-    this.STOPS.forEach((s, i) => {
-      const left = i % 2 === 0;
-      pts[s.key] = [left ? 80 : 220, 90 + i * 48, left ? 'right' : 'left'];
+    if (name === 'desktop') {
+      const sections = this.DESKTOP_SECTIONS.map(([stage, x0, x1]) => ({ stage, x0, x1, y0: 64, y1: 348 }));
+      return { w: 680, h: 360, pts: this.DESKTOP_PTS, sections, curve: 'h' };
+    }
+    // Mobile: stages stack as horizontal bands down the scroll. Each band
+    // has a header row, then its stops 48px apart, alternating left/right
+    // columns (continuing the zigzag across bands) with labels on the
+    // inside of each column.
+    const HEAD = 56, STEP = 48, TAIL = 28, pts = {}, sections = [];
+    let top = 70;
+    ['Found', 'Filled', 'Freed', 'Forged'].forEach(stage => {
+      const stops = this.STOPS.filter(s => (s.stage || 'Found') === stage);
+      stops.forEach((s, j) => {
+        const left = this.STOPS.indexOf(s) % 2 === 0;
+        pts[s.key] = [left ? 80 : 220, top + HEAD + j * STEP, left ? 'right' : 'left'];
+      });
+      const bottom = top + HEAD + (stops.length - 1) * STEP + TAIL;
+      sections.push({ stage, x0: 4, x1: 296, y0: top, y1: bottom });
+      top = bottom;
     });
-    return { w: 300, h: 90 + (this.STOPS.length - 1) * 48 + 60, pts, curve: 'v' };
+    return { w: 300, h: top + 26, pts, sections, curve: 'v' };
   },
 
   // S-curve between two stops: horizontal easing on desktop, vertical on mobile.
@@ -164,16 +186,13 @@ const JourneyMap = {
       out.push(`<rect x="4" y="14" width="${L.w - 8}" height="${L.h - 28}" fill="${C.paper}" stroke="${C.frame}" stroke-width="2"/>`);
       out.push(`<rect x="0" y="4" width="${L.w}" height="16" rx="8" fill="${C.tan}" stroke="${C.frame}"/>`);
       out.push(`<rect x="0" y="${L.h - 20}" width="${L.w}" height="16" rx="8" fill="${C.tan}" stroke="${C.frame}"/>`);
-      out.push(this._compass(262, 56));
-      out.push(`<text x="${L.w / 2}" y="54" text-anchor="middle" font-size="17" font-weight="700" fill="${C.ink}" aria-hidden="true">${title}</text>`);
+      out.push(this._compass(266, 46));
+      out.push(`<text x="${L.w / 2}" y="50" text-anchor="middle" font-size="17" font-weight="700" fill="${C.ink}" aria-hidden="true">${title}</text>`);
     } else {
-      out.push(`<rect x="4" y="4" width="672" height="312" rx="6" fill="${C.paper}" stroke="${C.frame}" stroke-width="2"/>`);
-      out.push(`<rect x="12" y="12" width="656" height="296" rx="4" fill="none" stroke="${C.rule}" stroke-width="0.75"/>`);
-      out.push(`<g stroke="${C.rule}" fill="none" stroke-width="1"><path d="M470,262 l10,-12 l10,12 M488,262 l8,-9 l8,9"/>`
-        + `<path d="M250,64 l12,-14 l12,14 M270,64 l9,-10 l9,10"/><path d="M40,150 q6,-4 12,0 t12,0 M52,162 q6,-4 12,0 t12,0"/>`
-        + `<path d="M150,64 q6,-4 12,0 t12,0 t12,0"/></g>`);
-      out.push(this._compass(58, 62));
-      out.push(`<text x="340" y="42" text-anchor="middle" font-size="20" font-weight="700" fill="${C.ink}" aria-hidden="true">${title}</text>`);
+      out.push(`<rect x="4" y="4" width="672" height="352" rx="6" fill="${C.paper}" stroke="${C.frame}" stroke-width="2"/>`);
+      out.push(`<rect x="12" y="12" width="656" height="336" rx="4" fill="none" stroke="${C.rule}" stroke-width="0.75"/>`);
+      out.push(this._compass(636, 40));
+      out.push(`<text x="340" y="44" text-anchor="middle" font-size="20" font-weight="700" fill="${C.ink}" aria-hidden="true">${title}</text>`);
     }
 
     // Trail: each segment is red once the stop it leads INTO is done.
@@ -185,23 +204,18 @@ const JourneyMap = {
         : `<path class="jm-trail" d="${this._seg(a, b, L.curve)}" fill="none" stroke="${C.faded}" stroke-width="2" stroke-dasharray="3 7"/>`);
     }
 
-    // Stage headers: sidebar-style numbered circle + name + verse, at each
-    // stage's first stop on mobile, at fixed positions on desktop.
-    if (mobile) {
-      let prev = null;
-      this.STOPS.forEach(s => {
-        if (s.stage && s.stage !== prev) {
-          // Nudged up into the gap above this stop rather than sharing its
-          // row -- the margin isn't wide enough for a name+verse pair to
-          // clear the stop's own label at this stop's x position.
-          const [x, y] = L.pts[s.key], hy = y - 22;
-          out.push(x < L.w / 2 ? this._stageHeader(s.stage, 18, hy, 'left', false) : this._stageHeader(s.stage, 266, hy, 'right', false));
-        }
-        prev = s.stage;
-      });
-    } else {
-      out.push(this.DESKTOP_STAGES.map(([n, x, y]) => this._stageHeader(n, x, y, 'left', true)).join(''));
-    }
+    // Stage sections: a dashed gray divider before every stage but the
+    // first (vertical on desktop, horizontal on mobile), and each stage's
+    // sidebar-style header in its section's upper-left corner.
+    L.sections.forEach((sec, i) => {
+      if (i > 0) {
+        const [x1, y1, x2, y2] = mobile ? [sec.x0 + 4, sec.y0, sec.x1 - 4, sec.y0] : [sec.x0, sec.y0, sec.x0, sec.y1];
+        out.push(`<line class="jm-divider" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C.divider}" stroke-width="1.5" stroke-dasharray="6 5"/>`);
+      }
+      out.push(mobile
+        ? this._stageHeader(sec.stage, sec.x0 + 18, sec.y0 + 22, 'left', false)
+        : this._stageHeader(sec.stage, sec.x0 + 22, sec.y0 + 26, 'left', true));
+    });
 
     // Stops: a transparent 18px hit circle under each marker keeps tap targets large.
     this.STOPS.forEach(s => {

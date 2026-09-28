@@ -39,8 +39,9 @@ Out of scope:
 
 ### Visual language
 
-- White map background with a double-rule border. Also a compass rose, a few hill and wave doodles, and the title "<First name>'s journey" in bold sans-serif.
-- Stage headers (Found, Filled, Freed, Forged) match the sidebar's own stage header: a small numbered circle (01-04) plus a bold name and an italic verse caption underneath (e.g. "01 Found / by God"), on both desktop and mobile.
+- White map background with a double-rule border, a compass rose, and the title "<First name>'s journey" in bold sans-serif.
+- **Stage sections:** the map is split into one section per stage (Found, Filled, Freed, Forged), separated by dashed gray divider lines: vertical on desktop, horizontal on mobile. Base camp sits in the Found section. Each stop and its label stay inside their own stage's section (tested).
+- Each stage's header sits in the upper-left corner of its section and matches the sidebar's own stage header: a small numbered circle (01-04) plus a bold name and an italic verse caption underneath (e.g. "01 Found / by God"), on both desktop and mobile.
 - **Completed stop:** a solid amber "seal" dot (the site's `--primary`). **Not yet done:** a hollow, dashed-outline dot. The X gets the same treatment, amber when done and faded ink when not.
 - **Trail:** each segment is solid amber dashes if the stop it leads *into* is done, otherwise faded dotted ink. There's no "you are here" marker, because steps can be done in any order.
 - Each dot has a text label under or beside it. The whole dot and label is the click and tap target, at least 32px.
@@ -48,8 +49,8 @@ Out of scope:
 
 ### Layouts
 
-- **Desktop (container wider than 640px):** a winding left-to-right trail (mockup A). It's a fixed-coordinate SVG with `viewBox="0 0 680 320"` that scales to the container width.
-- **Mobile (640px or narrower):** a vertical scroll (mockup B). The trail snakes down, labels sit on alternating sides, and the scroll ends are drawn at top and bottom. Its height depends on the number of stops.
+- **Desktop (container wider than 640px):** a winding left-to-right trail (mockup A), with a title band on top and the four stage columns below it. It's a fixed-coordinate SVG with `viewBox="0 0 680 360"` that scales to the container width.
+- **Mobile (640px or narrower):** a vertical scroll (mockup B). The stages stack as horizontal bands, each with a header row above its stops. The trail snakes down, labels sit on alternating sides, and the scroll ends are drawn at top and bottom. Its height depends on the number of stops.
 - The renderer checks the container width on render and re-renders on `resize`, debounced 150ms, only when the layout actually changes.
 
 ### Components
