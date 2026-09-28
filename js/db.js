@@ -1622,8 +1622,13 @@ window.SupaDB = {
     if (!roles || !roles.length) return { error: 'At least one role must be selected' };
     try {
       const personId = await this.upsertPerson({ name: displayName, email });
+      // `role` (singular) is a legacy NOT NULL column kept as a safety net
+      // when this table gained the `roles` array (see
+      // supabase/user-roles-multi-role-schema.sql) -- still required on
+      // INSERT, so it must be kept in sync here or a new row (as opposed to
+      // an UPDATE to an existing one) fails the NOT NULL constraint.
       const { error } = await db().from('user_roles')
-        .upsert({ user_id: userId, email: email.toLowerCase(), display_name: displayName || '', roles, force_password_change: !!forcePasswordChange, person_id: personId }, { onConflict: 'email' });
+        .upsert({ user_id: userId, email: email.toLowerCase(), display_name: displayName || '', role: roles[0], roles, force_password_change: !!forcePasswordChange, person_id: personId }, { onConflict: 'email' });
       if (error) throw error;
       return { ok: true };
     } catch(e) { console.error('[SupaDB] adminUpsertUserRole:', e.message); return { error: e.message }; }
