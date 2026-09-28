@@ -61,7 +61,7 @@ const JourneyMap = {
     grow: [398, 160, 'right'],      disc: [446, 108, 'above'],    gifts: [512, 94, 'above'],
     impactteam: [568, 162, 'below'], serving: [632, 108, 'below'],
   },
-  DESKTOP_STAGES: [['Found', 96, 302], ['Filled', 170, 116], ['Freed', 372, 294], ['Forged', 596, 240]],
+  DESKTOP_STAGES: [['Found', 150, 280], ['Filled', 155, 100], ['Freed', 372, 294], ['Forged', 596, 240]],
 
   // Matches the sidebar's own stage header (admin/dashboard.html's
   // .nav-stage-circle/.nav-stage-name/.nav-section-verse): a numbered
