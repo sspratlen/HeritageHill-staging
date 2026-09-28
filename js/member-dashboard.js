@@ -471,7 +471,7 @@ const MemberDashboard = {
             <span class="jp-role-tag ${t.role === 'leader' ? 'jp-leads' : 'jp-member'}">${t.role === 'leader' ? 'Leads' : 'Member'}</span>
           </div>
           ${t.trained === undefined ? '' : `<div class="jp-roster-sub" style="padding:0 0 6px;">${t.trained ? `✓ Trained${t.trainedAt ? ' · ' + this.escapeHtml(fmt(t.trainedAt)) : ''}` : 'Not yet trained'}</div>`}`).join('')}</div>`
-          : '<p class="jp-empty">Not serving on a team yet.</p>'}
+          : '<p class="jp-empty">Not serving on a team yet — talk to a staff member if you\'re interested.</p>'}
       </div>`;
   },
 };

@@ -6935,7 +6935,7 @@ async function renderMyImpactTeamsCard() {
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);">
           <span>${escapeHtml(r.name)} <span class="badge ${r.role === 'leader' ? 'badge-amber' : 'badge-blue'}" style="margin-left:6px;">${r.role === 'leader' ? 'Leads' : 'Member'}</span></span>
           <span style="font-size:.82rem;color:var(--text-muted);">${r.trained === undefined ? '' : (r.trained ? '✓ Trained' + (r.trainedAt ? ' · ' + fmt(r.trainedAt) : '') : 'Not yet trained')}</span>
-        </div>`).join('') : '<p style="color:var(--text-muted);font-size:.9rem;">You are not on an impact team yet.</p>'}
+        </div>`).join('') : '<p style="color:var(--text-muted);font-size:.9rem;">Not serving on a team yet — talk to a staff member if you\'re interested.</p>'}
     </div>`;
 }
 
