@@ -45,9 +45,17 @@
 -- Edge functions all use the service role key, so none of this affects them.
 
 -- Helpers (all mirror is_admin(); security definer so they work regardless
--- of the RLS on user_roles/groups themselves). is_event_manager() and
--- can_manage_group() already exist on staging from earlier files; they're
--- re-declared identically here so this file is self-contained on production.
+-- of the RLS on user_roles/groups themselves).
+--
+-- REQUIRES supabase/signups-rsvps-gt-registrations-admin-rls.sql to have run
+-- first: it defines is_event_manager() (role/roles-agnostic, so it works on
+-- both schemas) and its grants. This file deliberately does NOT redeclare it.
+-- can_manage_group() is from supabase/leader-group-requests-schema.sql and is
+-- redeclared identically below so this file doesn't depend on that one.
+--
+-- NOT PRODUCTION-READY AS-IS: production's user_roles has only the scalar
+-- `role` column (no `roles` array) as of 2026-09-28, and production runs older
+-- client code. Re-audit against origin/main before running any of it there.
 --
 -- Unlike is_admin(), anon has no EXECUTE on is_event_manager() or
 -- can_manage_group(). Any policy that calls them must be `to authenticated`,
@@ -55,13 +63,6 @@
 -- (Postgres evaluates every applicable policy, even a permissive one that
 -- another policy already satisfies). Found on staging 2026-09-28: the first
 -- apply briefly broke anon reads of events and sermons.
-create or replace function public.is_event_manager() returns boolean
-language sql stable security definer set search_path = public as
-$$ select exists (
-     select 1 from public.user_roles
-     where lower(email) = public.jwt_email() and 'event_manager' = any(roles)
-   ) $$;
-
 create or replace function public.can_manage_group(p_group_id bigint)
 returns boolean
 language sql
