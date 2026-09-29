@@ -1,5 +1,6 @@
--- STATUS 2026-09-28: NOT YET APPLIED to staging or production (the apply was
--- blocked by a permission check pending Scott's go-ahead).
+-- STATUS 2026-09-28: applied to STAGING (migration
+-- attendance_retreat_email_rls_lockdown) and verified with rolled-back role
+-- simulations. NOT applied to production.
 
 -- Second pass after supabase/admin-rls-lockdown.sql: close the remaining broad
 -- policies on attendance, group_attendance, retreat_registrations and the
