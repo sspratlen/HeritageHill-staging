@@ -314,6 +314,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/db.js"></script>
 <script src="js/main.js"></script>
+<script src="js/quick-signup.js"></script>
 <script>
   document.getElementById('footerYear').textContent = new Date().getFullYear();
       renderNavAvatar();
@@ -328,6 +329,15 @@
     const events = await SupaDB.getPublishedEvents();
     _homeEvents = [...events].sort((a, b) => a.dateSort.localeCompare(b.dateSort)).slice(0, 3);
     if (!_homeEvents.length) { grid.innerHTML = '<p class="text-muted">No events scheduled. Check back soon!</p>'; return; }
+    renderHomeEvents();
+    QuickSignup.load().then(ctx => { _qs = ctx; if (ctx) renderHomeEvents(); });
+  }
+
+  // Logged-in visitor + what they've already RSVP'd for (null = logged out).
+  let _qs = null;
+
+  function renderHomeEvents() {
+    const grid = document.getElementById('homeEventGrid');
     grid.innerHTML = _homeEvents.map(ev => {
       const dateParts = ev.date.match(/(\w+)\s+(\d+)/);
       const month = dateParts ? dateParts[1].slice(0,3).toUpperCase() : '';
@@ -358,7 +368,9 @@
           <p>${ev.description.slice(0,100)}${ev.description.length > 100 ? '…' : ''}</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
             <button class="btn btn-ghost btn-sm" onclick="openHomeEventDetail(${ev.id})">More Info</button>
-            ${ev.rsvpEnabled ? `<button class="btn btn-primary btn-sm" onclick="openHomeEventDetail(${ev.id}, true)">RSVP</button>` : ''}
+            ${!ev.rsvpEnabled ? '' : QuickSignup.eventState(_qs, ev.id) === 'going'
+              ? `<button class="btn btn-sm qs-done" onclick="openHomeEventDetail(${ev.id}, true)">You're going ✓</button>`
+              : `<button class="btn btn-primary btn-sm" onclick="openHomeEventDetail(${ev.id}, true)">RSVP</button>`}
           </div>
         </div>
       </article>`;
@@ -392,22 +404,45 @@
 
     document.getElementById('homeEvDetailDesc').textContent = ev.description;
 
-    const rsvpSection = document.getElementById('homeEvRsvpSection');
-    if (ev.rsvpEnabled) {
-      rsvpSection.style.display = '';
-      document.getElementById('homeEvRsvpForm').style.display = '';
-      document.getElementById('homeEvRsvpSuccess').style.display = 'none';
-      document.getElementById('homeRsvpName').value = '';
-      document.getElementById('homeRsvpEmail').value = '';
-      document.getElementById('homeRsvpPhone').value = '';
-      document.getElementById('homeRsvpError').style.display = 'none';
-    } else {
-      rsvpSection.style.display = 'none';
-    }
+    renderHomeRsvpSection(ev);
 
     document.getElementById('homeEvDetailModal').classList.add('open');
     if (scrollToRsvp && ev.rsvpEnabled) {
       setTimeout(() => { document.getElementById('homeEvRsvpSection').scrollIntoView({ behavior:'smooth', block:'start' }); }, 100);
+    }
+  }
+
+  // Logged out: the RSVP form. Logged in: a one-tap confirm, or "You're
+  // going" if they've already RSVP'd (js/quick-signup.js).
+  function renderHomeRsvpSection(ev) {
+    const rsvpSection = document.getElementById('homeEvRsvpSection');
+    if (!ev.rsvpEnabled) { rsvpSection.style.display = 'none'; return; }
+    rsvpSection.style.display = '';
+    const state = QuickSignup.eventState(_qs, ev.id);
+    const quick = document.getElementById('homeEvRsvpQuick');
+    document.getElementById('homeEvRsvpSuccess').style.display = 'none';
+    document.getElementById('homeEvRsvpGoing').style.display = state === 'going' ? '' : 'none';
+    document.getElementById('homeRsvpName').value = '';
+    document.getElementById('homeRsvpEmail').value = '';
+    document.getElementById('homeRsvpPhone').value = '';
+    document.getElementById('homeRsvpError').style.display = 'none';
+    if (state === 'ready') {
+      document.getElementById('homeEvRsvpForm').style.display = 'none';
+      quick.style.display = '';
+      QuickSignup.render(document.getElementById('homeEvRsvpQuickBody'), {
+        who: _qs.who, lead: 'RSVP as', action: "I'm going",
+        onConfirm: () => sendHomeRsvp(_qs.who),
+        onEdit: () => {
+          quick.style.display = 'none';
+          document.getElementById('homeEvRsvpForm').style.display = '';
+          document.getElementById('homeRsvpName').value = _qs.who.name;
+          document.getElementById('homeRsvpEmail').value = _qs.who.email;
+          document.getElementById('homeRsvpPhone').value = _qs.who.phone || '';
+        },
+      });
+    } else {
+      quick.style.display = 'none';
+      document.getElementById('homeEvRsvpForm').style.display = state === 'going' ? 'none' : '';
     }
   }
 
@@ -427,11 +462,21 @@
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email.'; errEl.style.display=''; return; }
     const btn = document.getElementById('homeRsvpSubmitBtn');
     btn.disabled = true; btn.textContent = 'Submitting…';
-    const result = await SupaDB.submitEventRsvp({ eventId: _homeRsvpEventId, eventTitle: _homeRsvpEventTitle, fullName: name, email, phone });
+    const result = await sendHomeRsvp({ name, email, phone });
     btn.disabled = false; btn.textContent = 'Submit RSVP';
     if (result.error) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.style.display=''; return; }
+  }
+
+  // Shared by the form and the one-tap confirm. Returns { error } on failure.
+  async function sendHomeRsvp({ name, email, phone }) {
+    const result = await SupaDB.submitEventRsvp({ eventId: _homeRsvpEventId, eventTitle: _homeRsvpEventTitle, fullName: name, email, phone: phone || '' });
+    if (result.error) return result;
+    QuickSignup.markEvent(_qs, _homeRsvpEventId);
+    renderHomeEvents();
     document.getElementById('homeEvRsvpForm').style.display = 'none';
+    document.getElementById('homeEvRsvpQuick').style.display = 'none';
     document.getElementById('homeEvRsvpSuccess').style.display = '';
+    return result;
   }
 
   /* Home — load 4 groups */
@@ -488,6 +533,11 @@
       <p class="ev-modal-desc" id="homeEvDetailDesc"></p>
 
       <div class="ev-rsvp-section" id="homeEvRsvpSection" style="display:none;">
+        <div id="homeEvRsvpGoing" class="ev-rsvp-success" style="display:none;">
+          <strong style="font-size:1.05rem;">You're going ✓</strong>
+          <p style="color:#555;font-size:.9rem;margin-top:6px;">You've already RSVP'd for this event. See you there!</p>
+        </div>
+        <div id="homeEvRsvpQuick" style="display:none;"><h3>RSVP for this Event</h3><div id="homeEvRsvpQuickBody"></div></div>
         <div id="homeEvRsvpForm">
           <h3>RSVP for this Event</h3>
           <div class="ev-rsvp-field"><label>Full Name *</label><input type="text" id="homeRsvpName" placeholder="Your full name" /></div>
